@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Betting - Available Bets</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* Inline CSS to position the Create Bet button in the header */
+    .bets-header {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .create-bet-btn {
+      background-color: #e8491d;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .create-bet-btn:hover {
+      background-color: #c73714;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <h1>P2P Betting</h1>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('wallet') }}">Wallet</a></li>
+          <li><a href="{{ url_for('bets') }}" class="active">Bets</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="bets-container">
+      <!-- Bets header containing the title and Create Bet button -->
+      <div class="bets-header">
+        <h2>Available Bets</h2>
+        <a href="{{ url_for('create_bet') }}" class="btn create-bet-btn">Create Bet</a>
+      </div>
+
+      <!-- Display flash messages if any -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flashes">
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      {% if bets|length > 0 %}
+      <table class="bets-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Bet Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for bet in bets %}
+          <tr>
+            <td>{{ bet['description'] }}</td>
+            <td>${{ "%.2f"|format(bet['bet_amount']) }}</td>
+            <td>{{ bet['status']|capitalize }}</td>
+            <td>
+              {% if bet['status'] == 'open' %}
+                {% if bet['creator_id'] != session['user_id'] %}
+                  <!-- Accept Bet form -->
+                  <form action="{{ url_for('accept_bet', bet_id=bet['id']) }}" method="post">
+                    <button type="submit" class="btn">Accept Bet</button>
+                  </form>
+                {% else %}
+                  <span>Open for bets</span>
+                {% endif %}
+              {% elif bet['status'] == 'accepted' %}
+                {% if bet['creator_id'] == session['user_id'] %}
+                  <!-- Resolve Bet form for the bet creator -->
+                  <form action="{{ url_for('resolve_bet', bet_id=bet['id']) }}" method="post" class="resolve-form">
+                    <label for="winner_{{ bet['id'] }}">Select Winner:</label>
+                    <select name="winner_id" id="winner_{{ bet['id'] }}">
+                      <option value="{{ bet['creator_id'] }}">You</option>
+                      <option value="{{ bet['opponent_id'] }}">Opponent</option>
+                    </select>
+                    <button type="submit" class="btn">Resolve Bet</button>
+                  </form>
+                {% else %}
+                  <span>Awaiting resolution by creator</span>
+                {% endif %}
+              {% else %}
+                <span>Completed</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No available bets at the moment. Check back later.</p>
+      {% endif %}
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2025 P2P Betting. All rights reserved.</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Betting Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <h1>P2P Betting</h1>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('wallet') }}">Wallet</a></li>
+          <li><a href="{{ url_for('bets') }}">Bets</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h2>Welcome to the Future of P2P Betting</h2>
+        <p>Connect with peers, place bets, and win big. Experience secure and fun betting like never before!</p>
+        <a href="{{ url_for('signup') }}" class="btn">Get Started</a>
+      </div>
+    </section>
+    <section class="features">
+      <div class="feature">
+        <h3>Easy Sign Up</h3>
+        <p>Create an account in minutes and start betting.</p>
+      </div>
+      <div class="feature">
+        <h3>Secure Platform</h3>
+        <p>Your transactions are safe and secure with our encrypted system.</p>
+      </div>
+      <div class="feature">
+        <h3>Live Updates</h3>
+        <p>Stay informed with real-time betting outcomes.</p>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2025 VR P2P Betting. All rights reserved.</p>
+  </footer>
+</body>
+</html>

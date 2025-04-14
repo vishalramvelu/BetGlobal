@@ -1,0 +1,174 @@
+/* Reset & Base Styles */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    color: #333;
+  }
+  
+  /* Navbar Styling */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #35424a;
+    padding: 10px 20px;
+  }
+  
+  .logo h1 {
+    color: #ffffff;
+    margin: 0;
+  }
+  
+  .nav-links {
+    list-style: none;
+    display: flex;
+  }
+  
+  .nav-links li {
+    margin-left: 20px;
+  }
+  
+  .nav-links li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    color: #e8491d;
+  }
+  
+  /* Hero Section (Index Page) */
+  .hero {
+    background: url('hero-bg.jpg') no-repeat center center/cover;
+    height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8b1a1a;
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .hero-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+  }
+  
+  .btn {
+    display: inline-block;
+    padding: 10px 25px;
+    background: #e8491d;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+  }
+  
+  .btn:hover {
+    background: #c73714;
+  }
+  
+  /* Form, Dashboard & Wallet Containers */
+  .form-container,
+  .dashboard-container,
+  .wallet-container {
+    background: #fff;
+    padding: 30px;
+    max-width: 600px;
+    margin: 40px auto;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  
+  .form-container h2,
+  .dashboard-container h2,
+  .wallet-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #35424a;
+  }
+  
+  form label {
+    display: block;
+    margin: 10px 0 5px;
+  }
+  
+  form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  form .btn {
+    width: 100%;
+    padding: 10px;
+    background: #35424a;
+    color: #ffffff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  
+  /* Main Content Padding */
+  main {
+    padding: 20px;
+  }
+  
+  /* Footer Styling */
+  footer {
+    text-align: center;
+    padding: 20px;
+    background: #35424a;
+    color: #fff;
+    margin-top: 20px;
+  }
+
+  .features {
+    display: flex;
+    justify-content: space-around; /* or space-between, center, etc. */
+    align-items: flex-start; /* Adjust as needed */
+    padding: 20px;
+  }
+
+  .feature {
+    flex: 1;
+    margin: 0 10px;
+    text-align: center; /* Optional: centers content in each box */
+  }
+  
+  

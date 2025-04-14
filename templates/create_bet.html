@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Betting - Create Bet</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <h1>P2P Betting</h1>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('wallet') }}">Wallet</a></li>
+          <li><a href="{{ url_for('bets') }}">Bets</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="form-container">
+      <h2>Create a New Bet</h2>
+
+      <!-- Display flash messages if any -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flashes">
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('create_bet') }}" method="post" class="bet-form">
+        <label for="description">Bet Description:</label>
+        <textarea id="description" name="description" rows="4" placeholder="Describe your bet/challenge" required></textarea>
+
+        <label for="bet_amount">Bet Amount ($):</label>
+        <input type="number" step="0.01" id="bet_amount" name="bet_amount" placeholder="Enter bet amount" required>
+
+        <button type="submit" class="btn">Create Bet</button>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2025 P2P Betting. All rights reserved.</p>
+  </footer>
+</body>
+</html>

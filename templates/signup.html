@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2P Betting - Sign Up</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <div class="navbar">
+      <div class="logo">
+        <h1>P2P Betting</h1>
+      </div>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+          <li><a href="{{ url_for('signup') }}" class="active">Sign Up</a></li>
+          <li><a href="{{ url_for('login') }}">Login</a></li>
+          <li><a href="{{ url_for('wallet') }}">Wallet</a></li>
+          <li><a href="{{ url_for('bets') }}">Bets</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="form-container">
+      <h2>Create Your Account</h2>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <ul class="flashes">
+          {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+
+      <form action="{{ url_for('signup') }}" method="post" class="signup-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit" class="btn">Sign Up</button>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <p>&copy; 2025 P2P Betting. All rights reserved.</p>
+  </footer>
+</body>
+</html>
