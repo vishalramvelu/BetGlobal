@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Global Betting Platform{% endblock %}
+
+{% block content %}
+{% if error %}
+    <div class="alert alert-danger" role="alert">
+        <i data-feather="alert-circle" class="me-2"></i>
+        {{ error }}
+    </div>
+{% elif not user %}
+    <div class="text-center py-5">
+        <i data-feather="user-x" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
+        <h3 class="text-muted">User not found</h3>
+        <p class="text-muted">Please try again or contact support.</p>
+    </div>
+{% else %}
+    <!-- User Info Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="mb-1">
+                                <i data-feather="user" class="me-2"></i>
+                                Welcome, {{ user.username }}
+                            </h1>
+                            <p class="text-muted mb-0">{{ user.email }}</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <h3 class="mb-0 {% if user.total_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if user.total_profit >= 0 %}+{% endif %} ${{ "%.2f"|format(user.total_profit) }}
+                            </h3>
+                            <small class="text-muted">Total Profit</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i data-feather="layers" style="width: 32px; height: 32px;" class="text-primary mb-2"></i>
+                    <h3 class="mb-1">{{ total_bets }}</h3>
+                    <p class="text-muted mb-0">Total Bets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i data-feather="activity" style="width: 32px; height: 32px;" class="text-warning mb-2"></i>
+                    <h3 class="mb-1">{{ active_bets }}</h3>
+                    <p class="text-muted mb-0">Active Bets</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i data-feather="check-circle" style="width: 32px; height: 32px;" class="text-success mb-2"></i>
+                    <h3 class="mb-1">{{ completed_bets }}</h3>
+                    <p class="text-muted mb-0">Completed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h5 class="card-title mb-3">Quick Actions</h5>
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        <a href="{{ url_for('create_bet_page') }}" class="btn btn-primary">
+                            <i data-feather="plus-circle" class="me-2"></i>
+                            Create New Bet
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                            <i data-feather="search" class="me-2"></i>
+                            Browse All Bets
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bets Sections -->
+    <div class="row">
+        <!-- Created Bets -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i data-feather="edit-3" class="me-2"></i>
+                        My Created Bets
+                    </h5>
+                    <span class="badge bg-primary">{{ created_bets|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if not created_bets %}
+                        <div class="text-center py-4">
+                            <i data-feather="plus-circle" style="width: 32px; height: 32px;" class="text-muted mb-2"></i>
+                            <p class="text-muted mb-2">No bets created yet</p>
+                            <a href="{{ url_for('create_bet_page') }}" class="btn btn-sm btn-outline-primary">
+                                Create Your First Bet
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for bet in created_bets %}
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ bet.title }}</h6>
+                                            <p class="mb-1 text-muted small">{{ bet.description[:50] }}{% if bet.description|length > 50 %}...{% endif %}</p>
+                                            <small class="text-muted">
+                                                ${{ "%.2f"|format(bet.amount) }} • {{ bet.odds }}:1 • {{ bet.category }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-{{ 'success' if bet.status == 'open' else 'secondary' if bet.status == 'accepted' else 'primary' }}">
+                                            {{ bet.status.title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Accepted Bets -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i data-feather="check-square" class="me-2"></i>
+                        My Accepted Bets
+                    </h5>
+                    <span class="badge bg-success">{{ accepted_bets|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if not accepted_bets %}
+                        <div class="text-center py-4">
+                            <i data-feather="search" style="width: 32px; height: 32px;" class="text-muted mb-2"></i>
+                            <p class="text-muted mb-2">No bets accepted yet</p>
+                            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-primary">
+                                Browse Available Bets
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for bet in accepted_bets %}
+                                <div class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ bet.title }}</h6>
+                                            <p class="mb-1 text-muted small">{{ bet.description[:50] }}{% if bet.description|length > 50 %}...{% endif %}</p>
+                                            <small class="text-muted">
+                                                ${{ "%.2f"|format(bet.amount) }} • {{ bet.odds }}:1 • {{ bet.category }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-{{ 'success' if bet.status == 'open' else 'secondary' if bet.status == 'accepted' else 'primary' }}">
+                                            {{ bet.status.title() }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any dashboard-specific JavaScript here
+    console.log('Dashboard loaded');
+});
+</script>
+{% endblock %}

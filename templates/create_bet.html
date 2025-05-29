@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Create Bet - Global Betting Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="mb-0">
+                    <i data-feather="plus-circle" class="me-2"></i>
+                    Create New Bet
+                </h1>
+            </div>
+            <div class="card-body">
+                <form id="createBetForm">
+                    <div class="row g-3">
+                        <!-- Title -->
+                        <div class="col-12">
+                            <label for="title" class="form-label">Bet Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" required
+                                   placeholder="Enter a descriptive title for your bet">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required
+                                      placeholder="Provide detailed information about the bet conditions and terms"></textarea>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Amount and Odds -->
+                        <div class="col-md-6">
+                            <label for="amount" class="form-label">Bet Amount ($) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       min="0.01" step="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="odds" class="form-label">Odds (X:1) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="odds" name="odds" 
+                                       min="0.1" step="0.1" required placeholder="2.0">
+                                <span class="input-group-text">: 1</span>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">Higher odds = higher potential payout</small>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-12">
+                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="category" name="category" required>
+                                <option value="">Select a category</option>
+                                <option value="Sports">Sports</option>
+                                <option value="Politics">Politics</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Weather">Weather</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <!-- Potential Payout Calculation -->
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6 class="mb-2">
+                                    <i data-feather="dollar-sign" class="me-2"></i>
+                                    Payout Calculator
+                                </h6>
+                                <div id="payoutInfo">
+                                    <p class="mb-1">Enter amount and odds to see potential payout</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i data-feather="check" class="me-2"></i>
+                                    Create Bet
+                                </button>
+                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                    <i data-feather="x" class="me-2"></i>
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tips Card -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i data-feather="help-circle" class="me-2"></i>
+                    Tips for Creating Great Bets
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Be Specific:</strong> Clear, specific bet conditions prevent disputes</li>
+                    <li><strong>Set Fair Odds:</strong> Competitive odds attract more participants</li>
+                    <li><strong>Choose Verifiable Outcomes:</strong> Ensure the result can be objectively determined</li>
+                    <li><strong>Include Time Limits:</strong> Specify when the bet expires or concludes</li>
+                    <li><strong>Consider the Amount:</strong> Set amounts that are reasonable for your target audience</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createBetForm');
+    const amountInput = document.getElementById('amount');
+    const oddsInput = document.getElementById('odds');
+    const payoutInfo = document.getElementById('payoutInfo');
+    const submitBtn = document.getElementById('submitBtn');
+    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+
+    // Calculate and display potential payout
+    function updatePayout() {
+        const amount = parseFloat(amountInput.value) || 0;
+        const odds = parseFloat(oddsInput.value) || 0;
+        
+        if (amount > 0 && odds > 0) {
+            const potentialWin = amount * odds;
+            const totalPayout = amount + potentialWin;
+            
+            payoutInfo.innerHTML = '<p class="mb-1"><strong>Your stake:</strong> $' + amount.toFixed(2) + '</p>' +
+                '<p class="mb-1"><strong>Potential win:</strong> $' + potentialWin.toFixed(2) + '</p>' +
+                '<p class="mb-0"><strong>Total potential return:</strong> $' + totalPayout.toFixed(2) + '</p>';
+        } else {
+            payoutInfo.innerHTML = '<p class="mb-1">Enter amount and odds to see potential payout</p>';
+        }
+    }
+
+    // Add event listeners for payout calculation
+    amountInput.addEventListener('input', updatePayout);
+    oddsInput.addEventListener('input', updatePayout);
+
+    // Form validation and submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Clear previous validation states
+        form.querySelectorAll('.is-invalid').forEach(function(el) {
+            el.classList.remove('is-invalid');
+        });
+        
+        const formData = new FormData(form);
+        const data = {};
+        
+        // Collect form data
+        formData.forEach(function(value, key) {
+            data[key] = value.trim();
+        });
+        
+        // Basic client-side validation
+        let isValid = true;
+        
+        if (!data.title) {
+            showFieldError('title', 'Title is required');
+            isValid = false;
+        }
+        
+        if (!data.description) {
+            showFieldError('description', 'Description is required');
+            isValid = false;
+        }
+        
+        if (!data.amount || parseFloat(data.amount) <= 0) {
+            showFieldError('amount', 'Amount must be greater than 0');
+            isValid = false;
+        }
+        
+        if (!data.odds || parseFloat(data.odds) <= 0) {
+            showFieldError('odds', 'Odds must be greater than 0');
+            isValid = false;
+        }
+        
+        if (!data.category) {
+            showFieldError('category', 'Category is required');
+            isValid = false;
+        }
+        
+        if (!isValid) return;
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+        
+        // Submit to API
+        fetch('/api/create-bet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(result) {
+            if (result.success) {
+                // Show success modal and redirect after a delay
+                successModal.show();
+                form.reset();
+                updatePayout();
+                
+                // Auto-redirect to dashboard after 2 seconds
+                setTimeout(function() {
+                    window.location.href = '/dashboard';
+                }, 2000);
+            } else {
+                alert('Error: ' + result.error);
+            }
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            alert('Failed to create bet. Please try again.');
+        })
+        .finally(function() {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-feather="check" class="me-2"></i>Create Bet';
+            feather.replace();
+        });
+    });
+    
+    function showFieldError(fieldName, message) {
+        const field = document.getElementById(fieldName);
+        let feedback = field.parentElement.querySelector('.invalid-feedback');
+        if (!feedback) {
+            feedback = field.nextElementSibling;
+        }
+        
+        field.classList.add('is-invalid');
+        if (feedback && feedback.classList.contains('invalid-feedback')) {
+            feedback.textContent = message;
+        }
+    }
+});
+</script>
+{% endblock %}

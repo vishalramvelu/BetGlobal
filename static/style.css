@@ -1,0 +1,210 @@
+/* Custom styles for the betting platform */
+
+:root {
+    --primary-color: 210 90% 50%; /* Bootstrap primary blue */
+    --success-color: 145 80% 40%; /* Bootstrap success green */
+    --danger-color: 0 85% 60%; /* Bootstrap danger red */
+    --warning-color: 45 100% 50%; /* Bootstrap warning yellow */
+    --info-color: 195 85% 50%; /* Bootstrap info cyan */
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Custom hover effects for cards */
+.card {
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Button hover effects */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Enhanced navigation */
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    transition: color 0.2s ease-in-out;
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+}
+
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 500;
+}
+
+/* Bet cards enhancements */
+.bet-card {
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.bet-card:hover {
+    border-left-color: var(--bs-primary);
+}
+
+.bet-card.status-open {
+    border-left-color: var(--bs-success);
+}
+
+.bet-card.status-accepted {
+    border-left-color: var(--bs-warning);
+}
+
+.bet-card.status-completed {
+    border-left-color: var(--bs-info);
+}
+
+/* Badge enhancements */
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Form enhancements */
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(13, 110, 253, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.25rem;
+    }
+}
+
+/* Enhanced alert styles */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+}
+
+/* Footer styling */
+footer {
+    margin-top: auto;
+}
+
+/* Custom utility classes */
+.text-profit {
+    color: var(--bs-success) !important;
+}
+
+.text-loss {
+    color: var(--bs-danger) !important;
+}
+
+/* Icon alignment */
+[data-feather] {
+    vertical-align: -0.125em;
+}
+
+/* List group enhancements */
+.list-group-item {
+    border-color: rgba(255, 255, 255, 0.125);
+    background-color: transparent;
+}
+
+.list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Modal enhancements */
+.modal-content {
+    border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+/* Search and filter form */
+.filter-form {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state [data-feather] {
+    opacity: 0.5;
+    margin-bottom: 1rem;
+}
+
+/* Enhanced dropdowns */
+.dropdown-menu {
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Smooth page transitions */
+main {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .btn,
+    footer {
+        display: none !important;
+    }
+    
+    .card {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+    }
+}
