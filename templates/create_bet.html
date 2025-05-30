@@ -40,9 +40,9 @@
     <!-- Create Bet Form -->
     <div class="dashboard-stats">
         <div class="container">
-            <div class="row justify-content-center">
+            <div class="row g-4">
+                <!-- Main Form Card -->
                 <div class="col-lg-8">
-                    <!-- Main Form Card -->
                     <div class="bets-card">
                         <div class="bets-header">
                             <div class="bets-title">
@@ -165,9 +165,11 @@
                             </form>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Tips Card -->
-                    <div class="bets-card mt-4">
+                <!-- Tips Card -->
+                <div class="col-lg-4">
+                    <div class="bets-card h-100">
                         <div class="bets-header">
                             <div class="bets-title">
                                 <div class="bets-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
@@ -181,7 +183,7 @@
                         </div>
                         <div class="bets-content">
                             <div class="row g-3">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
                                         <div class="benefit-icon" style="margin-bottom: 0.5rem;">
                                             <i data-feather="target"></i>
@@ -192,7 +194,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
                                         <div class="benefit-icon" style="margin-bottom: 0.5rem;">
                                             <i data-feather="trending-up"></i>
@@ -203,7 +205,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
                                         <div class="benefit-icon" style="margin-bottom: 0.5rem;">
                                             <i data-feather="check-circle"></i>
@@ -214,7 +216,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
                                         <div class="benefit-icon" style="margin-bottom: 0.5rem;">
                                             <i data-feather="clock"></i>
@@ -230,6 +232,21 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Popup -->
+<div class="popup-overlay" id="popupOverlay">
+    <div class="popup-container">
+        <div class="popup-icon">
+            <i id="popupIcon" data-feather="check-circle"></i>
+        </div>
+        <h4 id="popupTitle">Success!</h4>
+        <p id="popupMessage">Your bet has been created successfully.</p>
+        <div class="popup-actions">
+            <button type="button" class="btn btn-gradient" id="popupPrimaryBtn">Go to Dashboard</button>
+            <button type="button" class="btn btn-outline-secondary" id="popupSecondaryBtn">Create Another</button>
         </div>
     </div>
 </div>
@@ -331,22 +348,17 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(function(result) {
             if (result.success) {
-                // Show success and redirect
-                alert('Bet created successfully! Redirecting to dashboard...');
+                // Show success popup - user will choose action
+                showPopup('success', 'Bet Created!', 'Your bet has been created successfully and is now live.');
                 form.reset();
                 updatePayout();
-                
-                // Auto-redirect to dashboard after a delay
-                setTimeout(function() {
-                    window.location.href = '/dashboard';
-                }, 1000);
             } else {
-                alert('Error: ' + result.error);
+                showPopup('error', 'Creation Failed', result.error);
             }
         })
         .catch(function(error) {
             console.error('Error:', error);
-            alert('Failed to create bet. Please try again.');
+            showPopup('error', 'Connection Error', 'Failed to create bet. Please check your connection and try again.');
         })
         .finally(function() {
             // Reset button state
@@ -367,6 +379,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (feedback && feedback.classList.contains('invalid-feedback')) {
             feedback.textContent = message;
         }
+    }
+    
+    function showPopup(type, title, message) {
+        const overlay = document.getElementById('popupOverlay');
+        const icon = document.getElementById('popupIcon');
+        const titleEl = document.getElementById('popupTitle');
+        const messageEl = document.getElementById('popupMessage');
+        const primaryBtn = document.getElementById('popupPrimaryBtn');
+        const secondaryBtn = document.getElementById('popupSecondaryBtn');
+        
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        // Configure popup based on type
+        if (type === 'success') {
+            icon.setAttribute('data-feather', 'check-circle');
+            icon.style.color = '#28a745';
+            primaryBtn.textContent = 'Go to Dashboard';
+            secondaryBtn.textContent = 'Create Another';
+            secondaryBtn.style.display = 'inline-block';
+        } else {
+            icon.setAttribute('data-feather', 'x-circle');
+            icon.style.color = '#dc3545';
+            primaryBtn.textContent = 'Try Again';
+            secondaryBtn.style.display = 'none';
+        }
+        
+        // Show popup
+        overlay.style.display = 'flex';
+        feather.replace();
+        
+        // Handle button clicks
+        primaryBtn.onclick = function() {
+            if (type === 'success') {
+                window.location.href = '/dashboard';
+            } else {
+                overlay.style.display = 'none';
+            }
+        };
+        
+        secondaryBtn.onclick = function() {
+            overlay.style.display = 'none';
+            form.reset();
+            updatePayout();
+        };
+        
+        // Close on overlay click
+        overlay.onclick = function(e) {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+            }
+        };
     }
 });
 </script>

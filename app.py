@@ -42,6 +42,16 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def admin_required(f):
+    """Decorator to require admin authentication for admin routes"""
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'admin_authenticated' not in session:
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 def check_authenticated():
     """Check if user is authenticated"""
     return 'user_id' in session
@@ -50,7 +60,17 @@ def check_authenticated():
 @app.route('/landing')
 def landing():
     """Landing page for unauthenticated users"""
-    return render_template('landing.html')
+    try:
+        # Get 3 most recent open bets for display
+        live_bets = Bet.query.filter_by(status='open').order_by(Bet.created_at.desc()).limit(3).all()
+        
+        # Get users for display names
+        users = {user.id: user for user in User.query.all()}
+        
+        return render_template('landing.html', live_bets=live_bets, users=users)
+    except Exception as e:
+        logging.error(f"Error loading landing page: {str(e)}")
+        return render_template('landing.html', live_bets=[], users={})
 
 @app.route('/start-betting')
 def start_betting():
@@ -166,7 +186,7 @@ def root():
     """Root route - show landing if not authenticated, otherwise redirect to bets"""
     if check_authenticated():
         return redirect(url_for('index'))
-    return render_template('landing.html')
+    return redirect(url_for('landing'))
 
 @app.route('/bets')
 @login_required
@@ -433,6 +453,123 @@ def api_accept_bet():
     except Exception as e:
         logging.error(f"Error accepting bet: {str(e)}")
         return jsonify({'success': False, 'error': 'Failed to accept bet'}), 500
+
+# Admin routes
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    """Admin login page"""
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == "theothegoat6969":
+            session['admin_authenticated'] = True
+            flash('Welcome to admin dashboard!', 'success')
+            return redirect(url_for('admin_dashboard'))
+        else:
+            flash('Invalid admin password', 'error')
+    
+    if 'admin_authenticated' in session:
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    """Admin logout"""
+    session.pop('admin_authenticated', None)
+    flash('Logged out from admin panel', 'info')
+    return redirect(url_for('landing'))
+
+@app.route('/admin')
+@app.route('/admin/dashboard')
+@admin_required
+def admin_dashboard():
+    """Admin dashboard main page"""
+    try:
+        # Get basic statistics
+        total_users = User.query.count()
+        total_bets = Bet.query.count()
+        active_bets = Bet.query.filter(Bet.status.in_(['open', 'accepted'])).count()
+        completed_bets = Bet.query.filter_by(status='completed').count()
+        
+        # Calculate total money in system
+        total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
+        total_bet_volume = db.session.query(db.func.sum(Bet.amount)).scalar() or 0
+        
+        return render_template('admin_dashboard.html',
+                             total_users=total_users,
+                             total_bets=total_bets,
+                             active_bets=active_bets,
+                             completed_bets=completed_bets,
+                             total_balance=total_balance,
+                             total_bet_volume=total_bet_volume)
+    except Exception as e:
+        logging.error(f"Error in admin dashboard: {str(e)}")
+        return render_template('admin_dashboard.html', error="Failed to load admin dashboard")
+
+@app.route('/admin/database')
+@admin_required
+def admin_database():
+    """Admin database viewer"""
+    try:
+        users = User.query.order_by(User.created_at.desc()).all()
+        bets = Bet.query.order_by(Bet.created_at.desc()).all()
+        
+        return render_template('admin_database.html', users=users, bets=bets)
+    except Exception as e:
+        logging.error(f"Error in admin database viewer: {str(e)}")
+        return render_template('admin_database.html', users=[], bets=[], error="Failed to load database data")
+
+@app.route('/admin/disputes')
+@admin_required
+def admin_disputes():
+    """Admin bet disputes page - placeholder for now"""
+    return render_template('admin_disputes.html')
+
+@app.route('/admin/statistics')
+@admin_required
+def admin_statistics():
+    """Admin live statistics page"""
+    try:
+        # User statistics
+        total_users = User.query.count()
+        users_with_balance = User.query.filter(User.balance > 0).count()
+        top_users_by_balance = User.query.order_by(User.balance.desc()).limit(5).all()
+        top_users_by_profit = User.query.order_by(User.total_profit.desc()).limit(5).all()
+        
+        # Bet statistics
+        total_bets = Bet.query.count()
+        open_bets = Bet.query.filter_by(status='open').count()
+        accepted_bets = Bet.query.filter_by(status='accepted').count()
+        completed_bets = Bet.query.filter_by(status='completed').count()
+        cancelled_bets = Bet.query.filter_by(status='cancelled').count()
+        
+        # Category breakdown
+        category_stats = db.session.query(
+            Bet.category, 
+            db.func.count(Bet.id),
+            db.func.sum(Bet.amount)
+        ).group_by(Bet.category).all()
+        
+        # Recent activity
+        recent_bets = Bet.query.order_by(Bet.created_at.desc()).limit(10).all()
+        recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
+        
+        return render_template('admin_statistics.html',
+                             total_users=total_users,
+                             users_with_balance=users_with_balance,
+                             top_users_by_balance=top_users_by_balance,
+                             top_users_by_profit=top_users_by_profit,
+                             total_bets=total_bets,
+                             open_bets=open_bets,
+                             accepted_bets=accepted_bets,
+                             completed_bets=completed_bets,
+                             cancelled_bets=cancelled_bets,
+                             category_stats=category_stats,
+                             recent_bets=recent_bets,
+                             recent_users=recent_users)
+    except Exception as e:
+        logging.error(f"Error in admin statistics: {str(e)}")
+        return render_template('admin_statistics.html', error="Failed to load statistics")
 
 
 @app.route('/set-user/<int:user_id>')

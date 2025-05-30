@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Statistics - Admin Panel</title>
+    
+    <!-- Bootstrap CSS with dark theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+        <div class="container">
+            <a class="navbar-brand text-dark" href="{{ url_for('admin_dashboard') }}">
+                <i data-feather="shield" class="me-2"></i>
+                <strong>Admin Panel</strong>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="adminNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_dashboard') }}">
+                            <i data-feather="home" class="me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_database') }}">
+                            <i data-feather="database" class="me-1"></i>Database
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_disputes') }}">
+                            <i data-feather="alert-triangle" class="me-1"></i>Disputes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark active" href="{{ url_for('admin_statistics') }}">
+                            <i data-feather="bar-chart-2" class="me-1"></i>Statistics
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('landing') }}">
+                            <i data-feather="external-link" class="me-1"></i>Main Site
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_logout') }}">
+                            <i data-feather="log-out" class="me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="h3 mb-0">
+                    <i data-feather="bar-chart-2" class="me-2"></i>
+                    Live Statistics
+                </h1>
+                <p class="text-muted">Real-time platform analytics and insights</p>
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="alert alert-danger">
+                <i data-feather="alert-circle" class="me-2"></i>{{ error }}
+            </div>
+        {% else %}
+            <!-- User Statistics -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="users" class="me-2"></i>
+                                User Statistics
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <h3 class="text-primary">{{ total_users }}</h3>
+                                    <p class="text-muted mb-0">Total Users</p>
+                                </div>
+                                <div class="col-6">
+                                    <h3 class="text-success">{{ users_with_balance }}</h3>
+                                    <p class="text-muted mb-0">With Balance</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="trending-up" class="me-2"></i>
+                                Bet Status Breakdown
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-3">
+                                    <h4 class="text-primary">{{ open_bets }}</h4>
+                                    <small class="text-muted">Open</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4 class="text-warning">{{ accepted_bets }}</h4>
+                                    <small class="text-muted">Accepted</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4 class="text-success">{{ completed_bets }}</h4>
+                                    <small class="text-muted">Completed</small>
+                                </div>
+                                <div class="col-3">
+                                    <h4 class="text-danger">{{ cancelled_bets }}</h4>
+                                    <small class="text-muted">Cancelled</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Users -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="award" class="me-2"></i>
+                                Top Users by Balance
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if top_users_by_balance %}
+                                <div class="list-group list-group-flush">
+                                    {% for user in top_users_by_balance %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0">
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            <br>
+                                            <small class="text-muted">ID: {{ user.id }}</small>
+                                        </div>
+                                        <span class="badge bg-success">${{ "%.2f"|format(user.balance or 0) }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">No users found</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="trophy" class="me-2"></i>
+                                Top Users by Profit
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if top_users_by_profit %}
+                                <div class="list-group list-group-flush">
+                                    {% for user in top_users_by_profit %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0">
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            <br>
+                                            <small class="text-muted">ID: {{ user.id }}</small>
+                                        </div>
+                                        {% if user.total_profit >= 0 %}
+                                            <span class="badge bg-success">+${{ "%.2f"|format(user.total_profit) }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">${{ "%.2f"|format(user.total_profit) }}</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">No users found</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Statistics -->
+            {% if category_stats %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="pie-chart" class="me-2"></i>
+                        Bet Categories
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Number of Bets</th>
+                                    <th>Total Volume</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category, count, volume in category_stats %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ category }}</span>
+                                    </td>
+                                    <td>{{ count }}</td>
+                                    <td>
+                                        <span class="badge bg-success">${{ "%.2f"|format(volume or 0) }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Activity -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="clock" class="me-2"></i>
+                                Recent Bets
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_bets %}
+                                <div class="list-group list-group-flush">
+                                    {% for bet in recent_bets[:5] %}
+                                    <div class="list-group-item bg-transparent border-0 px-0">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <strong>{{ bet.title[:30] }}{% if bet.title|length > 30 %}...{% endif %}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    ${{ "%.2f"|format(bet.amount) }} • {{ bet.category }}
+                                                </small>
+                                            </div>
+                                            {% if bet.status == 'open' %}
+                                                <span class="badge bg-primary">Open</span>
+                                            {% elif bet.status == 'accepted' %}
+                                                <span class="badge bg-warning">Accepted</span>
+                                            {% elif bet.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">No recent bets</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i data-feather="user-plus" class="me-2"></i>
+                                New Users
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_users %}
+                                <div class="list-group list-group-flush">
+                                    {% for user in recent_users[:5] %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 px-0">
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}
+                                            </small>
+                                        </div>
+                                        <span class="badge bg-info">${{ "%.2f"|format(user.balance or 0) }}</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted text-center">No recent users</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Initialize Feather Icons -->
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>

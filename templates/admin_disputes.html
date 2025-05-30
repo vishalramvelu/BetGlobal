@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bet Disputes - Admin Panel</title>
+    
+    <!-- Bootstrap CSS with dark theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Admin Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
+        <div class="container">
+            <a class="navbar-brand text-dark" href="{{ url_for('admin_dashboard') }}">
+                <i data-feather="shield" class="me-2"></i>
+                <strong>Admin Panel</strong>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="adminNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_dashboard') }}">
+                            <i data-feather="home" class="me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_database') }}">
+                            <i data-feather="database" class="me-1"></i>Database
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark active" href="{{ url_for('admin_disputes') }}">
+                            <i data-feather="alert-triangle" class="me-1"></i>Disputes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_statistics') }}">
+                            <i data-feather="bar-chart-2" class="me-1"></i>Statistics
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('landing') }}">
+                            <i data-feather="external-link" class="me-1"></i>Main Site
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="{{ url_for('admin_logout') }}">
+                            <i data-feather="log-out" class="me-1"></i>Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container my-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="h3 mb-0">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    Bet Disputes
+                </h1>
+                <p class="text-muted">Manage bet disputes and resolution</p>
+            </div>
+        </div>
+
+        <!-- Placeholder Content -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <i data-feather="construction" style="width: 64px; height: 64px;" class="text-warning"></i>
+                        </div>
+                        <h4 class="mb-3">Bet Disputes System</h4>
+                        <p class="text-muted mb-4">
+                            This section is currently under development. The dispute resolution system will allow administrators to:
+                        </p>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i data-feather="eye" class="me-2"></i>
+                                            View Disputes
+                                        </h6>
+                                        <p class="card-text small text-muted mb-0">
+                                            Review all open bet disputes submitted by users
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i data-feather="check-circle" class="me-2"></i>
+                                            Resolve Disputes
+                                        </h6>
+                                        <p class="card-text small text-muted mb-0">
+                                            Make decisions on disputed bet outcomes
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i data-feather="message-square" class="me-2"></i>
+                                            Communication
+                                        </h6>
+                                        <p class="card-text small text-muted mb-0">
+                                            Communicate with disputing parties
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i data-feather="archive" class="me-2"></i>
+                                            History
+                                        </h6>
+                                        <p class="card-text small text-muted mb-0">
+                                            Track resolution history and patterns
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i data-feather="info" class="me-2"></i>
+                            <strong>Coming Soon:</strong> Advanced dispute resolution tools and workflow management.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Initialize Feather Icons -->
+    <script>
+        feather.replace();
+    </script>
+</body>
+</html>
