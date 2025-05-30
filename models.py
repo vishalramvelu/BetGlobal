@@ -1,10 +1,12 @@
 from datetime import datetime
-from app import db
+from database import db
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(128), nullable=False)
+    balance = db.Column(db.Float, default=100.0)  # Starting balance
     total_profit = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -60,7 +62,7 @@ def get_user_by_id(user_id):
     return User.query.get(user_id)
 
 def create_bet(creator_id, title, description, amount, odds, category):
-    """Create a new bet"""
+    """Create a new bet and deduct amount from creator's balance"""
     bet = Bet()
     bet.creator_id = creator_id
     bet.title = title
@@ -70,16 +72,26 @@ def create_bet(creator_id, title, description, amount, odds, category):
     bet.category = category
     bet.status = 'open'
     
+    # Deduct amount from creator's balance
+    creator = User.query.get(creator_id)
+    if creator:
+        creator.balance = (creator.balance or 0) - float(amount)
+    
     db.session.add(bet)
     db.session.commit()
     
     return bet
 
 def accept_bet(bet_id, acceptor_id):
-    """Accept a bet"""
+    """Accept a bet and deduct amount from acceptor's balance"""
     bet = Bet.query.get(bet_id)
     if not bet or bet.status != 'open':
         return False
+    
+    # Deduct amount from acceptor's balance
+    acceptor = User.query.get(acceptor_id)
+    if acceptor:
+        acceptor.balance = (acceptor.balance or 0) - bet.amount
     
     bet.status = 'accepted'
     bet.acceptor_id = acceptor_id

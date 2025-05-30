@@ -1,121 +1,234 @@
 {% extends "base.html" %}
 
-{% block title %}Create Bet - Global Betting Platform{% endblock %}
+{% block title %}Create Bet - BetGlobal{% endblock %}
+
+{% block main_class %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="mb-0">
-                    <i data-feather="plus-circle" class="me-2"></i>
-                    Create New Bet
-                </h1>
-            </div>
-            <div class="card-body">
-                <form id="createBetForm">
-                    <div class="row g-3">
-                        <!-- Title -->
-                        <div class="col-12">
-                            <label for="title" class="form-label">Bet Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="title" name="title" required
-                                   placeholder="Enter a descriptive title for your bet">
-                            <div class="invalid-feedback"></div>
+<div class="dashboard-container">
+    <div class="dashboard-bg"></div>
+    
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="user-welcome">
+                        <div class="welcome-icon">
+                            <i data-feather="plus-circle"></i>
                         </div>
-
-                        <!-- Description -->
-                        <div class="col-12">
-                            <label for="description" class="form-label">Description <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="description" name="description" rows="3" required
-                                      placeholder="Provide detailed information about the bet conditions and terms"></textarea>
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <!-- Amount and Odds -->
-                        <div class="col-md-6">
-                            <label for="amount" class="form-label">Bet Amount ($) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" class="form-control" id="amount" name="amount" 
-                                       min="0.01" step="0.01" required placeholder="0.00">
-                            </div>
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="odds" class="form-label">Odds (X:1) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="odds" name="odds" 
-                                       min="0.1" step="0.1" required placeholder="2.0">
-                                <span class="input-group-text">: 1</span>
-                            </div>
-                            <div class="invalid-feedback"></div>
-                            <small class="form-text text-muted">Higher odds = higher potential payout</small>
-                        </div>
-
-                        <!-- Category -->
-                        <div class="col-12">
-                            <label for="category" class="form-label">Category <span class="text-danger">*</span></label>
-                            <select class="form-select" id="category" name="category" required>
-                                <option value="">Select a category</option>
-                                <option value="Sports">Sports</option>
-                                <option value="Politics">Politics</option>
-                                <option value="Entertainment">Entertainment</option>
-                                <option value="Technology">Technology</option>
-                                <option value="Finance">Finance</option>
-                                <option value="Weather">Weather</option>
-                                <option value="Other">Other</option>
-                            </select>
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <!-- Potential Payout Calculation -->
-                        <div class="col-12">
-                            <div class="alert alert-info">
-                                <h6 class="mb-2">
-                                    <i data-feather="dollar-sign" class="me-2"></i>
-                                    Payout Calculator
-                                </h6>
-                                <div id="payoutInfo">
-                                    <p class="mb-1">Enter amount and odds to see potential payout</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Submit Button -->
-                        <div class="col-12">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary" id="submitBtn">
-                                    <i data-feather="check" class="me-2"></i>
-                                    Create Bet
-                                </button>
-                                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                                    <i data-feather="x" class="me-2"></i>
-                                    Cancel
-                                </a>
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">Create <span class="text-gradient">New Bet</span></h1>
+                            <p class="welcome-subtitle">Set up your betting challenge and attract participants</p>
+                            <div class="user-badge">
+                                <i data-feather="target" class="me-1"></i>
+                                <span>Fair & Transparent</span>
                             </div>
                         </div>
                     </div>
-                </form>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-2"></i>
+                        Back to All Bets
+                    </a>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Tips Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i data-feather="help-circle" class="me-2"></i>
-                    Tips for Creating Great Bets
-                </h5>
-            </div>
-            <div class="card-body">
-                <ul class="mb-0">
-                    <li><strong>Be Specific:</strong> Clear, specific bet conditions prevent disputes</li>
-                    <li><strong>Set Fair Odds:</strong> Competitive odds attract more participants</li>
-                    <li><strong>Choose Verifiable Outcomes:</strong> Ensure the result can be objectively determined</li>
-                    <li><strong>Include Time Limits:</strong> Specify when the bet expires or concludes</li>
-                    <li><strong>Consider the Amount:</strong> Set amounts that are reasonable for your target audience</li>
-                </ul>
+    <!-- Create Bet Form -->
+    <div class="dashboard-stats">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <!-- Main Form Card -->
+                    <div class="bets-card">
+                        <div class="bets-header">
+                            <div class="bets-title">
+                                <div class="bets-icon" style="background: linear-gradient(135deg, #ffd700, #ff6b35);">
+                                    <i data-feather="edit-3"></i>
+                                </div>
+                                <div>
+                                    <h5>Bet Details</h5>
+                                    <p>Fill in the information for your bet</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bets-content">
+                            <form id="createBetForm">
+                                <div class="row g-4">
+                                    <!-- Title -->
+                                    <div class="col-12">
+                                        <label for="title" class="form-label text-white">Bet Title <span class="text-warning">*</span></label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="type"></i>
+                                            </div>
+                                            <input type="text" class="form-control auth-input" id="title" name="title" required
+                                                   placeholder="Enter a descriptive title for your bet">
+                                        </div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <div class="col-12">
+                                        <label for="description" class="form-label text-white">Description <span class="text-warning">*</span></label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="file-text"></i>
+                                            </div>
+                                            <textarea class="form-control auth-input" id="description" name="description" rows="3" required
+                                                      placeholder="Provide detailed information about the bet conditions and terms" style="padding-left: 3rem;"></textarea>
+                                        </div>
+                                        <div class="form-hint">Be specific about the conditions and how the bet will be resolved</div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <!-- Amount and Odds -->
+                                    <div class="col-md-6">
+                                        <label for="amount" class="form-label text-white">Bet Amount <span class="text-warning">*</span></label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="dollar-sign"></i>
+                                            </div>
+                                            <input type="number" class="form-control auth-input" id="amount" name="amount" 
+                                                   min="0.01" step="0.01" required placeholder="0.00">
+                                        </div>
+                                        <div class="form-hint">Minimum: $0.01</div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="odds" class="form-label text-white">Odds (X:1) <span class="text-warning">*</span></label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="trending-up"></i>
+                                            </div>
+                                            <input type="number" class="form-control auth-input" id="odds" name="odds" 
+                                                   min="0.1" step="0.1" required placeholder="2.0">
+                                        </div>
+                                        <div class="form-hint">Higher odds = higher potential payout</div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <!-- Category -->
+                                    <div class="col-12">
+                                        <label for="category" class="form-label text-white">Category <span class="text-warning">*</span></label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="tag"></i>
+                                            </div>
+                                            <select class="form-control auth-input" id="category" name="category" required>
+                                                <option value="">Select a category</option>
+                                                <option value="Sports">Sports</option>
+                                                <option value="Politics">Politics</option>
+                                                <option value="Entertainment">Entertainment</option>
+                                                <option value="Technology">Technology</option>
+                                                <option value="Finance">Finance</option>
+                                                <option value="Weather">Weather</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <!-- Potential Payout Calculation -->
+                                    <div class="col-12">
+                                        <div class="stat-card" style="padding: 1.5rem;">
+                                            <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                                                <i data-feather="calculator"></i>
+                                            </div>
+                                            <div class="stat-content">
+                                                <div class="stat-label">Payout Calculator</div>
+                                                <div id="payoutInfo" style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">
+                                                    Enter amount and odds to see potential payout
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Button -->
+                                    <div class="col-12">
+                                        <div class="d-flex gap-3">
+                                            <button type="submit" class="btn btn-gradient flex-fill" id="submitBtn">
+                                                <i data-feather="check" class="me-2"></i>
+                                                Create Bet
+                                            </button>
+                                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                                                <i data-feather="x" class="me-2"></i>
+                                                Cancel
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tips Card -->
+                    <div class="bets-card mt-4">
+                        <div class="bets-header">
+                            <div class="bets-title">
+                                <div class="bets-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                                    <i data-feather="help-circle"></i>
+                                </div>
+                                <div>
+                                    <h5>Tips for Creating Great Bets</h5>
+                                    <p>Best practices for successful betting</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bets-content">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
+                                            <i data-feather="target"></i>
+                                        </div>
+                                        <div class="benefit-text">
+                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Be Specific</h6>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Clear conditions prevent disputes</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
+                                            <i data-feather="trending-up"></i>
+                                        </div>
+                                        <div class="benefit-text">
+                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Set Fair Odds</h6>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Competitive odds attract participants</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
+                                            <i data-feather="check-circle"></i>
+                                        </div>
+                                        <div class="benefit-text">
+                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Verifiable Outcomes</h6>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Ensure results can be determined</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
+                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
+                                            <i data-feather="clock"></i>
+                                        </div>
+                                        <div class="benefit-text">
+                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Include Time Limits</h6>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Specify when bet expires</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -131,7 +244,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const oddsInput = document.getElementById('odds');
     const payoutInfo = document.getElementById('payoutInfo');
     const submitBtn = document.getElementById('submitBtn');
-    const successModal = new bootstrap.Modal(document.getElementById('successModal'));
 
     // Calculate and display potential payout
     function updatePayout() {
@@ -142,11 +254,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const potentialWin = amount * odds;
             const totalPayout = amount + potentialWin;
             
-            payoutInfo.innerHTML = '<p class="mb-1"><strong>Your stake:</strong> $' + amount.toFixed(2) + '</p>' +
-                '<p class="mb-1"><strong>Potential win:</strong> $' + potentialWin.toFixed(2) + '</p>' +
-                '<p class="mb-0"><strong>Total potential return:</strong> $' + totalPayout.toFixed(2) + '</p>';
+            payoutInfo.innerHTML = 
+                '<div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem;"><strong>Your stake:</strong> <span class="text-warning">$' + amount.toFixed(2) + '</span></div>' +
+                '<div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem;"><strong>Potential win:</strong> <span class="text-success">$' + potentialWin.toFixed(2) + '</span></div>' +
+                '<div style="color: rgba(255, 255, 255, 0.9);"><strong>Total return:</strong> <span class="text-info">$' + totalPayout.toFixed(2) + '</span></div>';
         } else {
-            payoutInfo.innerHTML = '<p class="mb-1">Enter amount and odds to see potential payout</p>';
+            payoutInfo.innerHTML = 'Enter amount and odds to see potential payout';
         }
     }
 
@@ -218,15 +331,15 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(function(result) {
             if (result.success) {
-                // Show success modal and redirect after a delay
-                successModal.show();
+                // Show success and redirect
+                alert('Bet created successfully! Redirecting to dashboard...');
                 form.reset();
                 updatePayout();
                 
-                // Auto-redirect to dashboard after 2 seconds
+                // Auto-redirect to dashboard after a delay
                 setTimeout(function() {
                     window.location.href = '/dashboard';
-                }, 2000);
+                }, 1000);
             } else {
                 alert('Error: ' + result.error);
             }

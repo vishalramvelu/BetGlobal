@@ -16,10 +16,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
 </head>
 <body>
-    <!-- Navigation -->
+    <!-- Landing Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark landing-navbar">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
+            <a class="navbar-brand" href="{{ url_for('landing') }}">
                 <div class="brand-icon">
                     <i data-feather="trending-up"></i>
                 </div>
@@ -31,57 +31,23 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto align-items-center">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                            <i data-feather="list" class="me-1"></i>
-                            All Bets
+                        <a class="nav-link nav-link-clean" href="{{ url_for('login') }}">
+                            Login
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i data-feather="pie-chart" class="me-1"></i>
-                            Dashboard
+                        <a class="nav-link nav-link-clean" href="{{ url_for('signup') }}">
+                            Sign Up
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'create_bet_page' %}active{% endif %}" href="{{ url_for('create_bet_page') }}">
-                            <i data-feather="plus-circle" class="me-1"></i>
-                            Create Bet
+                    <li class="nav-item ms-3">
+                        <a class="btn btn-gradient-nav" href="{{ url_for('start_betting') }}">
+                            Start Betting
                         </a>
                     </li>
                 </ul>
-                
-                <!-- Right Side Menu -->
-                <div class="navbar-nav align-items-center">
-                    <!-- Wallet Button -->
-                    <div class="nav-item me-3">
-                        <a class="btn btn-gradient-nav" href="{{ url_for('wallet') }}">
-                            <i data-feather="credit-card" class="me-1"></i>
-                            Wallet
-                        </a>
-                    </div>
-                    
-                    <!-- User Menu -->
-                    <div class="nav-item dropdown">
-                        <a class="nav-link nav-link-clean dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i data-feather="user" class="me-1"></i>
-                            {{ session.get('username', 'User') }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
-                                <i data-feather="pie-chart" class="me-2"></i>Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('wallet') }}">
-                                <i data-feather="credit-card" class="me-2"></i>Wallet
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">
-                                <i data-feather="log-out" class="me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </nav>
@@ -101,13 +67,8 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="{% block main_class %}container my-4{% endblock %}">
-        {% block content %}
-        <div class="text-center py-5">
-            <h1>Welcome to BetGlobal</h1>
-            <p class="lead">Your global betting platform</p>
-        </div>
-        {% endblock %}
+    <main>
+        {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
@@ -143,9 +104,8 @@
                     <div class="footer-section">
                         <h6 class="footer-title">Platform</h6>
                         <ul class="footer-links">
-                            <li><a href="{{ url_for('index') }}">All Bets</a></li>
-                            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
-                            <li><a href="{{ url_for('create_bet_page') }}">Create Bet</a></li>
+                            <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+                            <li><a href="{{ url_for('login') }}">Login</a></li>
                         </ul>
                     </div>
                 </div>
@@ -189,7 +149,6 @@
     <script>
         feather.replace();
     </script>
-    
     
     {% block scripts %}{% endblock %}
 </body>

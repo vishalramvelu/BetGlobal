@@ -1,0 +1,192 @@
+{% extends "landing_base.html" %}
+
+{% block title %}Sign Up - BetGlobal{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-bg"></div>
+    <div class="container py-5">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="auth-visual">
+                    <div class="visual-content">
+                        <h3 class="visual-title">Start Your Betting Journey</h3>
+                        <p class="visual-subtitle">Join thousands of users who are already winning with peer-to-peer betting. No house edge, just pure competition.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-5 col-md-7">
+                <div class="auth-card">
+                    <div class="auth-header text-center mb-4">
+                        <div class="auth-brand mb-3">
+                            <div class="brand-icon">
+                                <i data-feather="trending-up"></i>
+                            </div>
+                            <span class="brand-text">BetGlobal</span>
+                        </div>
+                        <h2 class="auth-title">Create Account</h2>
+                        <p class="auth-subtitle">Join the future of betting in just minutes</p>
+                    </div>
+
+                    <form id="signupForm" method="POST" class="auth-form">
+                        <div class="form-group mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="user"></i>
+                                </div>
+                                <input type="text" class="form-control auth-input" id="username" name="username" 
+                                       placeholder="Choose a username" required>
+                            </div>
+                            <div class="form-hint">3-20 characters, letters and numbers only</div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="mail"></i>
+                                </div>
+                                <input type="email" class="form-control auth-input" id="email" name="email" 
+                                       placeholder="Enter your email" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                <input type="password" class="form-control auth-input" id="password" name="password" 
+                                       placeholder="Create a strong password" required>
+                            </div>
+                            <div class="form-hint">Minimum 6 characters</div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                <input type="password" class="form-control auth-input" id="confirm_password" name="confirm_password" 
+                                       placeholder="Confirm your password" required>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input auth-checkbox" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" class="auth-link">Terms of Service</a> 
+                                and <a href="#" class="auth-link">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
+                            <i data-feather="user-plus" class="me-2"></i>
+                            <span>Create Account</span>
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (confirmPassword && password !== confirmPassword) {
+        this.setCustomValidity("Passwords don't match");
+        this.classList.add('is-invalid');
+    } else {
+        this.setCustomValidity("");
+        this.classList.remove('is-invalid');
+    }
+});
+
+document.getElementById('signupForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Validate password confirmation
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm_password').value;
+    
+    if (password !== confirmPassword) {
+        document.getElementById('confirm_password').setCustomValidity("Passwords don't match");
+        document.getElementById('confirm_password').reportValidity();
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+    
+    fetch('{{ url_for("signup") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: formData.get('username'),
+            email: formData.get('email'),
+            password: formData.get('password'),
+            confirm_password: formData.get('confirm_password')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and redirect
+            const successAlert = document.createElement('div');
+            successAlert.className = 'alert alert-success';
+            successAlert.innerHTML = 'Account created successfully! Redirecting...';
+            this.insertBefore(successAlert, this.firstChild);
+            
+            setTimeout(() => {
+                window.location.href = data.redirect || '{{ url_for("index") }}';
+            }, 1500);
+        } else {
+            // Show error
+            let alertDiv = document.querySelector('.alert');
+            if (alertDiv) {
+                alertDiv.remove();
+            }
+            
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                ${data.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            this.insertBefore(errorAlert, this.firstChild);
+            
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            feather.replace();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    });
+});
+</script>
+{% endblock %}

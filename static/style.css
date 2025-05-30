@@ -1,11 +1,18 @@
 /* Custom styles for the betting platform */
 
 :root {
-    --primary-color: 210 90% 50%; /* Bootstrap primary blue */
+    --primary-color: 32 100% 60%; /* Orange primary */
     --success-color: 145 80% 40%; /* Bootstrap success green */
     --danger-color: 0 85% 60%; /* Bootstrap danger red */
     --warning-color: 45 100% 50%; /* Bootstrap warning yellow */
-    --info-color: 195 85% 50%; /* Bootstrap info cyan */
+    --info-color: 0 0% 50%; /* Gray info */
+}
+
+/* Global body styling to override Bootstrap theme */
+body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    color: #fff !important;
+    min-height: 100vh;
 }
 
 /* Smooth transitions for all interactive elements */
@@ -61,7 +68,7 @@
 }
 
 .bet-card:hover {
-    border-left-color: var(--bs-primary);
+    border-left-color: #ff6b35;
 }
 
 .bet-card.status-open {
@@ -73,7 +80,7 @@
 }
 
 .bet-card.status-completed {
-    border-left-color: var(--bs-info);
+    border-left-color: #6c757d;
 }
 
 /* Badge enhancements */
@@ -85,8 +92,8 @@
 /* Form enhancements */
 .form-control:focus,
 .form-select:focus {
-    border-color: rgba(13, 110, 253, 0.5);
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: rgba(255, 107, 53, 0.5);
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
 }
 
 /* Loading spinner */
@@ -171,12 +178,54 @@ footer {
 
 /* Enhanced dropdowns */
 .dropdown-menu {
-    border: 1px solid rgba(255, 255, 255, 0.125);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    background: rgba(45, 45, 45, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3) !important;
+}
+
+.dropdown-item {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 500;
 }
 
 .dropdown-item:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    color: #ffd700 !important;
+}
+
+.dropdown-item:focus {
+    background-color: rgba(255, 215, 0, 0.1) !important;
+    color: #ffd700 !important;
+}
+
+.dropdown-item:active {
+    background-color: rgba(255, 215, 0, 0.2) !important;
+    color: #ffd700 !important;
+}
+
+.dropdown-divider {
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Override bootstrap dropdown toggle colors */
+.dropdown-toggle {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.dropdown-toggle:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dropdown-toggle:focus {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    box-shadow: none !important;
+}
+
+.dropdown-toggle::after {
+    border-top-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Smooth page transitions */

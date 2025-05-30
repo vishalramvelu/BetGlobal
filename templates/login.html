@@ -1,0 +1,180 @@
+{% extends "landing_base.html" %}
+
+{% block title %}Login - BetGlobal{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-bg"></div>
+    <div class="container py-5">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-5 col-md-7">
+                <div class="auth-card">
+                    <div class="auth-header text-center mb-4">
+                        <div class="auth-brand mb-3">
+                            <div class="brand-icon">
+                                <i data-feather="trending-up"></i>
+                            </div>
+                            <span class="brand-text">BetGlobal</span>
+                        </div>
+                        <h2 class="auth-title">Welcome Back</h2>
+                        <p class="auth-subtitle">Sign in to your account and start winning</p>
+                    </div>
+
+                    <form id="loginForm" method="POST" class="auth-form">
+                        <div class="form-group mb-4">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="user"></i>
+                                </div>
+                                <input type="text" class="form-control auth-input" id="username" name="username" 
+                                       placeholder="Enter your username" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                <input type="password" class="form-control auth-input" id="password" name="password" 
+                                       placeholder="Enter your password" required>
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input type="checkbox" class="form-check-input auth-checkbox" id="remember" name="remember">
+                            <label class="form-check-label" for="remember">
+                                Remember me for 30 days
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
+                            <i data-feather="log-in" class="me-2"></i>
+                            <span>Sign In</span>
+                        </button>
+                    </form>
+
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+
+                    <div class="auth-links text-center">
+                        <p class="mb-3">Don't have an account? 
+                            <a href="{{ url_for('signup') }}" class="auth-link">
+                                Create one now
+                            </a>
+                        </p>
+                        <a href="{{ url_for('landing') }}" class="back-link">
+                            <i data-feather="arrow-left" class="me-1"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="auth-visual">
+                    <div class="visual-content">
+                        <h3 class="visual-title">Join the Global Betting Revolution</h3>
+                        <p class="visual-subtitle">Connect with thousands of users worldwide. No house edge, just peer-to-peer betting at its finest.</p>
+                        
+                        <div class="feature-highlights">
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="users"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>Global Community</h6>
+                                    <p>Bet with users worldwide</p>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="shield"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>Secure & Fair</h6>
+                                    <p>Advanced security measures</p>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="trending-up"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>Better Odds</h6>
+                                    <p>No house edge means better returns</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing In...';
+    
+    fetch('{{ url_for("login") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: formData.get('username'),
+            password: formData.get('password')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect || '{{ url_for("index") }}';
+        } else {
+            // Show error
+            let alertDiv = document.querySelector('.alert');
+            if (alertDiv) {
+                alertDiv.remove();
+            }
+            
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+            errorAlert.innerHTML = `
+                ${data.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            this.insertBefore(errorAlert, this.firstChild);
+            
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            feather.replace();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    });
+});
+</script>
+{% endblock %}

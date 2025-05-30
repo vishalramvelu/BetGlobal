@@ -1,158 +1,206 @@
 {% extends "base.html" %}
 
-{% block title %}All Bets - Global Betting Platform{% endblock %}
+{% block title %}All Bets - BetGlobal{% endblock %}
+
+{% block main_class %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">
-        <i data-feather="list" class="me-2"></i>
-        All Bets
-    </h1>
-    <a href="{{ url_for('create_bet_page') }}" class="btn btn-primary">
-        <i data-feather="plus" class="me-2"></i>
-        Create New Bet
-    </a>
-</div>
-
-<!-- Search and Filters -->
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="GET" class="row g-3">
-            <div class="col-md-4">
-                <label for="search" class="form-label">Search</label>
-                <input type="text" class="form-control" id="search" name="search" 
-                       placeholder="Search bets..." value="{{ current_search }}">
-            </div>
-            <div class="col-md-3">
-                <label for="category" class="form-label">Category</label>
-                <select class="form-select" id="category" name="category">
-                    <option value="">All Categories</option>
-                    {% for category in categories %}
-                        <option value="{{ category }}" {% if category == current_category %}selected{% endif %}>
-                            {{ category }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="status" class="form-label">Status</label>
-                <select class="form-select" id="status" name="status">
-                    <option value="">All Status</option>
-                    <option value="open" {% if current_status == 'open' %}selected{% endif %}>Open</option>
-                    <option value="accepted" {% if current_status == 'accepted' %}selected{% endif %}>Accepted</option>
-                    <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
-                </select>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i data-feather="search" class="me-1"></i>
-                    Filter
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Bets Grid -->
-{% if error %}
-    <div class="alert alert-danger" role="alert">
-        <i data-feather="alert-circle" class="me-2"></i>
-        {{ error }}
-    </div>
-{% elif not bets %}
-    <div class="text-center py-5">
-        <i data-feather="inbox" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
-        <h3 class="text-muted">No bets found</h3>
-        <p class="text-muted">
-            {% if current_search or current_category or current_status %}
-                Try adjusting your filters or <a href="{{ url_for('index') }}">view all bets</a>.
-            {% else %}
-                Be the first to <a href="{{ url_for('create_bet_page') }}">create a bet</a>!
-            {% endif %}
-        </p>
-    </div>
-{% else %}
-    <div class="row">
-        {% for bet in bets %}
-            <div class="col-lg-6 col-xl-4 mb-4">
-                <div class="card h-100">
-                    <div class="card-header d-flex justify-content-between align-items-start">
-                        <div>
-                            <h5 class="card-title mb-1">{{ bet.title }}</h5>
-                            <small class="text-muted">
-                                by {{ users.get(bet.creator_id, {}).get('username', 'Unknown') }}
-                            </small>
+<div class="dashboard-container">
+    <div class="dashboard-bg"></div>
+    
+    <!-- Page Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="user-welcome">
+                        <div class="welcome-icon">
+                            <i data-feather="layers"></i>
                         </div>
-                        <span class="badge bg-{{ 'success' if bet.status == 'open' else 'secondary' if bet.status == 'accepted' else 'primary' }}">
-                            {{ bet.status.title() }}
-                        </span>
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">{{ bet.description }}</p>
-                        
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <small class="text-muted d-block">Amount</small>
-                                <strong>${{ "%.2f"|format(bet.amount) }}</strong>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Odds</small>
-                                <strong>{{ bet.odds }}:1</strong>
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">All <span class="text-gradient">Bets</span></h1>
+                            <p class="welcome-subtitle">Discover and join exciting betting opportunities</p>
+                            <div class="user-badge">
+                                <i data-feather="trending-up" class="me-1"></i>
+                                <span>{{ bets|length }} Active Bets</span>
                             </div>
                         </div>
-                        
-                        <div class="mb-2">
-                            <small class="text-muted">Category:</small>
-                            <span class="badge bg-info">{{ bet.category }}</span>
-                        </div>
-                        
-                        <small class="text-muted">
-                            Created: {{ bet.created_at.strftime('%Y-%m-%d %H:%M') }}
-                        </small>
                     </div>
-                    
-                    {% if bet.status == 'open' %}
-                        <div class="card-footer">
-                            {% set current_user_id = session.get('user_id', 1) %}
-                            {% if bet.creator_id == current_user_id %}
-                                <button class="btn btn-outline-secondary w-100" disabled>
-                                    Your Bet
-                                </button>
-                            {% else %}
-                                <button class="btn btn-success w-100 accept-bet-btn" data-bet-id="{{ bet.id }}">
-                                    <i data-feather="check" class="me-2"></i>
-                                    Accept Bet
-                                </button>
-                            {% endif %}
-                        </div>
-                    {% elif bet.status == 'accepted' %}
-                        <div class="card-footer">
-                            <small class="text-muted">
-                                Accepted by {{ users.get(bet.acceptor_id, {}).get('username', 'Unknown') }}
-                            </small>
-                        </div>
-                    {% endif %}
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('create_bet_page') }}" class="btn btn-gradient btn-lg">
+                        <i data-feather="plus" class="me-2"></i>
+                        Create New Bet
+                    </a>
                 </div>
             </div>
-        {% endfor %}
+        </div>
     </div>
-{% endif %}
+
+    <!-- Search and Filters -->
+    <div class="dashboard-stats">
+        <div class="container">
+            <div class="bets-card">
+                <div class="bets-header">
+                    <div class="bets-title">
+                        <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                            <i data-feather="filter"></i>
+                        </div>
+                        <div>
+                            <h5>Filter & Search</h5>
+                            <p>Find the perfect bet for you</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bets-content">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label text-white">Search</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="search"></i>
+                                </div>
+                                <input type="text" class="form-control auth-input" id="search" name="search" 
+                                       placeholder="Search bets..." value="{{ current_search }}">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="category" class="form-label text-white">Category</label>
+                            <select class="form-control auth-input" id="category" name="category">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category }}" {% if category == current_category %}selected{% endif %}>
+                                        {{ category }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label text-white">Status</label>
+                            <select class="form-control auth-input" id="status" name="status">
+                                <option value="">All Status</option>
+                                <option value="open" {% if current_status == 'open' %}selected{% endif %}>Open</option>
+                                <option value="accepted" {% if current_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-gradient w-100">
+                                <i data-feather="search" class="me-1"></i>
+                                Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bets Grid -->
+    <div class="dashboard-bets">
+        <div class="container">
+            {% if error %}
+                <div class="alert alert-danger dashboard-alert" role="alert">
+                    <i data-feather="alert-circle" class="me-2"></i>
+                    {{ error }}
+                </div>
+            {% elif not bets %}
+                <div class="dashboard-empty">
+                    <div class="empty-icon">
+                        <i data-feather="inbox"></i>
+                    </div>
+                    <h3>No bets found</h3>
+                    <p>
+                        {% if current_search or current_category or current_status %}
+                            Try adjusting your filters or <a href="{{ url_for('index') }}" class="text-warning">view all bets</a>.
+                        {% else %}
+                            Be the first to <a href="{{ url_for('create_bet_page') }}" class="text-warning">create a bet</a>!
+                        {% endif %}
+                    </p>
+                </div>
+            {% else %}
+                <div class="row g-4">
+                    {% for bet in bets %}
+                        <div class="col-lg-6 col-xl-4">
+                            <div class="live-bet-card">
+                                <div class="bet-header">
+                                    <div class="bet-category">
+                                        <i data-feather="tag"></i>
+                                        {{ bet.category }}
+                                    </div>
+                                    <div class="bet-status">
+                                        <div class="pulse-dot"></div>
+                                        <span class="status-badge status-{{ bet.status }}">{{ bet.status.title() }}</span>
+                                    </div>
+                                </div>
+                                
+                                <h6 class="bet-title">{{ bet.title }}</h6>
+                                <p class="bet-description">{{ bet.description[:100] }}{% if bet.description|length > 100 %}...{% endif %}</p>
+                                
+                                <div class="bet-details">
+                                    <div class="bet-amount">
+                                        <i data-feather="dollar-sign"></i>
+                                        ${{ "%.2f"|format(bet.amount) }}
+                                    </div>
+                                    <div class="bet-odds">
+                                        <i data-feather="trending-up"></i>
+                                        {{ bet.odds }}:1
+                                    </div>
+                                    <div class="bet-users">
+                                        <i data-feather="user"></i>
+                                        {{ users.get(bet.creator_id).username if users.get(bet.creator_id) else 'Unknown' }}
+                                    </div>
+                                </div>
+                                
+                                {% if bet.status == 'open' %}
+                                    <div class="mt-3">
+                                        {% set current_user_id = session.get('user_id') %}
+                                        {% if bet.creator_id == current_user_id %}
+                                            <button class="btn btn-outline-secondary w-100" disabled>
+                                                <i data-feather="user" class="me-2"></i>
+                                                Your Bet
+                                            </button>
+                                        {% else %}
+                                            <button class="btn btn-gradient w-100 accept-bet-btn" data-bet-id="{{ bet.id }}">
+                                                <i data-feather="check" class="me-2"></i>
+                                                Accept Bet
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                {% elif bet.status == 'accepted' %}
+                                    <div class="mt-3 text-center">
+                                        <small style="color: rgba(255, 255, 255, 0.6);">
+                                            Accepted by {{ users.get(bet.acceptor_id).username if users.get(bet.acceptor_id) else 'Unknown' }}
+                                        </small>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 
 <!-- Accept Bet Modal -->
-<div class="modal fade" id="acceptBetModal" tabindex="-1">
+<div class="modal fade" id="acceptBetModal" tabindex="-1" data-bs-theme="dark">
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Accept Bet</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h5 class="modal-title text-white">
+                    <i data-feather="check-circle" class="me-2 text-warning"></i>
+                    Accept Bet
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to accept this bet?</p>
+                <p class="text-white">Are you sure you want to accept this bet?</p>
                 <div id="betDetails"></div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" id="confirmAcceptBet">
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-gradient" id="confirmAcceptBet">
                     <i data-feather="check" class="me-2"></i>
                     Accept Bet
                 </button>
@@ -175,14 +223,24 @@ document.addEventListener('DOMContentLoaded', function() {
             currentBetId = this.dataset.betId;
             
             // Get bet details from the card
-            const card = this.closest('.card');
-            const title = card.querySelector('.card-title').textContent;
-            const amount = card.querySelector('strong').textContent;
+            const card = this.closest('.live-bet-card');
+            const title = card.querySelector('.bet-title').textContent;
+            const amount = card.querySelector('.bet-amount').textContent;
             
             document.getElementById('betDetails').innerHTML = `
-                <div class="alert alert-info">
-                    <strong>Bet:</strong> ${title}<br>
-                    <strong>Amount:</strong> ${amount}
+                <div class="bets-card" style="margin: 1rem 0;">
+                    <div class="bets-content" style="padding: 1rem;">
+                        <div class="row">
+                            <div class="col-6">
+                                <small style="color: rgba(255, 255, 255, 0.7);">Bet Title:</small>
+                                <div class="text-white fw-bold">${title}</div>
+                            </div>
+                            <div class="col-6">
+                                <small style="color: rgba(255, 255, 255, 0.7);">Amount:</small>
+                                <div class="text-warning fw-bold">${amount}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
             

@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet - BetGlobal{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-bg"></div>
+    
+    {% if error %}
+        <div class="alert alert-danger dashboard-alert" role="alert">
+            <i data-feather="alert-circle" class="me-2"></i>
+            {{ error }}
+        </div>
+    {% elif not user %}
+        <div class="dashboard-empty">
+            <div class="empty-icon">
+                <i data-feather="user-x"></i>
+            </div>
+            <h3>User not found</h3>
+            <p>Please try again or contact support.</p>
+        </div>
+    {% else %}
+        <!-- Wallet Header -->
+        <div class="dashboard-header">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-lg-8">
+                        <div class="user-welcome">
+                            <div class="welcome-icon">
+                                <i data-feather="credit-card"></i>
+                            </div>
+                            <div class="welcome-content">
+                                <h1 class="welcome-title">Your <span class="text-gradient">Wallet</span></h1>
+                                <p class="welcome-subtitle">Manage your funds and transactions</p>
+                                <div class="user-badge">
+                                    <i data-feather="shield" class="me-1"></i>
+                                    <span>Secure & Protected</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 text-lg-end">
+                        <div class="profit-display">
+                            <div class="profit-label">Current Balance</div>
+                            <div class="profit-amount profit-positive" id="current-balance">
+                                ${{ "%.2f"|format(user.balance or 0) }}
+                            </div>
+                            <div class="profit-trend">
+                                <i data-feather="dollar-sign" class="me-1"></i>
+                                <span>Available Funds</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Actions -->
+        <div class="dashboard-stats">
+            <div class="container">
+                <div class="row g-4">
+                    <!-- Deposit Section -->
+                    <div class="col-lg-6">
+                        <div class="bets-card">
+                            <div class="bets-header">
+                                <div class="bets-title">
+                                    <div class="bets-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                                        <i data-feather="plus-circle"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Deposit Funds</h5>
+                                        <p>Add money to your wallet</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bets-content">
+                                <form id="depositForm" class="wallet-form">
+                                    <div class="form-group mb-3">
+                                        <label for="depositAmount" class="form-label text-white">Amount</label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="dollar-sign"></i>
+                                            </div>
+                                            <input type="number" class="form-control auth-input" id="depositAmount" 
+                                                   placeholder="Enter amount" min="1" max="10000" step="0.01" required>
+                                        </div>
+                                        <div class="form-hint">Minimum: $1.00, Maximum: $10,000.00</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-gradient w-100">
+                                        <i data-feather="plus" class="me-2"></i>
+                                        Deposit Money
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Withdraw Section -->
+                    <div class="col-lg-6">
+                        <div class="bets-card">
+                            <div class="bets-header">
+                                <div class="bets-title">
+                                    <div class="bets-icon" style="background: linear-gradient(135deg, #dc3545, #c82333);">
+                                        <i data-feather="minus-circle"></i>
+                                    </div>
+                                    <div>
+                                        <h5>Withdraw Funds</h5>
+                                        <p>Take money from your wallet</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bets-content">
+                                <form id="withdrawForm" class="wallet-form">
+                                    <div class="form-group mb-3">
+                                        <label for="withdrawAmount" class="form-label text-white">Amount</label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="dollar-sign"></i>
+                                            </div>
+                                            <input type="number" class="form-control auth-input" id="withdrawAmount" 
+                                                   placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
+                                        </div>
+                                        <div class="form-hint">Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
+                                    </div>
+                                    <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
+                                        <i data-feather="minus" class="me-2"></i>
+                                        Withdraw Money
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Statistics -->
+        <div class="dashboard-bets">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                <i data-feather="credit-card"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">${{ "%.2f"|format(user.balance or 0) }}</div>
+                                <div class="stat-label">Current Balance</div>
+                                <div class="stat-description">Available for betting</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #1e7e34);">
+                                <i data-feather="trending-up"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">{% if user.total_profit >= 0 %}+{% endif %} ${{ "%.2f"|format(user.total_profit) }}</div>
+                                <div class="stat-label">Total Profit</div>
+                                <div class="stat-description">All-time earnings</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
+                                <i data-feather="activity"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-number">${{ "%.2f"|format((user.balance or 0) + user.total_profit) }}</div>
+                                <div class="stat-label">Total Value</div>
+                                <div class="stat-description">Balance + Profit</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Deposit Form Handler
+document.getElementById('depositForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const amount = document.getElementById('depositAmount').value;
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid amount', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    fetch('{{ url_for("api_deposit") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            amount: parseFloat(amount)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            updateBalance(data.new_balance);
+            document.getElementById('depositAmount').value = '';
+            // Update withdraw max
+            document.getElementById('withdrawAmount').max = data.new_balance;
+            document.querySelector('#withdrawForm .form-hint').textContent = `Available: $${data.new_balance.toFixed(2)}`;
+        } else {
+            showAlert(data.error, 'danger');
+        }
+        
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Deposit failed', 'danger');
+        
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    });
+});
+
+// Withdraw Form Handler
+document.getElementById('withdrawForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const amount = document.getElementById('withdrawAmount').value;
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    if (!amount || amount <= 0) {
+        showAlert('Please enter a valid amount', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    fetch('{{ url_for("api_withdraw") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            amount: parseFloat(amount)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            updateBalance(data.new_balance);
+            document.getElementById('withdrawAmount').value = '';
+            // Update withdraw max
+            document.getElementById('withdrawAmount').max = data.new_balance;
+            document.querySelector('#withdrawForm .form-hint').textContent = `Available: $${data.new_balance.toFixed(2)}`;
+        } else {
+            showAlert(data.error, 'danger');
+        }
+        
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('Withdrawal failed', 'danger');
+        
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+        feather.replace();
+    });
+});
+
+// Helper Functions
+function updateBalance(newBalance) {
+    const balanceElement = document.getElementById('current-balance');
+    balanceElement.textContent = `$${newBalance.toFixed(2)}`;
+    
+    // Update statistics cards
+    const statCards = document.querySelectorAll('.stat-number');
+    if (statCards.length >= 1) {
+        statCards[0].textContent = `$${newBalance.toFixed(2)}`;
+    }
+    if (statCards.length >= 3) {
+        const totalProfit = parseFloat('{{ user.total_profit }}') || 0;
+        statCards[2].textContent = `$${(newBalance + totalProfit).toFixed(2)}`;
+    }
+}
+
+function showAlert(message, type) {
+    // Remove existing alerts
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert && existingAlert.classList.contains('dashboard-alert')) {
+        existingAlert.remove();
+    }
+    
+    // Create new alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show dashboard-alert`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert after dashboard-bg
+    const dashboardBg = document.querySelector('.dashboard-bg');
+    dashboardBg.parentNode.insertBefore(alertDiv, dashboardBg.nextSibling);
+    
+    // Auto-dismiss after 5 seconds for success messages
+    if (type === 'success') {
+        setTimeout(() => {
+            if (alertDiv && alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}
