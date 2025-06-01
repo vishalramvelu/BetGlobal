@@ -6,6 +6,9 @@ class User(db.Model):
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
+
+    stripe_account_id = db.Column(db.String(255), nullable = True)
+
     balance = db.Column(db.Float, default=100.0)  # Starting balance
     total_profit = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

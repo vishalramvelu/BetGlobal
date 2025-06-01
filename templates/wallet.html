@@ -76,19 +76,19 @@
                                 </div>
                             </div>
                             <div class="bets-content">
-                                <form id="depositForm" class="wallet-form">
+                                <form id="depositForm" class="wallet-form" action = "/create-checkout-session" method = "post">
                                     <div class="form-group mb-3">
                                         <label for="depositAmount" class="form-label text-white">Amount</label>
                                         <div class="input-wrapper">
                                             <div class="input-icon">
                                                 <i data-feather="dollar-sign"></i>
                                             </div>
-                                            <input type="number" class="form-control auth-input" id="depositAmount" 
+                                            <input type="number" class="form-control auth-input" id="depositAmount" name = "amount"
                                                    placeholder="Enter amount" min="1" max="10000" step="0.01" required>
                                         </div>
                                         <div class="form-hint">Minimum: $1.00, Maximum: $10,000.00</div>
                                     </div>
-                                    <button type="submit" class="btn btn-gradient w-100">
+                                    <button type="submit" id = "checkout-button" class="btn btn-gradient w-100">
                                         <i data-feather="plus" class="me-2"></i>
                                         Deposit Money
                                     </button>
@@ -183,8 +183,12 @@
 </div>
 {% endblock %}
 
+{#
+
 {% block scripts %}
 <script>
+
+
 // Deposit Form Handler
 document.getElementById('depositForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -239,6 +243,7 @@ document.getElementById('depositForm').addEventListener('submit', function(e) {
         feather.replace();
     });
 });
+
 
 // Withdraw Form Handler
 document.getElementById('withdrawForm').addEventListener('submit', function(e) {
@@ -345,3 +350,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+
+#}

@@ -4,6 +4,12 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 from database import db
+from models import User, Bet
+
+from flask_migrate import Migrate
+
+import stripe
+
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,6 +29,8 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 
 # Initialize the app with the extension
 db.init_app(app)
+
+migrate = Migrate(app, db)
 
 # Enable CORS for cross-origin requests
 CORS(app)
@@ -280,10 +288,160 @@ def wallet():
             flash('User not found', 'error')
             return redirect(url_for('index'))
         
-        return render_template('wallet.html', user=user)
+        can_withdraw = False
+        if user.stripe_account_id:
+            acct = stripe.Account.retrieve(user.stripe_account_id)
+            # Check that payouts are enabled on that connected account
+            can_withdraw = acct.payouts_enabled and acct.charges_enabled
+        
+        return render_template("wallet.html", user=user, can_withdraw=can_withdraw)
+    
     except Exception as e:
         logging.error(f"Error in wallet route: {str(e)}")
         return render_template('wallet.html', user=None, error="Failed to load wallet")
+    
+@app.route("/create-checkout-session", methods = ["POST"])
+@login_required
+def create_checkout_session():
+    """
+    Stripe Checkout Session creation.
+    Expects the front-end <form> to POST an 'amount' field (in dollars),
+    then converts that to cents, creates a Stripe Session, and redirects.
+    """
+
+    # 1) Read 'amount' from the submitted form data
+    raw_amount = request.form.get("amount", "").strip()
+    if raw_amount == "":
+        # No amount provided in form
+        flash("Please enter a valid amount before checking out.", "error")
+        return redirect(url_for("wallet"))
+
+    try:
+        # 2) Convert to float and multiply by 100 to get cents
+        dollars = float(raw_amount)
+        if dollars < 1.0 or dollars > 10_000.0:
+            flash("Amount must be between $1.00 and $10,000.00.", "error")
+            return redirect(url_for("wallet"))
+        
+        amount_in_cents = int(dollars * 100)
+    except ValueError:
+        flash("Invalid amount format. Please enter a numeric value.", "error")
+        return redirect(url_for("wallet"))
+
+    try:
+        # 3) Create a Stripe Checkout Session
+        session_obj = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "product_data": {
+                            "name": "Deposit to BetGlobal Wallet",
+                            # (Optional) You can add "description", "images", or metadata here
+                        },
+                        "unit_amount": amount_in_cents,
+                    },
+                    "quantity": 1,
+                }
+            ],
+            mode="payment",
+            # After successful payment, Stripe will redirect here:
+            success_url=url_for("success", _external=True) + "?session_id={CHECKOUT_SESSION_ID}",
+            # If user cancels on Stripe, they return here:
+            cancel_url=url_for("cancelled", _external=True),
+        )
+
+        # 4) Redirect the client (303 See Other) to the Stripe-hosted Checkout page
+        return redirect(session_obj.url, code=303)
+
+    except Exception as e:
+        logging.error(f"Stripe Session Creation Error: {e}")
+        flash("Failed to create Stripe Checkout Session. Please try again.", "error")
+        return redirect(url_for("wallet"))
+    
+@app.route("/success")
+@login_required
+def success():
+    """
+    Customer lands here after a successful payment.
+    You can fetch the session_id from query string and optionally
+    use stripe.checkout.Session.retrieve(...) to get more details
+    (e.g. the actual amount paid, customer email, etc.).
+    """
+    session_id = request.args.get("session_id", None)
+    if not session_id:
+        return "Success page: missing session_id", 400
+
+    try:
+        # Retrieve the Checkout Session from Stripe (optional)
+        stripe_session = stripe.checkout.Session.retrieve(session_id)
+        amount_paid = stripe_session.amount_total / 100.0  # in dollars
+
+        # At this point, you should credit the user's wallet in your database.
+        # For example:
+        user_id = session.get("user_id")
+        user = get_user_by_id(user_id)
+        if user:
+            user.balance = (user.balance or 0) + (amount_paid)
+            db.session.commit()
+
+        return redirect(url_for("wallet"))
+
+    except Exception as e:
+        logging.error(f"Error retrieving Stripe session: {e}")
+        return "Error retrieving payment details", 500
+
+
+@app.route("/cancelled")
+@login_required
+def cancelled():
+    """Customer lands here if they cancel the Stripe Checkout flow."""
+    flash('Payment was canceled-no charge was made', 'error')
+    return redirect(url_for('wallet'))
+
+
+@app.route("/connect/create-account", methods = ["POST"])
+@login_required
+def create_connected_account():
+    """
+    1) Creates a Stripe Connect Express account for the user.
+    2) Generates an account link so they can enter KYC info & bank details (hosted by Stripe).
+    """
+
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for("wallet"))
+    
+    # 1) Create a new Express account for them if they don't already have one
+    if not user.stripe_account_id:
+        account = stripe.Account.create(
+            type="express",
+            country="US",
+            email=user.email,
+            capabilities={
+                "transfers": {"requested": True},
+            }
+        )
+        user.stripe_account_id = account.id
+        db.session.commit()
+    else:
+        account = stripe.Account.retrieve(user.stripe_account_id)
+
+    # 2) Create an Account Link so they can finish connecting (KYC + bank)
+    account_link = stripe.AccountLink.create(
+        account=account.id,
+        refresh_url=url_for("wallet", _external=True),
+        return_url=url_for("wallet", _external=True),
+        type="account_onboarding",
+    )
+
+    # 3) Redirect them to Stripe's hosted onboarding page
+    return redirect(account_link.url)
+
+
 
 @app.route('/api/wallet/deposit', methods=['POST'])
 @login_required
