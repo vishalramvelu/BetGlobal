@@ -112,23 +112,29 @@
                                 </div>
                             </div>
                             <div class="bets-content">
-                                <form id="withdrawForm" class="wallet-form">
-                                    <div class="form-group mb-3">
-                                        <label for="withdrawAmount" class="form-label text-white">Amount</label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="dollar-sign"></i>
+                                {% if not user.stripe_account_id %}
+                                <p>You must <a href="{{ url_for('create_connected_account') }}">set up your bank info</a> before withdrawing.</p>
+                                {% elif not can_withdraw %}
+                                <p>Your bank account or KYC is still pending. Please complete onboarding.</p>
+                                {% else %}
+                                    <form id="withdrawForm" action = "/create-payout" method = "post" class="wallet-form">
+                                        <div class="form-group mb-3">
+                                            <label for="withdrawAmount" class="form-label text-white">Amount</label>
+                                            <div class="input-wrapper">
+                                                <div class="input-icon">
+                                                    <i data-feather="dollar-sign"></i>
+                                                </div>
+                                                <input type="number" class="form-control auth-input" id="withdrawAmount" name = "amount"
+                                                    placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
                                             </div>
-                                            <input type="number" class="form-control auth-input" id="withdrawAmount" 
-                                                   placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
+                                            <div class="form-hint">Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
                                         </div>
-                                        <div class="form-hint">Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
-                                    </div>
-                                    <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
-                                        <i data-feather="minus" class="me-2"></i>
-                                        Withdraw Money
-                                    </button>
-                                </form>
+                                        <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
+                                            <i data-feather="minus" class="me-2"></i>
+                                            Withdraw Money
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

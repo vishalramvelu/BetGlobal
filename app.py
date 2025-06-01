@@ -385,8 +385,13 @@ def success():
         if user:
             user.balance = (user.balance or 0) + (amount_paid)
             db.session.commit()
-
+        
+        flash(f'Successful deposit, {user.username}!', 'success')
         return redirect(url_for("wallet"))
+    
+
+    
+
 
     except Exception as e:
         logging.error(f"Error retrieving Stripe session: {e}")
@@ -401,7 +406,7 @@ def cancelled():
     return redirect(url_for('wallet'))
 
 
-@app.route("/connect/create-account", methods = ["POST"])
+@app.route("/connect/create-account", methods = ["POST", "GET"])
 @login_required
 def create_connected_account():
     """
@@ -441,7 +446,51 @@ def create_connected_account():
     # 3) Redirect them to Stripe's hosted onboarding page
     return redirect(account_link.url)
 
+@app.route("/create-payout", methods = ["POST"])
+@login_required
+def create_payout():
+    user_id = session["user_id"]
+    user = get_user_by_id(user_id)
+    if not user or not user.stripe_account_id:
+        return redirect(url_for("wallet"))
 
+    raw_amount = request.form.get("amount", "").strip()
+    print(f"  → raw_amount = {repr(raw_amount)}")
+    if raw_amount == "":
+        return redirect(url_for("wallet"))
+
+    try:
+        dollars = float(raw_amount)
+        if dollars < 0.01 or dollars > (user.balance or 0): #maybe error here
+            return redirect(url_for("wallet"))
+        amount_in_cents = int(dollars * 100)
+    except ValueError:
+        return redirect(url_for("wallet"))
+
+    try:
+        # 1) Create a Transfer from platform → connected account
+        transfer = stripe.Transfer.create(
+            amount=amount_in_cents,
+            currency="usd",
+            destination=user.stripe_account_id,  # sends money into their Connect account
+            transfer_group=f"user_{user.id}"
+        )
+
+
+        # once transfer is successful, Stripe will move the money from your Stripe balance
+        # into their connected account. That connected account then automatically payouts
+        # according to its payout schedule to their bank account.
+
+        # 2) Deduct the amount from your local database
+        user.balance = (user.balance or 0) - dollars
+        db.session.commit()
+
+        flash(f'Withdraw successful, {user.username}! You should see it in your account by end of day!', 'success')
+        return redirect(url_for("wallet"))
+    
+    except stripe.error.StripeError as e:
+        logging.error(f"Stripe Transfer Error: {e}")
+        return redirect(url_for("wallet"))    
 
 @app.route('/api/wallet/deposit', methods=['POST'])
 @login_required
