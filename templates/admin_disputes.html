@@ -92,79 +92,203 @@
             </div>
         </div>
 
-        <!-- Placeholder Content -->
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-body text-center p-5">
-                        <div class="mb-4">
-                            <i data-feather="construction" style="width: 64px; height: 64px;" class="text-warning"></i>
-                        </div>
-                        <h4 class="mb-3">Bet Disputes System</h4>
-                        <p class="text-muted mb-4">
-                            This section is currently under development. The dispute resolution system will allow administrators to:
-                        </p>
-                        
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <div class="card bg-dark">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i data-feather="eye" class="me-2"></i>
-                                            View Disputes
-                                        </h6>
-                                        <p class="card-text small text-muted mb-0">
-                                            Review all open bet disputes submitted by users
-                                        </p>
-                                    </div>
-                                </div>
+        {% if error %}
+            <div class="alert alert-danger" role="alert">
+                <i data-feather="alert-circle" class="me-2"></i>
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <!-- Disputed Bets -->
+        {% if not disputed_bets %}
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <i data-feather="check-circle" style="width: 64px; height: 64px;" class="text-success"></i>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-dark">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i data-feather="check-circle" class="me-2"></i>
-                                            Resolve Disputes
-                                        </h6>
-                                        <p class="card-text small text-muted mb-0">
-                                            Make decisions on disputed bet outcomes
-                                        </p>
-                                    </div>
-                                </div>
+                            <h4 class="mb-3">No Disputes</h4>
+                            <p class="text-muted mb-4">
+                                There are currently no bet disputes pending review.
+                            </p>
+                            <div class="alert alert-info">
+                                <i data-feather="info" class="me-2"></i>
+                                When users dispute bet outcomes, they will appear here for admin resolution.
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-dark">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i data-feather="message-square" class="me-2"></i>
-                                            Communication
-                                        </h6>
-                                        <p class="card-text small text-muted mb-0">
-                                            Communicate with disputing parties
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-dark">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i data-feather="archive" class="me-2"></i>
-                                            History
-                                        </h6>
-                                        <p class="card-text small text-muted mb-0">
-                                            Track resolution history and patterns
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="alert alert-info">
-                            <i data-feather="info" class="me-2"></i>
-                            <strong>Coming Soon:</strong> Advanced dispute resolution tools and workflow management.
                         </div>
                     </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i data-feather="flag" class="me-2"></i>
+                                Disputed Bets ({{ disputed_bets|length }})
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% for bet in disputed_bets %}
+                                <div class="dispute-item border-bottom p-4">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <div class="d-flex align-items-start">
+                                                <div class="dispute-badge me-3">
+                                                    <span class="badge bg-danger">ID: {{ bet.id }}</span>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold mb-2">{{ bet.title }}</h6>
+                                                    <p class="text-muted mb-2">{{ bet.description }}</p>
+                                                    
+                                                    <div class="row g-2 mb-3">
+                                                        <div class="col-auto">
+                                                            <small class="text-muted">
+                                                                <i data-feather="dollar-sign" class="me-1"></i>
+                                                                Amount: ${{ "%.2f"|format(bet.amount) }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="col-auto">
+                                                            <small class="text-muted">
+                                                                <i data-feather="calendar" class="me-1"></i>
+                                                                Created: {{ bet.created_at|strftime('%m/%d/%Y') }}
+                                                            </small>
+                                                        </div>
+                                                        <div class="col-auto">
+                                                            <small class="text-muted">
+                                                                <i data-feather="tag" class="me-1"></i>
+                                                                {{ bet.category }}
+                                                            </small>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="dispute-details">
+                                                        <div class="row g-3">
+                                                            <div class="col-md-6">
+                                                                <div class="card bg-dark">
+                                                                    <div class="card-body p-3">
+                                                                        <h6 class="card-title mb-2">
+                                                                            <i data-feather="user" class="me-1"></i>
+                                                                            Creator: {{ users[bet.creator_id].username }}
+                                                                        </h6>
+                                                                        <p class="mb-1">
+                                                                            <strong>Decision:</strong> 
+                                                                            <span class="badge bg-{% if bet.creator_decision == 'creator_wins' %}success{% else %}warning{% endif %}">
+                                                                                {{ 'Creator Wins' if bet.creator_decision == 'creator_wins' else 'Acceptor Wins' }}
+                                                                            </span>
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div class="card bg-dark">
+                                                                    <div class="card-body p-3">
+                                                                        <h6 class="card-title mb-2">
+                                                                            <i data-feather="users" class="me-1"></i>
+                                                                            Acceptor: {{ users[bet.acceptor_id].username }}
+                                                                        </h6>
+                                                                        <p class="mb-1">
+                                                                            <strong>Response:</strong> 
+                                                                            <span class="badge bg-danger">Disputed</span>
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {% if bet.dispute_reason %}
+                                                            <div class="mt-3">
+                                                                <h6 class="text-warning">
+                                                                    <i data-feather="message-square" class="me-1"></i>
+                                                                    Dispute Reason:
+                                                                </h6>
+                                                                <div class="card bg-secondary">
+                                                                    <div class="card-body p-3">
+                                                                        <p class="mb-0">{{ bet.dispute_reason }}</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="admin-actions">
+                                                <h6 class="mb-3">Admin Resolution</h6>
+                                                <div class="d-grid gap-2">
+                                                    <button class="btn btn-success" onclick="resolveDispute({{ bet.id }}, 'creator_wins')">
+                                                        <i data-feather="check" class="me-1"></i>
+                                                        Creator Wins
+                                                    </button>
+                                                    <button class="btn btn-primary" onclick="resolveDispute({{ bet.id }}, 'acceptor_wins')">
+                                                        <i data-feather="award" class="me-1"></i>
+                                                        Acceptor Wins
+                                                    </button>
+                                                    <button class="btn btn-warning" onclick="resolveDispute({{ bet.id }}, 'void')">
+                                                        <i data-feather="x-circle" class="me-1"></i>
+                                                        Void Bet
+                                                    </button>
+                                                </div>
+                                                <div class="mt-3">
+                                                    <small class="text-muted">
+                                                        <i data-feather="mail" class="me-1"></i>
+                                                        Support Email: support@betglobal.com<br>
+                                                        Reference Bet ID: {{ bet.id }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title d-flex align-items-center" id="confirmationModalLabel">
+                        <i id="confirmationIcon" data-feather="help-circle" class="me-2"></i>
+                        <span id="confirmationTitle">Confirm Action</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmationMessage">Are you sure you want to perform this action?</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmationCancel">Cancel</button>
+                    <button type="button" class="btn btn-warning" id="confirmationConfirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title d-flex align-items-center" id="notificationModalLabel">
+                        <i id="notificationIcon" data-feather="check-circle" class="me-2"></i>
+                        <span id="notificationTitle">Success!</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="notificationMessage">Action completed successfully.</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="notificationOk">OK</button>
                 </div>
             </div>
         </div>
@@ -176,6 +300,120 @@
     <!-- Initialize Feather Icons -->
     <script>
         feather.replace();
+        
+        let currentConfirmationAction = null;
+        let confirmationModal, notificationModal;
+        
+        // Set up event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Bootstrap modals
+            confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+            
+            // Confirmation modal handlers
+            document.getElementById('confirmationConfirm').addEventListener('click', function() {
+                if (currentConfirmationAction) {
+                    currentConfirmationAction();
+                    confirmationModal.hide();
+                }
+            });
+            
+            // Notification modal handler - reload page after successful actions
+            document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
+                if (document.getElementById('notificationIcon').getAttribute('data-feather') === 'check-circle') {
+                    setTimeout(() => location.reload(), 500);
+                }
+            });
+        });
+        
+        function resolveDispute(betId, decision) {
+            const decisionText = decision === 'creator_wins' ? 'Creator Wins' : 
+                               decision === 'acceptor_wins' ? 'Acceptor Wins' : 'Void Bet';
+            
+            let icon, iconColor;
+            switch(decision) {
+                case 'creator_wins':
+                    icon = 'check';
+                    iconColor = '#28a745';
+                    break;
+                case 'acceptor_wins':
+                    icon = 'award';
+                    iconColor = '#007bff';
+                    break;
+                case 'void':
+                    icon = 'x-circle';
+                    iconColor = '#ffc107';
+                    break;
+            }
+            
+            showConfirmationModal(
+                'Resolve Dispute',
+                `Are you sure you want to resolve this dispute as: ${decisionText}?`,
+                icon,
+                iconColor,
+                () => {
+                    fetch('/api/admin-resolve', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            bet_id: betId,
+                            admin_decision: decision
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotificationModal('success', 'Dispute Resolved!', data.message);
+                        } else {
+                            showNotificationModal('error', 'Resolution Failed', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showNotificationModal('error', 'Connection Error', 'Failed to resolve dispute');
+                    });
+                }
+            );
+        }
+        
+        function showConfirmationModal(title, message, icon, iconColor, action) {
+            const iconElement = document.getElementById('confirmationIcon');
+            const titleElement = document.getElementById('confirmationTitle');
+            const messageElement = document.getElementById('confirmationMessage');
+            
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            iconElement.setAttribute('data-feather', icon);
+            iconElement.style.color = iconColor;
+            
+            currentConfirmationAction = action;
+            
+            confirmationModal.show();
+            feather.replace();
+        }
+        
+        function showNotificationModal(type, title, message) {
+            const icon = document.getElementById('notificationIcon');
+            const titleEl = document.getElementById('notificationTitle');
+            const messageEl = document.getElementById('notificationMessage');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            // Configure modal based on type
+            if (type === 'success') {
+                icon.setAttribute('data-feather', 'check-circle');
+                icon.style.color = '#28a745';
+            } else {
+                icon.setAttribute('data-feather', 'x-circle');
+                icon.style.color = '#dc3545';
+            }
+            
+            notificationModal.show();
+            feather.replace();
+        }
     </script>
 </body>
 </html>

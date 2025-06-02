@@ -76,6 +76,13 @@
                                 <i data-feather="credit-card" class="me-2"></i>Wallet
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('contact') }}">
+                                <i data-feather="mail" class="me-2"></i>Contact Us
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('terms') }}">
+                                <i data-feather="file-text" class="me-2"></i>Terms of Service
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}">
                                 <i data-feather="log-out" class="me-2"></i>Logout
                             </a></li>
@@ -133,7 +140,7 @@
                     <div class="footer-section">
                         <h6 class="footer-title">Support</h6>
                         <ul class="footer-links">
-                            <li><a href="#">Contact Us</a></li>
+                            <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
                         </ul>
                     </div>
                 </div>
@@ -142,8 +149,7 @@
                     <div class="footer-section">
                         <h6 class="footer-title">Legal</h6>
                         <ul class="footer-links">
-                            <li><a href="#">Terms of Service</a></li>
-                            <li><a href="#">Responsible Gaming</a></li>
+                            <li><a href="{{ url_for('terms') }}">Terms of Service</a></li>
                         </ul>
                     </div>
                 </div>

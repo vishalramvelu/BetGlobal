@@ -82,6 +82,7 @@
                                 <option value="open" {% if current_status == 'open' %}selected{% endif %}>Open</option>
                                 <option value="accepted" {% if current_status == 'accepted' %}selected{% endif %}>Accepted</option>
                                 <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expired</option>
                             </select>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
@@ -122,7 +123,7 @@
                 <div class="row g-4">
                     {% for bet in bets %}
                         <div class="col-lg-6 col-xl-4">
-                            <div class="live-bet-card">
+                            <div class="live-bet-card" style="cursor: pointer;" onclick="showBetDetails({{ bet.id }})">
                                 <div class="bet-header">
                                     <div class="bet-category">
                                         <i data-feather="tag"></i>
@@ -140,7 +141,7 @@
                                 <div class="bet-details">
                                     <div class="bet-amount">
                                         <i data-feather="dollar-sign"></i>
-                                        ${{ "%.2f"|format(bet.amount) }}
+                                        ${{ "%.2f"|format(bet.amount * bet.odds) }}
                                     </div>
                                     <div class="bet-odds">
                                         <i data-feather="trending-up"></i>
@@ -152,6 +153,22 @@
                                     </div>
                                 </div>
                                 
+                                <div class="bet-breakdown" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 0.25rem;">
+                                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); display: flex; justify-content: space-between;">
+                                        <span>Creator wagers: ${{ "%.2f"|format(bet.amount) }}</span>
+                                        <span>You wager: ${{ "%.2f"|format(bet.amount * bet.odds) }}</span>
+                                    </div>
+                                </div>
+                                
+                                {% if bet.expire_time %}
+                                    <div class="bet-expire" style="margin-top: 0.75rem; padding: 0.5rem; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 0.25rem;">
+                                        <div style="color: #ffc107; font-size: 0.85rem; display: flex; align-items: center;">
+                                            <i data-feather="calendar" style="width: 16px; height: 16px; margin-right: 0.5rem;"></i>
+                                            <span>Expires: {{ bet.expire_time|strftime('%b %d, %Y') }} at EST midnight</span>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
                                 {% if bet.status == 'open' %}
                                     <div class="mt-3">
                                         {% set current_user_id = session.get('user_id') %}
@@ -161,7 +178,7 @@
                                                 Your Bet
                                             </button>
                                         {% else %}
-                                            <button class="btn btn-gradient w-100 accept-bet-btn" data-bet-id="{{ bet.id }}">
+                                            <button class="btn btn-gradient w-100 accept-bet-btn" data-bet-id="{{ bet.id }}" onclick="event.stopPropagation();">
                                                 <i data-feather="check" class="me-2"></i>
                                                 Accept Bet
                                             </button>
@@ -208,6 +225,32 @@
         </div>
     </div>
 </div>
+
+<!-- Bet Details Modal -->
+<div class="modal fade" id="betDetailsModal" tabindex="-1" data-bs-theme="dark">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(253, 126, 20, 0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(253, 126, 20, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i data-feather="info" class="me-2" style="color: #fd7e14;"></i>
+                    Bet Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="betDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(253, 126, 20, 0.2);">
+                <button type="button" class="btn" style="background: rgba(108, 117, 125, 0.8); color: white; border: 1px solid #6c757d;" data-bs-dismiss="modal">Close</button>
+                <div id="betDetailsActions">
+                    <!-- Action buttons will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -215,6 +258,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const acceptBetButtons = document.querySelectorAll('.accept-bet-btn');
     const acceptBetModal = new bootstrap.Modal(document.getElementById('acceptBetModal'));
+    const betDetailsModal = new bootstrap.Modal(document.getElementById('betDetailsModal'));
     const confirmButton = document.getElementById('confirmAcceptBet');
     let currentBetId = null;
 
@@ -226,18 +270,23 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = this.closest('.live-bet-card');
             const title = card.querySelector('.bet-title').textContent;
             const amount = card.querySelector('.bet-amount').textContent;
+            const breakdown = card.querySelector('.bet-breakdown').textContent.trim();
             
             document.getElementById('betDetails').innerHTML = `
                 <div class="bets-card" style="margin: 1rem 0;">
                     <div class="bets-content" style="padding: 1rem;">
                         <div class="row">
-                            <div class="col-6">
+                            <div class="col-12 mb-2">
                                 <small style="color: rgba(255, 255, 255, 0.7);">Bet Title:</small>
                                 <div class="text-white fw-bold">${title}</div>
                             </div>
-                            <div class="col-6">
-                                <small style="color: rgba(255, 255, 255, 0.7);">Amount:</small>
+                            <div class="col-12 mb-2">
+                                <small style="color: rgba(255, 255, 255, 0.7);">Your Wager Amount:</small>
                                 <div class="text-warning fw-bold">${amount}</div>
+                            </div>
+                            <div class="col-12">
+                                <small style="color: rgba(255, 255, 255, 0.7);">Breakdown:</small>
+                                <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">${breakdown}</div>
                             </div>
                         </div>
                     </div>
@@ -284,5 +333,230 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Bet details functionality
+function showBetDetails(betId) {
+    // Get bet data from the current page
+    const bets = {{ bets|tojson|safe }};
+    const users = {{ users|tojson|safe }};
+    const bet = bets.find(b => b.id === betId);
+    
+    if (!bet) {
+        alert('Bet not found');
+        return;
+    }
+    
+    const creator = users[bet.creator_id];
+    const acceptor = bet.acceptor_id ? users[bet.acceptor_id] : null;
+    const currentUserId = {{ session.get('user_id')|tojson|safe }};
+    
+    // Calculate amounts
+    const creatorAmount = bet.amount;
+    const takerAmount = bet.amount * bet.odds;
+    const totalPot = creatorAmount + takerAmount;
+    
+    // Format dates
+    const createdDate = new Date(bet.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const expireDate = bet.expire_time ? 
+        new Date(bet.expire_time).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) + ' at EST midnight' : 'No expiration';
+    
+    // Build content using main app styling
+    const content = `
+        <div class="row g-4">
+            <!-- Basic Info -->
+            <div class="col-12">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
+                                <i data-feather="file-text"></i>
+                            </div>
+                            <div>
+                                <h5>Bet Information</h5>
+                                <p>Complete bet details</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="mb-3">
+                            <h6 class="fw-bold">${bet.title}</h6>
+                        </div>
+                        <p class="mb-0">${bet.description}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Details -->
+            <div class="col-md-6">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                <i data-feather="dollar-sign"></i>
+                            </div>
+                            <div>
+                                <h5>Financial Details</h5>
+                                <p>Wager amounts and odds</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <small class="text-muted">Creator Wagers:</small>
+                                <div class="fw-bold">$${creatorAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Taker Must Wager:</small>
+                                <div class="fw-bold" style="color: #fd7e14;">$${takerAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Total Pot:</small>
+                                <div class="fw-bold" style="color: #fd7e14;">$${totalPot.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Odds:</small>
+                                <div class="fw-bold" style="color: #6c757d;">${bet.odds}:1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Participants & Status -->
+            <div class="col-md-6">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                <i data-feather="users"></i>
+                            </div>
+                            <div>
+                                <h5>Participants & Status</h5>
+                                <p>Current bet status</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <small class="text-muted">Created by:</small>
+                                <div class="fw-bold">
+                                    <i data-feather="user" class="me-1"></i>
+                                    ${creator ? creator.username : 'Unknown'}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Accepted by:</small>
+                                <div class="fw-bold">
+                                    <i data-feather="user-check" class="me-1"></i>
+                                    ${acceptor ? acceptor.username : 'Open for anyone'}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Status:</small>
+                                <div>
+                                    <span class="badge bg-${getStatusColor(bet.status)} status-${bet.status}">
+                                        ${bet.status.charAt(0).toUpperCase() + bet.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Category:</small>
+                                <div class="fw-bold">
+                                    <i data-feather="tag" class="me-1"></i>
+                                    ${bet.category}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="col-12">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
+                                <i data-feather="clock"></i>
+                            </div>
+                            <div>
+                                <h5>Timeline</h5>
+                                <p>Important dates</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted">Created:</small>
+                                <div class="fw-bold">${createdDate}</div>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted">Expires:</small>
+                                <div class="fw-bold">${expireDate}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('betDetailsContent').innerHTML = content;
+    
+    // Add action buttons based on bet status and user
+    let actions = '';
+    if (bet.status === 'open' && bet.creator_id !== currentUserId) {
+        actions = `<button class="btn btn-gradient" onclick="acceptBetFromDetails(${bet.id})">
+                       <i data-feather="check" class="me-2"></i>Accept Bet
+                   </button>`;
+    }
+    
+    document.getElementById('betDetailsActions').innerHTML = actions;
+    
+    // Replace feather icons
+    feather.replace();
+    
+    // Show modal
+    const betDetailsModal = new bootstrap.Modal(document.getElementById('betDetailsModal'));
+    betDetailsModal.show();
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'open': return 'success';
+        case 'accepted': return 'warning';
+        case 'completed': return 'secondary';
+        case 'disputed': return 'danger';
+        case 'expired': return 'dark';
+        case 'cancelled': return 'dark';
+        default: return 'secondary';
+    }
+}
+
+function acceptBetFromDetails(betId) {
+    // Close bet details modal and trigger accept bet flow
+    const betDetailsModal = bootstrap.Modal.getInstance(document.getElementById('betDetailsModal'));
+    betDetailsModal.hide();
+    
+    // Find the accept button for this bet and trigger click
+    const acceptButton = document.querySelector(`[data-bet-id="${betId}"]`);
+    if (acceptButton) {
+        acceptButton.click();
+    }
+}
 </script>
 {% endblock %}

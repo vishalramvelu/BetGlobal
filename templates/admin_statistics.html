@@ -132,20 +132,28 @@
                         </div>
                         <div class="card-body">
                             <div class="row text-center">
-                                <div class="col-3">
+                                <div class="col-2">
                                     <h4 class="text-primary">{{ open_bets }}</h4>
                                     <small class="text-muted">Open</small>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
                                     <h4 class="text-warning">{{ accepted_bets }}</h4>
                                     <small class="text-muted">Accepted</small>
                                 </div>
-                                <div class="col-3">
+                                <div class="col-2">
+                                    <h4 class="text-info">{{ awaiting_resolution_bets }}</h4>
+                                    <small class="text-muted">Awaiting</small>
+                                </div>
+                                <div class="col-2">
+                                    <h4 class="text-danger">{{ disputed_bets }}</h4>
+                                    <small class="text-muted">Disputed</small>
+                                </div>
+                                <div class="col-2">
                                     <h4 class="text-success">{{ completed_bets }}</h4>
                                     <small class="text-muted">Completed</small>
                                 </div>
-                                <div class="col-3">
-                                    <h4 class="text-danger">{{ cancelled_bets }}</h4>
+                                <div class="col-2">
+                                    <h4 class="text-secondary">{{ cancelled_bets }}</h4>
                                     <small class="text-muted">Cancelled</small>
                                 </div>
                             </div>
@@ -315,7 +323,7 @@
                                             <strong>{{ user.username }}</strong>
                                             <br>
                                             <small class="text-muted">
-                                                {{ user.created_at.strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}
+                                                {{ user.created_at|strftime('%Y-%m-%d %H:%M') if user.created_at else 'N/A' }}
                                             </small>
                                         </div>
                                         <span class="badge bg-info">${{ "%.2f"|format(user.balance or 0) }}</span>

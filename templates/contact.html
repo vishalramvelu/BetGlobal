@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - BetGlobal{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-bg"></div>
+    
+    <!-- Contact Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="user-welcome">
+                        <div class="welcome-icon">
+                            <i data-feather="mail"></i>
+                        </div>
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">Contact <span class="text-gradient">Us</span></h1>
+                            <p class="welcome-subtitle">Get in touch with our support team</p>
+                            <div class="user-badge">
+                                <i data-feather="clock" class="me-1"></i>
+                                <span>24/7 Support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('index') if session.get('user_id') else url_for('landing') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-2"></i>
+                        Back to {{ 'Dashboard' if session.get('user_id') else 'Home' }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="dashboard-stats">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="bets-card">
+                        <div class="bets-header">
+                            <div class="bets-title">
+                                <div class="bets-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                                    <i data-feather="message-circle"></i>
+                                </div>
+                                <div>
+                                    <h5>Get Support</h5>
+                                    <p>We're here to help with any questions or issues</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bets-content">
+                            <div class="text-center">
+                                <div style="margin-bottom: 2rem;">
+                                    <div style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, #ffc107, #e0a800); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                        <i data-feather="mail" style="width: 40px; height: 40px; color: white;"></i>
+                                    </div>
+                                    <h4 style="color: #fff; margin-bottom: 1rem;">Email Support</h4>
+                                    <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 2rem;">
+                                        Have a question or need assistance? Send us an email and we'll get back to you as soon as possible.
+                                    </p>
+                                </div>
+                                
+                                <div class="email-container" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 2rem; margin-bottom: 2rem;">
+                                    <div style="margin-bottom: 1rem;">
+                                        <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">Click to copy email address</span>
+                                    </div>
+                                    <button id="emailButton" class="btn btn-gradient btn-lg" style="font-size: 1.25rem; padding: 1rem 2rem; border-radius: 0.5rem;">
+                                        <i data-feather="mail" class="me-2"></i>
+                                        support@betglobal.com
+                                        <i data-feather="copy" class="ms-2" id="copyIcon"></i>
+                                    </button>
+                                    <div id="copyFeedback" style="margin-top: 1rem; display: none;">
+                                        <span style="color: #28a745; font-weight: 500;">
+                                            <i data-feather="check" style="width: 16px; height: 16px; margin-right: 0.5rem;"></i>
+                                            Email copied to clipboard!
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 text-start">
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 0.5rem;">
+                                            <div style="margin-bottom: 1rem;">
+                                                <i data-feather="help-circle" style="color: #ffc107; margin-right: 0.5rem;"></i>
+                                                <strong style="color: #fff;">General Support</strong>
+                                            </div>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">
+                                                Account questions, betting help, technical issues, and general inquiries.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem; border-radius: 0.5rem;">
+                                            <div style="margin-bottom: 1rem;">
+                                                <i data-feather="shield" style="color: #28a745; margin-right: 0.5rem;"></i>
+                                                <strong style="color: #fff;">Security & Privacy</strong>
+                                            </div>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">
+                                                Report security issues, privacy concerns, or suspicious activity.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="row g-3 text-start mt-3">
+                                    <div class="col-12">
+                                        <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); padding: 1.5rem; border-radius: 0.5rem;">
+                                            <div style="margin-bottom: 1rem;">
+                                                <i data-feather="flag" style="color: #dc3545; margin-right: 0.5rem;"></i>
+                                                <strong style="color: #fff;">Bet Disputes</strong>
+                                            </div>
+                                            <p style="color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem; font-size: 0.9rem;">
+                                                If you have a bet dispute under admin review, you can email supporting materials with your <strong>Bet ID</strong>.
+                                            </p>
+                                            <div class="alert alert-warning">
+                                                <i data-feather="info" class="me-2"></i>
+                                                <strong>Important:</strong> Always include your Bet ID in the subject line when contacting about disputes.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    <div class="dashboard-bets">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #1e7e34);">
+                            <i data-feather="clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">< 24 Hours</div>
+                            <div class="stat-label">Response Time</div>
+                            <div class="stat-description">Average email response</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                            <i data-feather="users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Support Team</div>
+                            <div class="stat-description">Always here to help</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
+                            <i data-feather="star"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-number">4.9/5</div>
+                            <div class="stat-label">Support Rating</div>
+                            <div class="stat-description">Customer satisfaction</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const emailButton = document.getElementById('emailButton');
+    const copyIcon = document.getElementById('copyIcon');
+    const copyFeedback = document.getElementById('copyFeedback');
+    const email = 'support@betglobal.com';
+
+    emailButton.addEventListener('click', function() {
+        // Copy email to clipboard
+        navigator.clipboard.writeText(email).then(function() {
+            // Show success feedback
+            copyIcon.setAttribute('data-feather', 'check');
+            copyFeedback.style.display = 'block';
+            emailButton.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            
+            // Update icons
+            feather.replace();
+            
+            // Reset after 3 seconds
+            setTimeout(function() {
+                copyIcon.setAttribute('data-feather', 'copy');
+                copyFeedback.style.display = 'none';
+                emailButton.style.background = '';
+                feather.replace();
+            }, 3000);
+        }).catch(function(err) {
+            console.error('Failed to copy email: ', err);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = email;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            
+            // Show success feedback
+            copyIcon.setAttribute('data-feather', 'check');
+            copyFeedback.style.display = 'block';
+            emailButton.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+            feather.replace();
+            
+            setTimeout(function() {
+                copyIcon.setAttribute('data-feather', 'copy');
+                copyFeedback.style.display = 'none';
+                emailButton.style.background = '';
+                feather.replace();
+            }, 3000);
+        });
+    });
+
+    // Initialize feather icons
+    feather.replace();
+});
+</script>
+{% endblock %}

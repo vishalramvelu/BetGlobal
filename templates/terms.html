@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Terms of Service - BetGlobal{% endblock %}
+
+{% block main_class %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-bg"></div>
+    
+    <!-- Terms Header -->
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="user-welcome">
+                        <div class="welcome-icon">
+                            <i data-feather="file-text"></i>
+                        </div>
+                        <div class="welcome-content">
+                            <h1 class="welcome-title">Terms of <span class="text-gradient">Service</span></h1>
+                            <p class="welcome-subtitle">Our terms and conditions for using BetGlobal</p>
+                            <div class="user-badge">
+                                <i data-feather="calendar" class="me-1"></i>
+                                <span>Last Updated: December 2024</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('index') if session.get('user_id') else url_for('landing') }}" class="btn btn-outline-secondary">
+                        <i data-feather="arrow-left" class="me-2"></i>
+                        Back to {{ 'Dashboard' if session.get('user_id') else 'Home' }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Content -->
+    <div class="dashboard-stats">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="bets-card">
+                        <div class="bets-header">
+                            <div class="bets-title">
+                                <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                    <i data-feather="shield"></i>
+                                </div>
+                                <div>
+                                    <h5>Terms and Conditions</h5>
+                                    <p>Please read these terms carefully before using our service</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bets-content">
+                            <div class="terms-content">
+                                
+                                <section class="terms-section">
+                                    <h3>1. Acceptance of Terms</h3>
+                                    <p>By accessing and using BetGlobal ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>2. Description of Service</h3>
+                                    <p>BetGlobal is a peer-to-peer betting platform that allows users to create and participate in bets with other users. The platform facilitates transactions and provides a secure environment for betting activities.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>3. User Accounts and Registration</h3>
+                                    <ul>
+                                        <li>Users must be at least 18 years old to create an account</li>
+                                        <li>You are responsible for maintaining the confidentiality of your account information</li>
+                                        <li>You agree to provide accurate and complete information during registration</li>
+                                        <li>One account per person is permitted</li>
+                                        <li>We reserve the right to suspend or terminate accounts that violate these terms</li>
+                                    </ul>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>4. Betting Rules and Conduct</h3>
+                                    <ul>
+                                        <li>All bets must be resolved fairly and transparently</li>
+                                        <li>Users must honor the terms of any bet they create or accept</li>
+                                        <li>Manipulation, fraud, or cheating is strictly prohibited</li>
+                                        <li>Disputes should be reported to our support team</li>
+                                        <li>We reserve the right to void bets that violate platform rules</li>
+                                    </ul>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>5. Financial Terms</h3>
+                                    <ul>
+                                        <li>All transactions are processed securely through our platform</li>
+                                        <li>Users are responsible for any applicable taxes on winnings</li>
+                                        <li>Withdrawal requests are processed within 1-3 business days</li>
+                                        <li>We reserve the right to implement reasonable withdrawal limits</li>
+                                        <li>Funds from expired bets are automatically refunded to creators</li>
+                                    </ul>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>6. Prohibited Activities</h3>
+                                    <p>Users are prohibited from:</p>
+                                    <ul>
+                                        <li>Creating bets on illegal activities</li>
+                                        <li>Using the platform for money laundering or fraudulent activities</li>
+                                        <li>Attempting to manipulate or hack the platform</li>
+                                        <li>Creating multiple accounts to circumvent limits</li>
+                                        <li>Harassing or threatening other users</li>
+                                        <li>Sharing account credentials with others</li>
+                                    </ul>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>7. Privacy and Data Protection</h3>
+                                    <p>We are committed to protecting your privacy. We collect and use personal information only as necessary to provide our services. Your information will not be shared with third parties except as required by law or with your explicit consent.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>8. Limitation of Liability</h3>
+                                    <p>BetGlobal provides the platform "as is" without warranties of any kind. We are not liable for any direct, indirect, incidental, or consequential damages arising from your use of the service. Users participate in betting activities at their own risk.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>9. Platform Availability</h3>
+                                    <p>While we strive to maintain continuous service availability, we do not guarantee uninterrupted access to the platform. Scheduled maintenance and unexpected downtime may occur. We will provide notice of planned maintenance when possible.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>10. Modifications to Terms</h3>
+                                    <p>We reserve the right to modify these terms at any time. Users will be notified of significant changes, and continued use of the service constitutes acceptance of the modified terms.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>11. Termination</h3>
+                                    <p>We may terminate or suspend access to our service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the service will cease immediately.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>12. Governing Law</h3>
+                                    <p>These terms shall be governed by and construed in accordance with the laws of the jurisdiction in which BetGlobal operates, without regard to its conflict of law provisions.</p>
+                                </section>
+
+                                <section class="terms-section">
+                                    <h3>13. Contact Information</h3>
+                                    <p>If you have any questions about these Terms of Service, please contact us at <a href="mailto:support@betglobal.com" class="text-warning">support@betglobal.com</a>.</p>
+                                </section>
+
+                                <div class="terms-footer">
+                                    <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 2rem 0;">
+                                    <p style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; text-align: center;">
+                                        <strong>Effective Date:</strong> December 1, 2024<br>
+                                        <strong>Last Updated:</strong> December 1, 2024<br><br>
+                                        By using BetGlobal, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.
+                                    </p>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.terms-content {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+}
+
+.terms-section {
+    margin-bottom: 2rem;
+}
+
+.terms-section h3 {
+    color: #fff;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    border-bottom: 2px solid rgba(255, 193, 7, 0.3);
+    padding-bottom: 0.5rem;
+}
+
+.terms-section p {
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.terms-section ul {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.terms-section li {
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.terms-footer {
+    margin-top: 3rem;
+    padding-top: 2rem;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+    text-decoration: none;
+}
+
+.text-warning:hover {
+    color: #e0a800 !important;
+    text-decoration: underline;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

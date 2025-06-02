@@ -136,7 +136,7 @@
                                 {% else %}
                                     <div class="bets-list">
                                         {% for bet in created_bets %}
-                                            <div class="bet-item">
+                                            <div class="bet-item" style="cursor: pointer;" onclick="showDashboardBetDetails({{ bet.id }}, 'created')">
                                                 <div class="bet-main">
                                                     <h6 class="bet-title">{{ bet.title }}</h6>
                                                     <p class="bet-description">{{ bet.description[:60] }}{% if bet.description|length > 60 %}...{% endif %}</p>
@@ -153,12 +153,36 @@
                                                             <i data-feather="tag"></i>
                                                             {{ bet.category }}
                                                         </span>
+                                                        {% if bet.expire_time %}
+                                                            <span class="bet-expiry">
+                                                                <i data-feather="calendar"></i>
+                                                                Expires {{ bet.expire_time|strftime('%m/%d/%Y') }}
+                                                            </span>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                                 <div class="bet-status">
                                                     <span class="status-badge status-{{ bet.status }}">
                                                         {{ bet.status.title() }}
                                                     </span>
+                                                    {% if bet.status == 'accepted' %}
+                                                        <div class="bet-actions mt-2" onclick="event.stopPropagation();">
+                                                            <button class="btn btn-success btn-sm me-2" onclick="resolveCreatorBet({{ bet.id }}, 'creator_wins')">
+                                                                <i data-feather="check" class="me-1"></i>I Won
+                                                            </button>
+                                                            <button class="btn btn-warning btn-sm" onclick="resolveCreatorBet({{ bet.id }}, 'acceptor_wins')">
+                                                                <i data-feather="x" class="me-1"></i>I Lost
+                                                            </button>
+                                                        </div>
+                                                    {% elif bet.status == 'awaiting_resolution' %}
+                                                        <div class="bet-actions mt-2">
+                                                            <small class="text-muted">Waiting for opponent to respond</small>
+                                                        </div>
+                                                    {% elif bet.status == 'disputed' %}
+                                                        <div class="bet-actions mt-2">
+                                                            <small class="text-warning">Under admin review - Bet ID: {{ bet.id }}</small>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -199,7 +223,7 @@
                                 {% else %}
                                     <div class="bets-list">
                                         {% for bet in accepted_bets %}
-                                            <div class="bet-item">
+                                            <div class="bet-item" style="cursor: pointer;" onclick="showDashboardBetDetails({{ bet.id }}, 'accepted')">
                                                 <div class="bet-main">
                                                     <h6 class="bet-title">{{ bet.title }}</h6>
                                                     <p class="bet-description">{{ bet.description[:60] }}{% if bet.description|length > 60 %}...{% endif %}</p>
@@ -216,12 +240,37 @@
                                                             <i data-feather="tag"></i>
                                                             {{ bet.category }}
                                                         </span>
+                                                        {% if bet.expire_time %}
+                                                            <span class="bet-expiry">
+                                                                <i data-feather="calendar"></i>
+                                                                Expires {{ bet.expire_time|strftime('%m/%d/%Y') }}
+                                                            </span>
+                                                        {% endif %}
                                                     </div>
                                                 </div>
                                                 <div class="bet-status">
                                                     <span class="status-badge status-{{ bet.status }}">
                                                         {{ bet.status.title() }}
                                                     </span>
+                                                    {% if bet.status == 'awaiting_resolution' %}
+                                                        <div class="bet-actions mt-2" onclick="event.stopPropagation();">
+                                                            {% if bet.creator_decision == 'creator_wins' %}
+                                                                <p><small>Creator claims they won. Do you agree?</small></p>
+                                                            {% else %}
+                                                                <p><small>Creator claims you won. Do you agree?</small></p>
+                                                            {% endif %}
+                                                            <button class="btn btn-success btn-sm me-2" onclick="respondToDecision({{ bet.id }}, 'accepted')">
+                                                                <i data-feather="check" class="me-1"></i>Accept
+                                                            </button>
+                                                            <button class="btn btn-danger btn-sm" onclick="showDisputeModal({{ bet.id }})">
+                                                                <i data-feather="flag" class="me-1"></i>Dispute
+                                                            </button>
+                                                        </div>
+                                                    {% elif bet.status == 'disputed' %}
+                                                        <div class="bet-actions mt-2">
+                                                            <small class="text-warning">Under admin review - Bet ID: {{ bet.id }}</small>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -235,13 +284,626 @@
         </div>
     {% endif %}
 </div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h5 class="modal-title text-white d-flex align-items-center">
+                    <i id="confirmationIcon" data-feather="help-circle" class="me-2"></i>
+                    <span id="confirmationTitle">Confirm Action</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage" class="text-white">Are you sure you want to perform this action?</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmationCancel">Cancel</button>
+                <button type="button" class="btn btn-warning" id="confirmationConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Dispute Modal -->
+<div class="modal fade" id="disputeModal" tabindex="-1" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h5 class="modal-title text-white d-flex align-items-center">
+                    <i data-feather="flag" class="me-2" style="color: #dc3545;"></i>
+                    Dispute Bet Decision
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white">Please explain why you disagree with the creator's decision:</p>
+                <div class="mb-3">
+                    <textarea class="form-control bg-secondary border-0 text-white" id="disputeReason" rows="4" placeholder="Provide a clear explanation of your dispute..." style="background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;"></textarea>
+                </div>
+                <div class="alert alert-warning" style="font-size: 0.9rem;">
+                    <i data-feather="info" class="me-2"></i>
+                    <strong>Note:</strong> An admin will review this dispute. Email support with supporting materials using Bet ID: <span id="disputeBetId" class="fw-bold"></span>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="disputeCancel">Cancel</button>
+                <button type="button" class="btn btn-danger" id="submitDispute">
+                    <i data-feather="flag" class="me-1"></i>
+                    Submit Dispute
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1" data-bs-theme="dark">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h5 class="modal-title text-white d-flex align-items-center">
+                    <i id="notificationIcon" data-feather="check-circle" class="me-2"></i>
+                    <span id="notificationTitle">Success!</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="notificationMessage" class="text-white">Action completed successfully.</p>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="notificationOk">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bet Details Modal -->
+<div class="modal fade" id="betDetailsModal" tabindex="-1" data-bs-theme="dark">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(253, 126, 20, 0.2);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(253, 126, 20, 0.2);">
+                <h5 class="modal-title text-white">
+                    <i data-feather="info" class="me-2" style="color: #fd7e14;"></i>
+                    Bet Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="betDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid rgba(253, 126, 20, 0.2);">
+                <button type="button" class="btn" style="background: rgba(108, 117, 125, 0.8); color: white; border: 1px solid #6c757d;" data-bs-dismiss="modal">Close</button>
+                <div id="betDetailsActions">
+                    <!-- Action buttons will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+let currentDisputeBetId = null;
+let currentConfirmationAction = null;
+let confirmationModal, disputeModal, notificationModal, betDetailsModal;
+
+// Define functions first to ensure they're available
+function resolveCreatorBet(betId, decision) {
+    console.log('resolveCreatorBet called with:', betId, decision);
+    
+    const decisionText = decision === 'creator_wins' ? 'you won' : 'you lost';
+    const icon = decision === 'creator_wins' ? 'trophy' : 'x-circle';
+    const iconColor = decision === 'creator_wins' ? '#28a745' : '#ffc107';
+    
+    showConfirmationModal(
+        'Confirm Bet Decision',
+        `Are you sure you want to declare that ${decisionText} this bet?`,
+        icon,
+        iconColor,
+        () => {
+            fetch('/api/creator-decide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    bet_id: betId,
+                    decision: decision
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotificationModal('success', 'Decision Submitted!', data.message);
+                    // Refresh dashboard immediately to show updated bet status
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotificationModal('error', 'Submission Failed', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotificationModal('error', 'Connection Error', 'Failed to submit decision');
+            });
+        }
+    );
+}
+
+function respondToDecision(betId, response, disputeReason = '') {
+    if (response === 'accepted') {
+        showConfirmationModal(
+            'Accept Decision',
+            'Are you sure you want to accept the creator\'s decision?',
+            'check-circle',
+            '#28a745',
+            () => {
+                submitTakerResponse(betId, response, disputeReason);
+            }
+        );
+        return;
+    }
+    
+    // For disputed responses, submit directly since user already confirmed in dispute popup
+    submitTakerResponse(betId, response, disputeReason);
+}
+
+function submitTakerResponse(betId, response, disputeReason = '') {
+    const payload = {
+        bet_id: betId,
+        response: response
+    };
+    
+    if (response === 'disputed') {
+        payload.dispute_reason = disputeReason;
+    }
+    
+    fetch('/api/taker-respond', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotificationModal('success', 'Response Submitted!', data.message);
+            if (response === 'disputed') {
+                disputeModal.hide();
+            }
+            // Refresh dashboard immediately to show updated bet status
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotificationModal('error', 'Submission Failed', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotificationModal('error', 'Connection Error', 'Failed to submit response');
+    });
+}
+
+function showDisputeModal(betId) {
+    currentDisputeBetId = betId;
+    document.getElementById('disputeBetId').textContent = betId;
+    document.getElementById('disputeReason').value = '';
+    
+    disputeModal.show();
+    feather.replace();
+}
+
+function showConfirmationModal(title, message, icon, iconColor, action) {
+    const iconElement = document.getElementById('confirmationIcon');
+    const titleElement = document.getElementById('confirmationTitle');
+    const messageElement = document.getElementById('confirmationMessage');
+    
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+    iconElement.setAttribute('data-feather', icon);
+    iconElement.style.color = iconColor;
+    
+    currentConfirmationAction = action;
+    
+    confirmationModal.show();
+    feather.replace();
+}
+
+function showNotificationModal(type, title, message) {
+    const icon = document.getElementById('notificationIcon');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    // Configure modal based on type
+    if (type === 'success') {
+        icon.setAttribute('data-feather', 'check-circle');
+        icon.style.color = '#28a745';
+    } else {
+        icon.setAttribute('data-feather', 'x-circle');
+        icon.style.color = '#dc3545';
+    }
+    
+    notificationModal.show();
+    feather.replace();
+}
+
+// Legacy function for compatibility
+function showAlert(type, message) {
+    const title = type === 'success' ? 'Success!' : 'Error';
+    showNotificationModal(type, title, message);
+}
+
+// Bet details functionality for dashboard
+function showDashboardBetDetails(betId, betType) {
+    // Get bet data from the current page
+    const createdBets = {{ created_bets|tojson|safe }};
+    const acceptedBets = {{ accepted_bets|tojson|safe }};
+    const users = {};
+    
+    // Get user data (user object contains basic user info)
+    const currentUser = {{ user|tojson|safe }};
+    if (currentUser) {
+        users[currentUser.id] = currentUser;
+    }
+    
+    // Find the bet
+    let bet;
+    if (betType === 'created') {
+        bet = createdBets.find(b => b.id === betId);
+    } else {
+        bet = acceptedBets.find(b => b.id === betId);
+    }
+    
+    if (!bet) {
+        alert('Bet not found');
+        return;
+    }
+    
+    const currentUserId = {{ session.get('user_id')|tojson|safe }};
+    
+    // Calculate amounts
+    const creatorAmount = bet.amount;
+    const takerAmount = bet.amount * bet.odds;
+    const totalPot = creatorAmount + takerAmount;
+    
+    // Format dates
+    const createdDate = new Date(bet.created_at).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    const expireDate = bet.expire_time ? 
+        new Date(bet.expire_time).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        }) + ' at EST midnight' : 'No expiration';
+    
+    // Get resolution info
+    const resolvedDate = bet.resolved_at ? 
+        new Date(bet.resolved_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : null;
+    
+    // Build content with main app styling
+    const content = `
+        <div class="row g-4">
+            <!-- Basic Info -->
+            <div class="col-12">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
+                                <i data-feather="file-text"></i>
+                            </div>
+                            <div>
+                                <h5>Bet Information</h5>
+                                <p>Complete bet details</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="mb-3">
+                            <h6 class="fw-bold">${bet.title}</h6>
+                        </div>
+                        <p class="mb-0">${bet.description}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Financial Details -->
+            <div class="col-md-6">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                <i data-feather="dollar-sign"></i>
+                            </div>
+                            <div>
+                                <h5>Financial Details</h5>
+                                <p>Wager amounts and odds</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <small class="text-muted">Creator Wagers:</small>
+                                <div class="fw-bold">$${creatorAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Taker Must Wager:</small>
+                                <div class="fw-bold" style="color: #fd7e14;">$${takerAmount.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Total Pot:</small>
+                                <div class="fw-bold" style="color: #fd7e14;">$${totalPot.toFixed(2)}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Odds:</small>
+                                <div class="fw-bold" style="color: #6c757d;">${bet.odds}:1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status & Timeline -->
+            <div class="col-md-6">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
+                                <i data-feather="clock"></i>
+                            </div>
+                            <div>
+                                <h5>Status & Timeline</h5>
+                                <p>Current bet status</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <small class="text-muted">Current Status:</small>
+                                <div>
+                                    <span class="badge bg-${getStatusColor(bet.status)} status-${bet.status}">
+                                        ${bet.status.charAt(0).toUpperCase() + bet.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Created:</small>
+                                <div class="fw-bold">${createdDate}</div>
+                            </div>
+                            <div class="col-12">
+                                <small class="text-muted">Expires:</small>
+                                <div class="fw-bold">${expireDate}</div>
+                            </div>
+                            ${resolvedDate ? `
+                            <div class="col-12">
+                                <small class="text-muted">Resolved:</small>
+                                <div class="fw-bold">${resolvedDate}</div>
+                            </div>
+                            ` : ''}
+                            <div class="col-12">
+                                <small class="text-muted">Category:</small>
+                                <div class="fw-bold">
+                                    <i data-feather="tag" class="me-1"></i>
+                                    ${bet.category}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Participants & Decisions -->
+            <div class="col-12">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
+                                <i data-feather="users"></i>
+                            </div>
+                            <div>
+                                <h5>Participants & Decisions</h5>
+                                <p>User actions and responses</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="bets-card" style="background: rgba(255, 255, 255, 0.05);">
+                                    <div class="bets-content" style="padding: 1rem;">
+                                        <h6 class="mb-2">
+                                            <i data-feather="user" class="me-1"></i>
+                                            Creator: ${betType === 'created' ? 'You' : 'Other User'}
+                                        </h6>
+                                        ${bet.creator_decision ? `
+                                        <p class="mb-1">
+                                            <strong>Decision:</strong> 
+                                            <span class="badge bg-${bet.creator_decision === 'creator_wins' ? 'success' : 'warning'}">
+                                                ${bet.creator_decision === 'creator_wins' ? 'Creator Wins' : 'Acceptor Wins'}
+                                            </span>
+                                        </p>
+                                        ` : '<p class="text-muted mb-0">No decision made yet</p>'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bets-card" style="background: rgba(255, 255, 255, 0.05);">
+                                    <div class="bets-content" style="padding: 1rem;">
+                                        <h6 class="mb-2">
+                                            <i data-feather="user-check" class="me-1"></i>
+                                            Acceptor: ${betType === 'accepted' ? 'You' : (bet.acceptor_id ? 'Other User' : 'Open for anyone')}
+                                        </h6>
+                                        ${bet.taker_response ? `
+                                        <p class="mb-1">
+                                            <strong>Response:</strong> 
+                                            <span class="badge bg-${bet.taker_response === 'accepted' ? 'success' : 'danger'}">
+                                                ${bet.taker_response === 'accepted' ? 'Accepted' : 'Disputed'}
+                                            </span>
+                                        </p>
+                                        ` : '<p class="text-muted mb-0">No response yet</p>'}
+                                    </div>
+                                </div>
+                            </div>
+                            ${bet.dispute_reason ? `
+                            <div class="col-12">
+                                <div class="bets-card" style="background: rgba(253, 126, 20, 0.1); border-left: 3px solid #fd7e14;">
+                                    <div class="bets-content" style="padding: 1rem;">
+                                        <h6 style="color: #fd7e14;">
+                                            <i data-feather="message-square" class="me-1"></i>
+                                            Dispute Reason:
+                                        </h6>
+                                        <p class="mb-0">${bet.dispute_reason}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${bet.admin_decision ? `
+                            <div class="col-12">
+                                <div class="bets-card" style="background: rgba(108, 117, 125, 0.1); border-left: 3px solid #6c757d;">
+                                    <div class="bets-content" style="padding: 1rem;">
+                                        <h6 style="color: #6c757d;">
+                                            <i data-feather="shield" class="me-1"></i>
+                                            Admin Decision:
+                                        </h6>
+                                        <p class="mb-0">
+                                            <span class="badge bg-primary">${bet.admin_decision.replace('_', ' ').toUpperCase()}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            ${bet.winner ? `
+                            <div class="col-12">
+                                <div class="bets-card" style="background: rgba(253, 126, 20, 0.1); border-left: 3px solid #fd7e14;">
+                                    <div class="bets-content" style="padding: 1rem;">
+                                        <h6 style="color: #fd7e14;">
+                                            <i data-feather="trophy" class="me-1"></i>
+                                            Winner:
+                                        </h6>
+                                        <p class="mb-0">
+                                            <span class="badge bg-success">${bet.winner === 'creator' ? 'Creator' : 'Acceptor'} Wins!</span>
+                                            ${bet.winner === (betType === 'created' ? 'creator' : 'acceptor') ? ' (You won!)' : ' (You lost)'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('betDetailsContent').innerHTML = content;
+    
+    // Add action buttons based on bet status and user type
+    let actions = '';
+    if (betType === 'created' && bet.status === 'accepted') {
+        actions = `
+            <button class="btn btn-success me-2" onclick="resolveCreatorBet(${bet.id}, 'creator_wins')">
+                <i data-feather="check" class="me-1"></i>I Won
+            </button>
+            <button class="btn btn-warning" onclick="resolveCreatorBet(${bet.id}, 'acceptor_wins')">
+                <i data-feather="x" class="me-1"></i>I Lost
+            </button>
+        `;
+    } else if (betType === 'accepted' && bet.status === 'awaiting_resolution') {
+        actions = `
+            <button class="btn btn-success me-2" onclick="respondToDecision(${bet.id}, 'accepted')">
+                <i data-feather="check" class="me-1"></i>Accept Decision
+            </button>
+            <button class="btn btn-danger" onclick="showDisputeModal(${bet.id})">
+                <i data-feather="flag" class="me-1"></i>Dispute
+            </button>
+        `;
+    }
+    
+    document.getElementById('betDetailsActions').innerHTML = actions;
+    
+    // Replace feather icons
+    feather.replace();
+    
+    // Show modal
+    betDetailsModal.show();
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'open': return 'success';
+        case 'accepted': return 'warning';
+        case 'completed': return 'secondary';
+        case 'disputed': return 'danger';
+        case 'expired': return 'dark';
+        case 'cancelled': return 'dark';
+        case 'awaiting_resolution': return 'info';
+        default: return 'secondary';
+    }
+}
+
+// Set up event handlers when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Add any dashboard-specific JavaScript here
     console.log('Dashboard loaded');
+    
+    // Initialize Bootstrap modals
+    confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    disputeModal = new bootstrap.Modal(document.getElementById('disputeModal'));
+    notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
+    betDetailsModal = new bootstrap.Modal(document.getElementById('betDetailsModal'));
+    
+    // Confirmation modal handlers
+    document.getElementById('confirmationConfirm').addEventListener('click', function() {
+        if (currentConfirmationAction) {
+            currentConfirmationAction();
+            confirmationModal.hide();
+        }
+    });
+    
+    // Dispute modal handlers
+    document.getElementById('submitDispute').addEventListener('click', function() {
+        const reason = document.getElementById('disputeReason').value.trim();
+        if (!reason) {
+            showNotificationModal('error', 'Missing Information', 'Please provide a reason for the dispute');
+            return;
+        }
+        
+        respondToDecision(currentDisputeBetId, 'disputed', reason);
+    });
+    
+    // Notification modal handler - reload page after successful actions
+    document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
+        if (document.getElementById('notificationIcon').getAttribute('data-feather') === 'check-circle') {
+            setTimeout(() => location.reload(), 500);
+        }
+    });
+    
+    // Initialize feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
+    console.log('All event handlers set up successfully');
 });
 </script>
 {% endblock %}

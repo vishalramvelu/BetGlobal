@@ -113,7 +113,7 @@
                                     </div>
 
                                     <!-- Category -->
-                                    <div class="col-12">
+                                    <div class="col-md-6">
                                         <label for="category" class="form-label text-white">Category <span class="text-warning">*</span></label>
                                         <div class="input-wrapper">
                                             <div class="input-icon">
@@ -130,6 +130,20 @@
                                                 <option value="Other">Other</option>
                                             </select>
                                         </div>
+                                        <div class="invalid-feedback"></div>
+                                    </div>
+
+                                    <!-- Expiration Date -->
+                                    <div class="col-md-6">
+                                        <label for="expire_time" class="form-label text-white">Expiration Date</label>
+                                        <div class="input-wrapper">
+                                            <div class="input-icon">
+                                                <i data-feather="calendar"></i>
+                                            </div>
+                                            <input type="date" class="form-control auth-input" id="expire_time" name="expire_time"
+                                                   placeholder="Select expiration date">
+                                        </div>
+                                        <div class="form-hint">Optional: Bet expires at EST midnight on this date</div>
                                         <div class="invalid-feedback"></div>
                                     </div>
 
@@ -298,7 +312,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Collect form data
         formData.forEach(function(value, key) {
-            data[key] = value.trim();
+            if (key === 'expire_time' && value) {
+                // Use date value directly (YYYY-MM-DD format)
+                data[key] = value + 'T23:59:59'; // Set to end of day for conversion
+            } else {
+                data[key] = value.trim();
+            }
         });
         
         // Basic client-side validation

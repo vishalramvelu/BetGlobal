@@ -27,9 +27,23 @@ db.init_app(app)
 # Enable CORS for cross-origin requests
 CORS(app)
 
+# Custom Jinja2 filter for formatting ISO date strings
+@app.template_filter('strftime')
+def datetime_filter(date_string, format_string='%Y-%m-%d %H:%M'):
+    """Convert ISO date string back to formatted date"""
+    if not date_string:
+        return 'N/A'
+    try:
+        # Parse ISO format and apply the requested format
+        dt = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+        return dt.strftime(format_string)
+    except (ValueError, AttributeError):
+        return date_string  # Return original if parsing fails
+
 # Import models after app creation to avoid circular imports
-from models import Bet, User, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets
+from models import Bet, User, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 # Authentication helper functions
 def login_required(f):
@@ -65,9 +79,9 @@ def landing():
         live_bets = Bet.query.filter_by(status='open').order_by(Bet.created_at.desc()).limit(3).all()
         
         # Get users for display names
-        users = {user.id: user for user in User.query.all()}
+        users = {user.id: user.to_dict() for user in User.query.all()}
         
-        return render_template('landing.html', live_bets=live_bets, users=users)
+        return render_template('landing.html', live_bets=[bet.to_dict() for bet in live_bets], users=users)
     except Exception as e:
         logging.error(f"Error loading landing page: {str(e)}")
         return render_template('landing.html', live_bets=[], users={})
@@ -193,6 +207,9 @@ def root():
 def index():
     """All Bets page - displays all open bets"""
     try:
+        # Check for expired bets first
+        check_and_expire_bets()
+        
         # Get filters from request
         search_query = request.args.get('search', '').lower()
         category_filter = request.args.get('category', '')
@@ -225,10 +242,10 @@ def index():
         categories = [cat[0] for cat in db.session.query(Bet.category).distinct().all()]
         
         # Get users for display
-        users = {user.id: user for user in User.query.all()}
+        users = {user.id: user.to_dict() for user in User.query.all()}
         
         return render_template('index.html', 
-                             bets=filtered_bets, 
+                             bets=[bet.to_dict() for bet in filtered_bets], 
                              users=users, 
                              categories=categories,
                              current_search=search_query,
@@ -254,24 +271,31 @@ def dashboard():
         
         # Calculate statistics
         total_bets = len(created_bets) + len(accepted_bets)
-        active_bets = len([bet for bet in created_bets + accepted_bets if bet.status in ['open', 'accepted']])
+        active_bets = len([bet for bet in created_bets + accepted_bets if bet.status in ['open', 'accepted', 'awaiting_resolution', 'disputed']])
         completed_bets = len([bet for bet in created_bets + accepted_bets if bet.status == 'completed'])
         
         return render_template('dashboard.html', 
-                             user=user,
-                             created_bets=created_bets,
-                             accepted_bets=accepted_bets,
+                             user=user.to_dict(),
+                             created_bets=[bet.to_dict() for bet in created_bets],
+                             accepted_bets=[bet.to_dict() for bet in accepted_bets],
                              total_bets=total_bets,
                              active_bets=active_bets,
                              completed_bets=completed_bets)
     except Exception as e:
         logging.error(f"Error in dashboard route: {str(e)}")
-        return render_template('dashboard.html', user=None, error="Failed to load dashboard")
+        return render_template('dashboard.html', 
+                             user=None, 
+                             created_bets=[], 
+                             accepted_bets=[], 
+                             total_bets=0,
+                             active_bets=0,
+                             completed_bets=0,
+                             error="Failed to load dashboard")
 
 @app.route('/wallet')
 @login_required
 def wallet():
-    """User wallet page"""
+    """User wallet page with transaction history"""
     try:
         user_id = session.get('user_id')
         user = get_user_by_id(user_id)
@@ -280,10 +304,44 @@ def wallet():
             flash('User not found', 'error')
             return redirect(url_for('index'))
         
-        return render_template('wallet.html', user=user)
+        # Get filter parameters
+        filter_period = request.args.get('period', 'all')  # all, week, month, year
+        
+        # Build transaction query
+        from datetime import datetime, timedelta
+        query = Transaction.query.filter_by(user_id=user_id)
+        
+        # Apply time filters
+        if filter_period == 'week':
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            query = query.filter(Transaction.created_at >= week_ago)
+        elif filter_period == 'month':
+            month_ago = datetime.utcnow() - timedelta(days=30)
+            query = query.filter(Transaction.created_at >= month_ago)
+        elif filter_period == 'year':
+            year_ago = datetime.utcnow() - timedelta(days=365)
+            query = query.filter(Transaction.created_at >= year_ago)
+        
+        # Get transactions ordered by newest first
+        transactions = query.order_by(Transaction.created_at.desc()).all()
+        
+        # Get related bets for transaction context
+        bet_ids = [t.bet_id for t in transactions if t.bet_id]
+        bets = {bet.id: bet.to_dict() for bet in Bet.query.filter(Bet.id.in_(bet_ids)).all()} if bet_ids else {}
+        
+        return render_template('wallet.html', 
+                             user=user.to_dict(), 
+                             transactions=[t.to_dict() for t in transactions],
+                             bets=bets,
+                             current_filter=filter_period)
     except Exception as e:
         logging.error(f"Error in wallet route: {str(e)}")
-        return render_template('wallet.html', user=None, error="Failed to load wallet")
+        return render_template('wallet.html', 
+                             user=None, 
+                             transactions=[], 
+                             bets={}, 
+                             current_filter='all',
+                             error="Failed to load wallet")
 
 @app.route('/api/wallet/deposit', methods=['POST'])
 @login_required
@@ -307,6 +365,15 @@ def api_deposit():
         
         # Add to balance
         user.balance = (user.balance or 0) + amount
+        
+        # Record transaction
+        create_transaction(
+            user_id=user_id,
+            transaction_type='deposit',
+            amount=amount,
+            description=f'Deposit: ${amount:.2f}'
+        )
+        
         db.session.commit()
         
         return jsonify({
@@ -344,6 +411,15 @@ def api_withdraw():
         
         # Subtract from balance
         user.balance = (user.balance or 0) - amount
+        
+        # Record transaction
+        create_transaction(
+            user_id=user_id,
+            transaction_type='withdrawal',
+            amount=-amount,  # Negative amount for withdrawal
+            description=f'Withdrawal: ${amount:.2f}'
+        )
+        
         db.session.commit()
         
         return jsonify({
@@ -387,6 +463,27 @@ def api_create_bet():
         except ValueError:
             return jsonify({'success': False, 'error': 'Invalid amount or odds format'}), 400
         
+        # Handle expire_time if provided
+        expire_time = None
+        if data.get('expire_time'):
+            try:
+                from datetime import datetime, date, timezone, timedelta
+                
+                # Parse the date from the input
+                expire_date = datetime.fromisoformat(data['expire_time'].replace('Z', '+00:00')).date()
+                
+                # Get current date in EST
+                est_offset = timedelta(hours=-5)
+                est_tz = timezone(est_offset)
+                today_est = datetime.now(est_tz).date()
+                
+                if expire_date <= today_est:
+                    return jsonify({'success': False, 'error': 'Expiration date must be in the future'}), 400
+                
+                expire_time = expire_date
+            except ValueError:
+                return jsonify({'success': False, 'error': 'Invalid expiration date format'}), 400
+        
         creator_id = session.get('user_id')
         
         # Check if user has sufficient balance
@@ -403,7 +500,8 @@ def api_create_bet():
             description=data['description'],
             amount=amount,
             odds=odds,
-            category=data['category']
+            category=data['category'],
+            expire_time=expire_time
         )
         
         return jsonify({'success': True, 'bet_id': bet.id})
@@ -429,6 +527,25 @@ def api_accept_bet():
         if not bet:
             return jsonify({'success': False, 'error': 'Bet not found'}), 404
         
+        # Check if bet is expired
+        if is_bet_expired(bet):
+            bet.status = 'expired'
+            # Return money to creator
+            creator = get_user_by_id(bet.creator_id)
+            if creator:
+                creator.balance = (creator.balance or 0) + bet.amount
+                
+                # Record refund transaction
+                create_transaction(
+                    user_id=bet.creator_id,
+                    transaction_type='bet_refund',
+                    amount=bet.amount,
+                    description=f'Refund for expired bet: {bet.title}',
+                    bet_id=bet.id
+                )
+            db.session.commit()
+            return jsonify({'success': False, 'error': 'This bet has expired'}), 400
+        
         if bet.status != 'open':
             return jsonify({'success': False, 'error': 'Bet is no longer available'}), 400
         
@@ -440,8 +557,9 @@ def api_accept_bet():
         if not acceptor:
             return jsonify({'success': False, 'error': 'User not found'}), 404
         
-        if (acceptor.balance or 0) < bet.amount:
-            return jsonify({'success': False, 'error': f'Insufficient balance. You need ${bet.amount:.2f} but only have ${acceptor.balance:.2f}'}), 400
+        taker_amount = get_taker_amount(bet)
+        if (acceptor.balance or 0) < taker_amount:
+            return jsonify({'success': False, 'error': f'Insufficient balance. You need ${taker_amount:.2f} but only have ${acceptor.balance:.2f}'}), 400
         
         success = accept_bet(bet_id, acceptor_id)
         
@@ -453,6 +571,109 @@ def api_accept_bet():
     except Exception as e:
         logging.error(f"Error accepting bet: {str(e)}")
         return jsonify({'success': False, 'error': 'Failed to accept bet'}), 500
+
+@app.route('/api/creator-decide', methods=['POST'])
+@login_required
+def api_creator_decide():
+    """API endpoint for bet creator to decide outcome"""
+    try:
+        data = request.get_json()
+        bet_id = data.get('bet_id')
+        decision = data.get('decision')  # 'creator_wins' or 'acceptor_wins'
+        
+        if not bet_id or not decision:
+            return jsonify({'success': False, 'error': 'Bet ID and decision are required'}), 400
+        
+        if decision not in ['creator_wins', 'acceptor_wins']:
+            return jsonify({'success': False, 'error': 'Invalid decision'}), 400
+        
+        user_id = session.get('user_id')
+        bet = get_bet_by_id(bet_id)
+        
+        if not bet:
+            return jsonify({'success': False, 'error': 'Bet not found'}), 404
+        
+        if bet.creator_id != user_id:
+            return jsonify({'success': False, 'error': 'Only the bet creator can decide the outcome'}), 403
+        
+        success = creator_decide_bet(bet_id, decision)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Decision submitted. Waiting for bet taker response.'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to submit decision'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error in creator decision: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to submit decision'}), 500
+
+@app.route('/api/taker-respond', methods=['POST'])
+@login_required
+def api_taker_respond():
+    """API endpoint for bet taker to respond to creator's decision"""
+    try:
+        data = request.get_json()
+        bet_id = data.get('bet_id')
+        response = data.get('response')  # 'accepted' or 'disputed'
+        dispute_reason = data.get('dispute_reason', '')
+        
+        if not bet_id or not response:
+            return jsonify({'success': False, 'error': 'Bet ID and response are required'}), 400
+        
+        if response not in ['accepted', 'disputed']:
+            return jsonify({'success': False, 'error': 'Invalid response'}), 400
+        
+        if response == 'disputed' and not dispute_reason.strip():
+            return jsonify({'success': False, 'error': 'Dispute reason is required when disputing'}), 400
+        
+        user_id = session.get('user_id')
+        bet = get_bet_by_id(bet_id)
+        
+        if not bet:
+            return jsonify({'success': False, 'error': 'Bet not found'}), 404
+        
+        if bet.acceptor_id != user_id:
+            return jsonify({'success': False, 'error': 'Only the bet taker can respond to the decision'}), 403
+        
+        success = taker_respond_to_decision(bet_id, response, dispute_reason)
+        
+        if success:
+            if response == 'accepted':
+                return jsonify({'success': True, 'message': 'Decision accepted. Bet has been resolved.'})
+            else:
+                return jsonify({'success': True, 'message': f'Bet disputed. Admin will review. Bet ID: {bet_id}'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to submit response'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error in taker response: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to submit response'}), 500
+
+@app.route('/api/admin-resolve', methods=['POST'])
+@admin_required
+def api_admin_resolve():
+    """API endpoint for admin to resolve disputed bets"""
+    try:
+        data = request.get_json()
+        bet_id = data.get('bet_id')
+        admin_decision = data.get('admin_decision')  # 'creator_wins', 'acceptor_wins', or 'void'
+        
+        if not bet_id or not admin_decision:
+            return jsonify({'success': False, 'error': 'Bet ID and admin decision are required'}), 400
+        
+        if admin_decision not in ['creator_wins', 'acceptor_wins', 'void']:
+            return jsonify({'success': False, 'error': 'Invalid admin decision'}), 400
+        
+        success = admin_resolve_dispute(bet_id, admin_decision)
+        
+        if success:
+            return jsonify({'success': True, 'message': f'Dispute resolved: {admin_decision.replace("_", " ")}'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to resolve dispute'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error in admin resolution: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to resolve dispute'}), 500
 
 # Admin routes
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -514,7 +735,7 @@ def admin_database():
         users = User.query.order_by(User.created_at.desc()).all()
         bets = Bet.query.order_by(Bet.created_at.desc()).all()
         
-        return render_template('admin_database.html', users=users, bets=bets)
+        return render_template('admin_database.html', users=[user.to_dict() for user in users], bets=[bet.to_dict() for bet in bets])
     except Exception as e:
         logging.error(f"Error in admin database viewer: {str(e)}")
         return render_template('admin_database.html', users=[], bets=[], error="Failed to load database data")
@@ -522,8 +743,30 @@ def admin_database():
 @app.route('/admin/disputes')
 @admin_required
 def admin_disputes():
-    """Admin bet disputes page - placeholder for now"""
-    return render_template('admin_disputes.html')
+    """Admin bet disputes page"""
+    try:
+        disputed_bets = get_disputed_bets()
+        users = {user.id: user.to_dict() for user in User.query.all()}
+        
+        return render_template('admin_disputes.html', 
+                             disputed_bets=[bet.to_dict() for bet in disputed_bets], 
+                             users=users)
+    except Exception as e:
+        logging.error(f"Error in admin disputes: {str(e)}")
+        return render_template('admin_disputes.html', 
+                             disputed_bets=[], 
+                             users={}, 
+                             error="Failed to load disputed bets")
+
+@app.route('/contact')
+def contact():
+    """Contact us page"""
+    return render_template('contact.html')
+
+@app.route('/terms')
+def terms():
+    """Terms of service page"""
+    return render_template('terms.html')
 
 @app.route('/admin/statistics')
 @admin_required
@@ -540,6 +783,8 @@ def admin_statistics():
         total_bets = Bet.query.count()
         open_bets = Bet.query.filter_by(status='open').count()
         accepted_bets = Bet.query.filter_by(status='accepted').count()
+        awaiting_resolution_bets = Bet.query.filter_by(status='awaiting_resolution').count()
+        disputed_bets = Bet.query.filter_by(status='disputed').count()
         completed_bets = Bet.query.filter_by(status='completed').count()
         cancelled_bets = Bet.query.filter_by(status='cancelled').count()
         
@@ -557,19 +802,36 @@ def admin_statistics():
         return render_template('admin_statistics.html',
                              total_users=total_users,
                              users_with_balance=users_with_balance,
-                             top_users_by_balance=top_users_by_balance,
-                             top_users_by_profit=top_users_by_profit,
+                             top_users_by_balance=[user.to_dict() for user in top_users_by_balance],
+                             top_users_by_profit=[user.to_dict() for user in top_users_by_profit],
                              total_bets=total_bets,
                              open_bets=open_bets,
                              accepted_bets=accepted_bets,
+                             awaiting_resolution_bets=awaiting_resolution_bets,
+                             disputed_bets=disputed_bets,
                              completed_bets=completed_bets,
                              cancelled_bets=cancelled_bets,
                              category_stats=category_stats,
-                             recent_bets=recent_bets,
-                             recent_users=recent_users)
+                             recent_bets=[bet.to_dict() for bet in recent_bets],
+                             recent_users=[user.to_dict() for user in recent_users])
     except Exception as e:
         logging.error(f"Error in admin statistics: {str(e)}")
-        return render_template('admin_statistics.html', error="Failed to load statistics")
+        return render_template('admin_statistics.html', 
+                             total_users=0,
+                             users_with_balance=0,
+                             top_users_by_balance=[],
+                             top_users_by_profit=[],
+                             total_bets=0,
+                             open_bets=0,
+                             accepted_bets=0,
+                             awaiting_resolution_bets=0,
+                             disputed_bets=0,
+                             completed_bets=0,
+                             cancelled_bets=0,
+                             category_stats=[],
+                             recent_bets=[],
+                             recent_users=[],
+                             error="Failed to load statistics")
 
 
 @app.route('/set-user/<int:user_id>')

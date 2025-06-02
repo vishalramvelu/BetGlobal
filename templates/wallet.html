@@ -164,17 +164,87 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #e0a800);">
-                                <i data-feather="activity"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transaction History -->
+        <div class="dashboard-stats">
+            <div class="container">
+                <div class="bets-card">
+                    <div class="bets-header">
+                        <div class="bets-title">
+                            <div class="bets-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
+                                <i data-feather="list"></i>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-number">${{ "%.2f"|format((user.balance or 0) + user.total_profit) }}</div>
-                                <div class="stat-label">Total Value</div>
-                                <div class="stat-description">Balance + Profit</div>
+                            <div>
+                                <h5>Transaction History</h5>
+                                <p>All your financial activities</p>
                             </div>
                         </div>
+                        <div class="bets-actions">
+                            <form method="GET" class="d-flex align-items-center gap-2">
+                                <select name="period" class="form-select form-select-sm auth-input" style="width: auto;" onchange="this.form.submit()">
+                                    <option value="all" {% if current_filter == 'all' %}selected{% endif %}>All Time</option>
+                                    <option value="week" {% if current_filter == 'week' %}selected{% endif %}>Last Week</option>
+                                    <option value="month" {% if current_filter == 'month' %}selected{% endif %}>Last Month</option>
+                                    <option value="year" {% if current_filter == 'year' %}selected{% endif %}>Last Year</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="bets-content">
+                        {% if not transactions %}
+                            <div class="text-center py-4">
+                                <div style="color: rgba(255, 255, 255, 0.6); margin-bottom: 1rem;">
+                                    <i data-feather="archive" style="width: 48px; height: 48px;"></i>
+                                </div>
+                                <h6 style="color: rgba(255, 255, 255, 0.8);">No transactions found</h6>
+                                <p style="color: rgba(255, 255, 255, 0.6); margin: 0;">
+                                    {% if current_filter != 'all' %}
+                                        Try selecting a different time period or <a href="{{ url_for('wallet') }}" class="text-warning">view all transactions</a>.
+                                    {% else %}
+                                        Start by making a deposit or creating a bet to see your transaction history.
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% else %}
+                            <div class="transaction-list">
+                                {% for transaction in transactions %}
+                                    <div class="transaction-item">
+                                        <div class="transaction-icon">
+                                            {% if transaction.transaction_type == 'deposit' %}
+                                                <div class="t-icon t-deposit"><i data-feather="plus-circle"></i></div>
+                                            {% elif transaction.transaction_type == 'withdrawal' %}
+                                                <div class="t-icon t-withdrawal"><i data-feather="minus-circle"></i></div>
+                                            {% elif transaction.transaction_type == 'bet_created' %}
+                                                <div class="t-icon t-bet-out"><i data-feather="target"></i></div>
+                                            {% elif transaction.transaction_type == 'bet_accepted' %}
+                                                <div class="t-icon t-bet-out"><i data-feather="check-circle"></i></div>
+                                            {% elif transaction.transaction_type == 'bet_refund' %}
+                                                <div class="t-icon t-refund"><i data-feather="rotate-ccw"></i></div>
+                                            {% elif transaction.transaction_type == 'bet_payout' %}
+                                                <div class="t-icon t-payout"><i data-feather="award"></i></div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="transaction-details">
+                                            <div class="transaction-title">{{ transaction.description }}</div>
+                                            <div class="transaction-meta">
+                                                <span class="transaction-date">{{ transaction.created_at|strftime('%b %d, %Y at %I:%M %p') }}</span>
+                                                {% if transaction.bet_id and bets.get(transaction.bet_id) %}
+                                                    <span class="transaction-bet">• Bet #{{ transaction.bet_id }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="transaction-amount">
+                                            <span class="amount {% if transaction.amount >= 0 %}amount-positive{% else %}amount-negative{% endif %}">
+                                                {% if transaction.amount >= 0 %}+{% endif %}${{ "%.2f"|format(transaction.amount) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -184,6 +254,111 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+.transaction-list {
+    margin-top: 1rem;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.transaction-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.transaction-item:last-child {
+    margin-bottom: 0;
+}
+
+.transaction-icon {
+    margin-right: 1rem;
+}
+
+.t-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.t-deposit {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.t-withdrawal {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.t-bet-out {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+.t-refund {
+    background: linear-gradient(135deg, #6c757d, #495057);
+}
+
+.t-payout {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.transaction-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.transaction-title {
+    color: #fff;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.transaction-meta {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+}
+
+.transaction-date {
+    margin-right: 0.5rem;
+}
+
+.transaction-bet {
+    color: rgba(255, 193, 7, 0.8);
+}
+
+.transaction-amount {
+    text-align: right;
+}
+
+.amount {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.amount-positive {
+    color: #28a745;
+}
+
+.amount-negative {
+    color: #dc3545;
+}
+
+.bets-actions {
+    margin-left: auto;
+}
+</style>
+
 <script>
 // Deposit Form Handler
 document.getElementById('depositForm').addEventListener('submit', function(e) {
@@ -220,6 +395,8 @@ document.getElementById('depositForm').addEventListener('submit', function(e) {
             // Update withdraw max
             document.getElementById('withdrawAmount').max = data.new_balance;
             document.querySelector('#withdrawForm .form-hint').textContent = `Available: $${data.new_balance.toFixed(2)}`;
+            // Refresh page after a delay to show new transaction
+            setTimeout(() => window.location.reload(), 2000);
         } else {
             showAlert(data.error, 'danger');
         }
@@ -275,6 +452,8 @@ document.getElementById('withdrawForm').addEventListener('submit', function(e) {
             // Update withdraw max
             document.getElementById('withdrawAmount').max = data.new_balance;
             document.querySelector('#withdrawForm .form-hint').textContent = `Available: $${data.new_balance.toFixed(2)}`;
+            // Refresh page after a delay to show new transaction
+            setTimeout(() => window.location.reload(), 2000);
         } else {
             showAlert(data.error, 'danger');
         }
@@ -304,10 +483,6 @@ function updateBalance(newBalance) {
     const statCards = document.querySelectorAll('.stat-number');
     if (statCards.length >= 1) {
         statCards[0].textContent = `$${newBalance.toFixed(2)}`;
-    }
-    if (statCards.length >= 3) {
-        const totalProfit = parseFloat('{{ user.total_profit }}') || 0;
-        statCards[2].textContent = `$${(newBalance + totalProfit).toFixed(2)}`;
     }
 }
 
