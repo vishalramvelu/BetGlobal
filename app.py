@@ -5,22 +5,22 @@ from flask_cors import CORS
 from werkzeug.middleware.proxy_fix import ProxyFix
 from database import db
 from models import User, Bet
-
 from flask_migrate import Migrate
 
 import stripe
 
+#STRIPE API Key
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production") 
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db") 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
@@ -275,6 +275,8 @@ def dashboard():
     except Exception as e:
         logging.error(f"Error in dashboard route: {str(e)}")
         return render_template('dashboard.html', user=None, error="Failed to load dashboard")
+    
+# Stripe Changes Start 
 
 @app.route('/wallet')
 @login_required
@@ -338,7 +340,6 @@ def create_checkout_session():
                         "currency": "usd",
                         "product_data": {
                             "name": "Deposit to BetGlobal Wallet",
-                            # (Optional) You can add "description", "images", or metadata here
                         },
                         "unit_amount": amount_in_cents,
                     },
@@ -374,12 +375,11 @@ def success():
         return "Success page: missing session_id", 400
 
     try:
-        # Retrieve the Checkout Session from Stripe (optional)
+        # Retrieve the Checkout Session from Stripe 
         stripe_session = stripe.checkout.Session.retrieve(session_id)
         amount_paid = stripe_session.amount_total / 100.0  # in dollars
 
-        # At this point, you should credit the user's wallet in your database.
-        # For example:
+        # credit the user's wallet in database
         user_id = session.get("user_id")
         user = get_user_by_id(user_id)
         if user:
@@ -390,9 +390,6 @@ def success():
         return redirect(url_for("wallet"))
     
 
-    
-
-
     except Exception as e:
         logging.error(f"Error retrieving Stripe session: {e}")
         return "Error retrieving payment details", 500
@@ -402,7 +399,8 @@ def success():
 @login_required
 def cancelled():
     """Customer lands here if they cancel the Stripe Checkout flow."""
-    flash('Payment was canceled-no charge was made', 'error')
+
+    flash('Payment was canceled - no charge was made', 'error')
     return redirect(url_for('wallet'))
 
 
@@ -466,6 +464,25 @@ def create_payout():
         amount_in_cents = int(dollars * 100)
     except ValueError:
         return redirect(url_for("wallet"))
+    
+    #extra check to make sure our stripe account has enough funds
+    try:
+        platform_balance = stripe.Balance.retrieve()
+        
+        available_usd = 0
+        for bal in platform_balance.available:
+            if bal.currency.lower() == "usd":
+                available_usd = bal.amount
+                break
+        
+        if available_usd < amount_in_cents:
+            flash("Our payout system is temporarily out of funds. Please try again shortly. Sorry for the inconvenience!", "danger")
+            return redirect(url_for("wallet"))
+    
+    except stripe.error.StripeError as e:
+        logging.error(f"Stripe Balance Retrieve Error: {e}")
+        flash("Unable to verify payout balance. Try again later.", "danger")
+        return redirect(url_for("wallet"))
 
     try:
         # 1) Create a Transfer from platform → connected account
@@ -481,7 +498,7 @@ def create_payout():
         # into their connected account. That connected account then automatically payouts
         # according to its payout schedule to their bank account.
 
-        # 2) Deduct the amount from your local database
+        # 2) Deduct the amount from local database
         user.balance = (user.balance or 0) - dollars
         db.session.commit()
 
@@ -490,7 +507,12 @@ def create_payout():
     
     except stripe.error.StripeError as e:
         logging.error(f"Stripe Transfer Error: {e}")
-        return redirect(url_for("wallet"))    
+        return redirect(url_for("wallet"))
+
+
+# Stripe Changes End 
+
+#Testing deposit
 
 @app.route('/api/wallet/deposit', methods=['POST'])
 @login_required
@@ -528,6 +550,8 @@ def api_deposit():
         logging.error(f"Error in deposit: {str(e)}")
         db.session.rollback()
         return jsonify({'success': False, 'error': 'Deposit failed'}), 500
+
+# Testing withdraw
 
 @app.route('/api/wallet/withdraw', methods=['POST'])
 @login_required

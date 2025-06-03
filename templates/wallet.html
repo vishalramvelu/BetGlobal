@@ -48,7 +48,6 @@
                                 ${{ "%.2f"|format(user.balance or 0) }}
                             </div>
                             <div class="profit-trend">
-                                <i data-feather="dollar-sign" class="me-1"></i>
                                 <span>Available Funds</span>
                             </div>
                         </div>
@@ -116,6 +115,13 @@
                                 <p>You must <a href="{{ url_for('create_connected_account') }}">set up your bank info</a> before withdrawing.</p>
                                 {% elif not can_withdraw %}
                                 <p>Your bank account or KYC is still pending. Please complete onboarding.</p>
+                                 <a
+                                    href="{{ url_for('create_connected_account') }}"
+                                    class="btn btn-primary"
+                                    style="margin-top: 1rem;"
+                                 >
+                                    Complete Onboarding
+                                 </a>
                                 {% else %}
                                     <form id="withdrawForm" action = "/create-payout" method = "post" class="wallet-form">
                                         <div class="form-group mb-3">
@@ -127,7 +133,7 @@
                                                 <input type="number" class="form-control auth-input" id="withdrawAmount" name = "amount"
                                                     placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
                                             </div>
-                                            <div class="form-hint">Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
+                                            <div class="form-hint">Minimum: $0.01, Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
                                         </div>
                                         <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
                                             <i data-feather="minus" class="me-2"></i>
