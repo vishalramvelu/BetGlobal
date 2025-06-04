@@ -1,0 +1,14 @@
+Welcome to Play Stakes!
+
+Hello {{ user.username }},
+
+Thank you for registering with Play Stakes! To complete your registration and start betting, please confirm your email address by visiting this link:
+
+{{ confirmation_link }}
+
+This confirmation link will expire in 5 days. If you need a new confirmation link, you can request one by visiting our login page.
+
+If you didn't create an account with Play Stakes, you can safely ignore this email.
+
+Best regards,
+The Play Stakes Team

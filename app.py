@@ -2,6 +2,8 @@ import os
 import logging
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_cors import CORS
+from flask_mail import Mail
+from flask_security import Security, SQLAlchemyUserDatastore, auth_required, hash_password
 from werkzeug.middleware.proxy_fix import ProxyFix
 from database import db
 
@@ -21,11 +23,52 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
 }
 
+# Flask-Security-Too configuration
+app.config['SECURITY_PASSWORD_SALT'] = os.environ.get("SECURITY_PASSWORD_SALT", "super-secret-salt")
+app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
+
+# Email confirmation - disable for development, enable for production
+if os.environ.get('FLASK_ENV') == 'production':
+    app.config['SECURITY_CONFIRMABLE'] = True
+    app.config['SECURITY_SEND_REGISTER_EMAIL'] = True
+    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'security.login'
+else:
+    # Development mode - auto-confirm users, no email needed
+    app.config['SECURITY_CONFIRMABLE'] = False
+    app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
+    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'index'
+
+app.config['SECURITY_REGISTERABLE'] = True
+app.config['SECURITY_RECOVERABLE'] = True
+app.config['SECURITY_TRACKABLE'] = True
+app.config['SECURITY_PASSWORDLESS'] = False
+app.config['SECURITY_CHANGEABLE'] = True
+app.config['SECURITY_EMAIL_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@playstakes.com')
+app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
+
+# Mail configuration - Development mode
+if os.environ.get('FLASK_ENV') == 'production':
+    # Production email settings
+    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+else:
+    # Development mode - suppress actual email sending, log to console
+    app.config['TESTING'] = True
+    app.config['MAIL_SUPPRESS_SEND'] = True
+    
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@playstakes.com')
+
 # Initialize the app with the extension
 db.init_app(app)
 
 # Enable CORS for cross-origin requests
 CORS(app)
+
+# Initialize Flask-Mail
+mail = Mail(app)
 
 # Custom Jinja2 filter for formatting ISO date strings
 @app.template_filter('strftime')
@@ -41,20 +84,29 @@ def datetime_filter(date_string, format_string='%Y-%m-%d %H:%M'):
         return date_string  # Return original if parsing fails
 
 # Import models after app creation to avoid circular imports
-from models import Bet, User, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount
+from models import Bet, User, Role, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-# Authentication helper functions
+# Setup Flask-Security-Too
+from forms import ExtendedRegisterForm
+
+class CustomUserDatastore(SQLAlchemyUserDatastore):
+    def create_user(self, **kwargs):
+        """Override create_user to handle username field"""
+        # Set default balance for new users
+        kwargs.setdefault('balance', 100.0)
+        return super().create_user(**kwargs)
+
+user_datastore = CustomUserDatastore(db, User, Role)
+security = Security(app, user_datastore, 
+                   register_form=ExtendedRegisterForm,
+                   confirm_register_form=ExtendedRegisterForm)
+
+# Authentication helper functions (keeping for admin routes)
 def login_required(f):
-    """Decorator to require login for certain routes"""
-    from functools import wraps
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+    """Decorator to require login for certain routes - replaced by Flask-Security auth_required"""
+    return auth_required()(f)
 
 def admin_required(f):
     """Decorator to require admin authentication for admin routes"""
@@ -68,7 +120,8 @@ def admin_required(f):
 
 def check_authenticated():
     """Check if user is authenticated"""
-    return 'user_id' in session
+    from flask_security import current_user
+    return current_user.is_authenticated
 
 # Routes
 @app.route('/landing')
@@ -91,109 +144,10 @@ def start_betting():
     """Start betting - redirects to login if not authenticated"""
     if check_authenticated():
         return redirect(url_for('index'))
-    return redirect(url_for('login'))
+    return redirect(url_for('security.login'))
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """Login page and authentication"""
-    if request.method == 'POST':
-        if request.is_json:
-            data = request.get_json()
-            username = data.get('username')
-            password = data.get('password')
-        else:
-            username = request.form.get('username')
-            password = request.form.get('password')
-        
-        if not username or not password:
-            return jsonify({'success': False, 'error': 'Username and password are required'})
-        
-        # Find user by username
-        user = User.query.filter_by(username=username).first()
-        
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            flash(f'Welcome back, {user.username}!', 'success')
-            return jsonify({'success': True, 'redirect': url_for('index')})
-        else:
-            return jsonify({'success': False, 'error': 'Invalid username or password'})
-    
-    # If already logged in, redirect to main app
-    if check_authenticated():
-        return redirect(url_for('index'))
-    
-    return render_template('login.html')
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    """Signup page and user registration"""
-    if request.method == 'POST':
-        if request.is_json:
-            data = request.get_json()
-            username = data.get('username')
-            email = data.get('email')
-            password = data.get('password')
-        else:
-            username = request.form.get('username')
-            email = request.form.get('email')
-            password = request.form.get('password')
-        
-        # Validation
-        if not username or not email or not password:
-            return jsonify({'success': False, 'error': 'All fields are required'})
-        
-        if len(username) < 3 or len(username) > 20:
-            return jsonify({'success': False, 'error': 'Username must be 3-20 characters long'})
-        
-        if len(password) < 6:
-            return jsonify({'success': False, 'error': 'Password must be at least 6 characters long'})
-        
-        # Check if username or email already exists
-        existing_user = User.query.filter(
-            (User.username == username) | (User.email == email)
-        ).first()
-        
-        if existing_user:
-            if existing_user.username == username:
-                return jsonify({'success': False, 'error': 'Username already exists'})
-            else:
-                return jsonify({'success': False, 'error': 'Email already registered'})
-        
-        try:
-            # Create new user
-            user = User()
-            user.username = username
-            user.email = email
-            user.password = generate_password_hash(password)
-            
-            db.session.add(user)
-            db.session.commit()
-            
-            # Auto-login the user
-            session['user_id'] = user.id
-            session['username'] = user.username
-            flash(f'Welcome to BetGlobal, {user.username}!', 'success')
-            return jsonify({'success': True, 'redirect': url_for('index')})
-            
-        except Exception as e:
-            db.session.rollback()
-            logging.error(f"Error creating user: {str(e)}")
-            return jsonify({'success': False, 'error': 'Failed to create account. Please try again.'})
-    
-    # If already logged in, redirect to main app
-    if check_authenticated():
-        return redirect(url_for('index'))
-    
-    return render_template('signup.html')
-
-@app.route('/logout')
-def logout():
-    """Logout user and redirect to landing page"""
-    username = session.get('username', 'User')
-    session.clear()
-    flash(f'Goodbye, {username}! You have been logged out.', 'secondary')
-    return redirect(url_for('landing'))
+# Login, signup, and logout are now handled by Flask-Security-Too
+# Available at /login, /register, /logout endpoints
 
 @app.route('/')
 def root():
@@ -260,14 +214,14 @@ def index():
 def dashboard():
     """User dashboard page"""
     try:
-        user_id = session.get('user_id')
-        user = get_user_by_id(user_id)
+        from flask_security import current_user
+        user = current_user
         
         if not user:
             flash('User not found', 'error')
             return redirect(url_for('index'))
         
-        created_bets, accepted_bets = get_user_bets(user_id)
+        created_bets, accepted_bets = get_user_bets(user.id)
         
         # Calculate statistics
         total_bets = len(created_bets) + len(accepted_bets)
@@ -297,8 +251,8 @@ def dashboard():
 def wallet():
     """User wallet page with transaction history"""
     try:
-        user_id = session.get('user_id')
-        user = get_user_by_id(user_id)
+        from flask_security import current_user
+        user = current_user
         
         if not user:
             flash('User not found', 'error')
@@ -309,7 +263,7 @@ def wallet():
         
         # Build transaction query
         from datetime import datetime, timedelta
-        query = Transaction.query.filter_by(user_id=user_id)
+        query = Transaction.query.filter_by(user_id=user.id)
         
         # Apply time filters
         if filter_period == 'week':
@@ -348,6 +302,7 @@ def wallet():
 def api_deposit():
     """API endpoint to deposit money"""
     try:
+        from flask_security import current_user
         data = request.get_json()
         amount = float(data.get('amount', 0))
         
@@ -357,8 +312,7 @@ def api_deposit():
         if amount > 10000:  # Limit deposits
             return jsonify({'success': False, 'error': 'Maximum deposit is $10,000'}), 400
         
-        user_id = session.get('user_id')
-        user = get_user_by_id(user_id)
+        user = current_user
         
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
@@ -368,7 +322,7 @@ def api_deposit():
         
         # Record transaction
         create_transaction(
-            user_id=user_id,
+            user_id=user.id,
             transaction_type='deposit',
             amount=amount,
             description=f'Deposit: ${amount:.2f}'
@@ -394,14 +348,14 @@ def api_deposit():
 def api_withdraw():
     """API endpoint to withdraw money"""
     try:
+        from flask_security import current_user
         data = request.get_json()
         amount = float(data.get('amount', 0))
         
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Amount must be greater than 0'}), 400
         
-        user_id = session.get('user_id')
-        user = get_user_by_id(user_id)
+        user = current_user
         
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
@@ -414,7 +368,7 @@ def api_withdraw():
         
         # Record transaction
         create_transaction(
-            user_id=user_id,
+            user_id=user.id,
             transaction_type='withdrawal',
             amount=-amount,  # Negative amount for withdrawal
             description=f'Withdrawal: ${amount:.2f}'
@@ -484,7 +438,8 @@ def api_create_bet():
             except ValueError:
                 return jsonify({'success': False, 'error': 'Invalid expiration date format'}), 400
         
-        creator_id = session.get('user_id')
+        from flask_security import current_user
+        creator_id = current_user.id
         
         # Check if user has sufficient balance
         user = get_user_by_id(creator_id)
@@ -521,7 +476,8 @@ def api_accept_bet():
         if not bet_id:
             return jsonify({'success': False, 'error': 'Bet ID is required'}), 400
         
-        acceptor_id = session.get('user_id')
+        from flask_security import current_user
+        acceptor_id = current_user.id
         
         bet = get_bet_by_id(bet_id)
         if not bet:
@@ -587,7 +543,8 @@ def api_creator_decide():
         if decision not in ['creator_wins', 'acceptor_wins']:
             return jsonify({'success': False, 'error': 'Invalid decision'}), 400
         
-        user_id = session.get('user_id')
+        from flask_security import current_user
+        user_id = current_user.id
         bet = get_bet_by_id(bet_id)
         
         if not bet:
@@ -626,7 +583,8 @@ def api_taker_respond():
         if response == 'disputed' and not dispute_reason.strip():
             return jsonify({'success': False, 'error': 'Dispute reason is required when disputing'}), 400
         
-        user_id = session.get('user_id')
+        from flask_security import current_user
+        user_id = current_user.id
         bet = get_bet_by_id(bet_id)
         
         if not bet:
@@ -861,22 +819,40 @@ with app.app_context():
     try:
         existing_users = User.query.count()
         if existing_users == 0:
-            user1 = User()
-            user1.username = 'john_doe'
-            user1.email = 'john@example.com'
-            user1.password = generate_password_hash('password123')
-            user1.balance = 100.0
+            # Create users using Flask-Security-Too's user_datastore
+            user1 = user_datastore.create_user(
+                username='john_doe',
+                email='john@example.com',
+                password=hash_password('password123'),
+                balance=100.0,
+                active=True,
+                confirmed_at=datetime.utcnow()
+            )
             
-            user2 = User()
-            user2.username = 'jane_smith'
-            user2.email = 'jane@example.com'
-            user2.password = generate_password_hash('password123')
-            user2.balance = 100.0
+            user2 = user_datastore.create_user(
+                username='jane_smith',
+                email='jane@example.com',
+                password=hash_password('password123'),
+                balance=100.0,
+                active=True,
+                confirmed_at=datetime.utcnow()
+            )
             
-            db.session.add(user1)
-            db.session.add(user2)
             db.session.commit()
             logging.info("Sample users created with default password: password123")
+        else:
+            # Add fs_uniquifier to existing users if they don't have it
+            users_without_uniquifier = User.query.filter_by(fs_uniquifier=None).all()
+            for user in users_without_uniquifier:
+                import uuid
+                user.fs_uniquifier = str(uuid.uuid4())
+            if users_without_uniquifier:
+                db.session.commit()
+                logging.info(f"Added fs_uniquifier to {len(users_without_uniquifier)} existing users")
     except Exception as e:
         logging.error(f"Error initializing users: {e}")
         db.session.rollback()
+
+# Initialize notification scheduler
+from scheduler import init_scheduler
+init_scheduler(app)

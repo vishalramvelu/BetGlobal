@@ -1,0 +1,164 @@
+{% extends "landing_base.html" %}
+
+{% block title %}Sign Up - BetGlobal{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-bg"></div>
+    <div class="container py-5">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-5 col-md-7">
+                <div class="auth-card">
+                    <div class="auth-header text-center mb-4">
+                        <div class="auth-brand mb-3">
+                            <a href="{{ url_for('landing') }}" class="text-decoration-none">
+                                <div class="brand-icon">
+                                    <i data-feather="trending-up"></i>
+                                </div>
+                                <span class="brand-text">BetGlobal</span>
+                            </a>
+                        </div>
+                        <h2 class="auth-title">Join BetGlobal</h2>
+                        <p class="auth-subtitle">Create your account and start winning today</p>
+                    </div>
+
+                    <form action="{{ url_for_security('register') }}" method="post" class="auth-form">
+                        {{ register_user_form.hidden_tag() }}
+                        
+                        <div class="form-group mb-4">
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="user"></i>
+                                </div>
+                                {{ register_user_form.username(class="form-control auth-input", placeholder="Choose a username") }}
+                            </div>
+                            {% if register_user_form.username.errors %}
+                                {% for error in register_user_form.username.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="mail"></i>
+                                </div>
+                                {{ register_user_form.email(class="form-control auth-input", placeholder="Enter your email") }}
+                            </div>
+                            {% if register_user_form.email.errors %}
+                                {% for error in register_user_form.email.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                {{ register_user_form.password(class="form-control auth-input", placeholder="Create a password") }}
+                            </div>
+                            {% if register_user_form.password.errors %}
+                                {% for error in register_user_form.password.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="password_confirm" class="form-label">Confirm Password</label>
+                            <div class="input-wrapper">
+                                <div class="input-icon">
+                                    <i data-feather="lock"></i>
+                                </div>
+                                {{ register_user_form.password_confirm(class="form-control auth-input", placeholder="Confirm your password") }}
+                            </div>
+                            {% if register_user_form.password_confirm.errors %}
+                                {% for error in register_user_form.password_confirm.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
+                            <i data-feather="user-plus" class="me-2"></i>
+                            <span>Create Account</span>
+                        </button>
+                    </form>
+
+                    <div class="auth-divider">
+                        <span>or</span>
+                    </div>
+
+                    <div class="auth-links text-center">
+                        <p class="mb-3">Already have an account? 
+                            <a href="{{ url_for_security('login') }}" class="auth-link">
+                                Sign in here
+                            </a>
+                        </p>
+                        <a href="{{ url_for('landing') }}" class="back-link">
+                            <i data-feather="arrow-left" class="me-1"></i>
+                            Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 d-none d-lg-block">
+                <div class="auth-visual">
+                    <div class="visual-content">
+                        <h3 class="visual-title">Start Your Betting Journey</h3>
+                        <p class="visual-subtitle">Join thousands of users worldwide in the most exciting peer-to-peer betting platform.</p>
+                        
+                        <div class="feature-highlights">
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="gift"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>$100 Bonus</h6>
+                                    <p>Start with $100 in your wallet</p>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="mail-check"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>Email Verification</h6>
+                                    <p>Secure account confirmation</p>
+                                </div>
+                            </div>
+                            
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <i data-feather="trending-up"></i>
+                                </div>
+                                <div class="highlight-text">
+                                    <h6>No Fees</h6>
+                                    <p>Zero platform fees forever</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize Feather Icons after page load
+    document.addEventListener('DOMContentLoaded', function() {
+        feather.replace();
+    });
+</script>
+{% endblock %}

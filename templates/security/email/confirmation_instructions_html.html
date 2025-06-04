@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Confirm Your Email - Play Stakes</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #007bff;">Welcome to Play Stakes!</h2>
+        
+        <p>Hello {{ user.username }},</p>
+        
+        <p>Thank you for registering with Play Stakes! To complete your registration and start betting, please confirm your email address by clicking the link below:</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+            <a href="{{ confirmation_link }}" 
+               style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                Confirm Email Address
+            </a>
+        </p>
+        
+        <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
+        <p style="word-break: break-all; color: #666;">{{ confirmation_link }}</p>
+        
+        <p>This confirmation link will expire in 5 days. If you need a new confirmation link, you can request one by visiting our login page.</p>
+        
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+        
+        <p style="font-size: 12px; color: #666;">
+            If you didn't create an account with Play Stakes, you can safely ignore this email.
+        </p>
+        
+        <p style="font-size: 12px; color: #666;">
+            Best regards,<br>
+            The Play Stakes Team
+        </p>
+    </div>
+</body>
+</html>

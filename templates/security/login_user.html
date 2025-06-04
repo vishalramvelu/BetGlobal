@@ -11,25 +11,33 @@
                 <div class="auth-card">
                     <div class="auth-header text-center mb-4">
                         <div class="auth-brand mb-3">
-                            <div class="brand-icon">
-                                <i data-feather="trending-up"></i>
-                            </div>
-                            <span class="brand-text">BetGlobal</span>
+                            <a href="{{ url_for('landing') }}" class="text-decoration-none">
+                                <div class="brand-icon">
+                                    <i data-feather="trending-up"></i>
+                                </div>
+                                <span class="brand-text">BetGlobal</span>
+                            </a>
                         </div>
                         <h2 class="auth-title">Welcome Back</h2>
                         <p class="auth-subtitle">Sign in to your account and start winning</p>
                     </div>
 
-                    <form id="loginForm" method="POST" class="auth-form">
+                    <form action="{{ url_for_security('login') }}" method="post" class="auth-form">
+                        {{ login_user_form.hidden_tag() }}
+                        
                         <div class="form-group mb-4">
-                            <label for="username" class="form-label">Username</label>
+                            <label for="email" class="form-label">Email</label>
                             <div class="input-wrapper">
                                 <div class="input-icon">
-                                    <i data-feather="user"></i>
+                                    <i data-feather="mail"></i>
                                 </div>
-                                <input type="text" class="form-control auth-input" id="username" name="username" 
-                                       placeholder="Enter your username" required>
+                                {{ login_user_form.email(class="form-control auth-input", placeholder="Enter your email") }}
                             </div>
+                            {% if login_user_form.email.errors %}
+                                {% for error in login_user_form.email.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
                         </div>
 
                         <div class="form-group mb-4">
@@ -38,17 +46,23 @@
                                 <div class="input-icon">
                                     <i data-feather="lock"></i>
                                 </div>
-                                <input type="password" class="form-control auth-input" id="password" name="password" 
-                                       placeholder="Enter your password" required>
+                                {{ login_user_form.password(class="form-control auth-input", placeholder="Enter your password") }}
                             </div>
+                            {% if login_user_form.password.errors %}
+                                {% for error in login_user_form.password.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
                         </div>
 
+                        {% if login_user_form.remember %}
                         <div class="form-check mb-4">
-                            <input type="checkbox" class="form-check-input auth-checkbox" id="remember" name="remember">
+                            {{ login_user_form.remember(class="form-check-input auth-checkbox") }}
                             <label class="form-check-label" for="remember">
                                 Remember me for 30 days
                             </label>
                         </div>
+                        {% endif %}
 
                         <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
                             <i data-feather="log-in" class="me-2"></i>
@@ -62,8 +76,13 @@
 
                     <div class="auth-links text-center">
                         <p class="mb-3">Don't have an account? 
-                            <a href="{{ url_for('security.register') }}" class="auth-link">
+                            <a href="{{ url_for_security('register') }}" class="auth-link">
                                 Create one now
+                            </a>
+                        </p>
+                        <p class="mb-3">
+                            <a href="{{ url_for_security('forgot_password') }}" class="auth-link">
+                                Forgot your password?
                             </a>
                         </p>
                         <a href="{{ url_for('landing') }}" class="back-link">
@@ -121,60 +140,9 @@
 
 {% block scripts %}
 <script>
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    
-    // Show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing In...';
-    
-    fetch('{{ url_for("security.login") }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            username: formData.get('username'),
-            password: formData.get('password')
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = data.redirect || '{{ url_for("index") }}';
-        } else {
-            // Show error
-            let alertDiv = document.querySelector('.alert');
-            if (alertDiv) {
-                alertDiv.remove();
-            }
-            
-            const errorAlert = document.createElement('div');
-            errorAlert.className = 'alert alert-danger alert-dismissible fade show';
-            errorAlert.innerHTML = `
-                ${data.error}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            this.insertBefore(errorAlert, this.firstChild);
-            
-            // Reset button
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalText;
-            feather.replace();
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        // Reset button
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+    // Initialize Feather Icons after page load
+    document.addEventListener('DOMContentLoaded', function() {
         feather.replace();
     });
-});
 </script>
 {% endblock %}

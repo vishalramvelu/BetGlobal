@@ -1,7 +1,19 @@
 from datetime import datetime
 from database import db
+from flask_security import UserMixin, RoleMixin
 
-class User(db.Model):
+# Define models for Flask-Security-Too
+roles_users = db.Table('roles_users',
+    db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
+    db.Column('role_id', db.Integer(), db.ForeignKey('role.id'))
+)
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -10,7 +22,20 @@ class User(db.Model):
     total_profit = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Flask-Security-Too fields
+    active = db.Column(db.Boolean(), default=True)
+    fs_uniquifier = db.Column(db.String(255), unique=True)
+    confirmed_at = db.Column(db.DateTime())
+    
+    # Flask-Security-Too trackable fields
+    last_login_at = db.Column(db.DateTime())
+    current_login_at = db.Column(db.DateTime())
+    last_login_ip = db.Column(db.String(100))
+    current_login_ip = db.Column(db.String(100))
+    login_count = db.Column(db.Integer)
+    
     # Relationships
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
     created_bets = db.relationship('Bet', foreign_keys='Bet.creator_id', backref='creator', lazy='dynamic')
     accepted_bets = db.relationship('Bet', foreign_keys='Bet.acceptor_id', backref='acceptor', lazy='dynamic')
     
@@ -157,6 +182,14 @@ def accept_bet(bet_id, acceptor_id):
     
     db.session.commit()
     
+    # Send notification to bet creator
+    try:
+        from notifications import notify_bet_taken
+        notify_bet_taken(bet_id, acceptor_id)
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to send bet taken notification: {str(e)}")
+    
     return True
 
 def get_user_bets(user_id):
@@ -244,6 +277,15 @@ def creator_decide_bet(bet_id, decision):
     bet.status = 'awaiting_resolution'
     
     db.session.commit()
+    
+    # Send notification to bet taker
+    try:
+        from notifications import notify_bet_decision
+        notify_bet_decision(bet_id)
+    except Exception as e:
+        import logging
+        logging.error(f"Failed to send bet decision notification: {str(e)}")
+    
     return True
 
 def taker_respond_to_decision(bet_id, response, dispute_reason=None):

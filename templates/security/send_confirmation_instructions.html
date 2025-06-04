@@ -1,0 +1,22 @@
+{% extends "security/base.html" %}
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+
+{% block auth_content %}
+    <h2 class="text-center mb-4">Resend Confirmation Instructions</h2>
+    
+    <form action="{{ url_for_security('send_confirmation') }}" method="post">
+        {{ send_confirmation_form.hidden_tag() }}
+        
+        <div class="mb-3">
+            {{ render_field_with_errors(send_confirmation_form.email, class="form-control", placeholder="Email") }}
+        </div>
+        
+        <div class="d-grid">
+            {{ render_field(send_confirmation_form.submit, class="btn btn-primary") }}
+        </div>
+    </form>
+    
+    <div class="text-center mt-3">
+        <p><a href="{{ url_for_security('login') }}">Back to Login</a></p>
+    </div>
+{% endblock %}

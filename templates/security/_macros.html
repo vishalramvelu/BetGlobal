@@ -1,0 +1,20 @@
+{% macro render_field_with_errors(field) %}
+  <div class="form-group">
+    {{ field.label(class="form-label") }}
+    {{ field(**kwargs) }}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <div class="text-danger small">{{ error }}</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro render_field(field) %}
+  {{ field(**kwargs) }}
+  {% if field.errors %}
+    {% for error in field.errors %}
+      <div class="text-danger small">{{ error }}</div>
+    {% endfor %}
+  {% endif %}
+{% endmacro %}
