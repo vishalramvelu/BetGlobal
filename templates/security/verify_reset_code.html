@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Reset Code - Play Stakes</title>
+    
+    <!-- Bootstrap CSS with dark theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .auth-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-logo h1 {
+            color: white;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .auth-logo p {
+            color: rgba(255, 255, 255, 0.8);
+            margin: 0;
+        }
+        
+        .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+        
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #4dabf7;
+            box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+            color: white;
+        }
+        
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .code-input {
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #4dabf7, #339af0);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #339af0, #228be6);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn-outline-light {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+        }
+        
+        .auth-links {
+            text-align: center;
+            margin-top: 25px;
+        }
+        
+        .auth-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .auth-links a:hover {
+            color: white;
+        }
+        
+        .email-info {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .email-info p {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+        }
+        
+        .timer {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .password-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 25px;
+            margin-top: 25px;
+        }
+        
+        .progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .step.active {
+            background: #4dabf7;
+        }
+        
+        .step.completed {
+            background: #28a745;
+        }
+        
+        .step.pending {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .step-line {
+            width: 50px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .step-line.completed {
+            background: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo">
+                <h1>
+                    <i data-feather="key" class="me-2"></i>
+                    {% if code_verified %}Reset Password{% else %}Verify Code{% endif %}
+                </h1>
+                <p>{% if code_verified %}Create your new password{% else %}Enter the verification code sent to your email{% endif %}</p>
+            </div>
+            
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step completed">1</div>
+                <div class="step-line completed"></div>
+                <div class="step {% if code_verified %}completed{% else %}active{% endif %}">2</div>
+                <div class="step-line {% if code_verified %}completed{% endif %}"></div>
+                <div class="step {% if code_verified %}active{% else %}pending{% endif %}">3</div>
+            </div>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {% if category == 'error' %}
+                                <i data-feather="alert-circle" class="me-2"></i>
+                            {% elif category == 'success' %}
+                                <i data-feather="check-circle" class="me-2"></i>
+                            {% else %}
+                                <i data-feather="info" class="me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% if user_not_found %}
+                <!-- User not found message -->
+                <div class="email-info">
+                    <p>
+                        <i data-feather="info" class="me-2"></i>
+                        If an account with that email exists, a verification code has been sent.
+                    </p>
+                </div>
+                
+                <div class="auth-links">
+                    <a href="{{ url_for('forgot_password') }}">
+                        <i data-feather="arrow-left" class="me-1"></i>
+                        Try Different Email
+                    </a>
+                </div>
+                
+            {% elif not code_verified %}
+                <!-- Code verification step -->
+                <div class="email-info">
+                    <p>
+                        <i data-feather="mail" class="me-2"></i>
+                        Verification code sent to: <strong>{{ email }}</strong>
+                    </p>
+                </div>
+                
+                <div class="timer" id="timer">
+                    <p class="mb-0">
+                        <i data-feather="clock" class="me-1"></i>
+                        Code expires in: <span id="countdown">15:00</span>
+                    </p>
+                </div>
+                
+                <form method="POST" id="verifyCodeForm">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    
+                    <div class="mb-3">
+                        <label for="reset_code" class="form-label text-white">
+                            <i data-feather="shield" class="me-1"></i>
+                            6-Digit Verification Code
+                        </label>
+                        <input type="text" 
+                               class="form-control code-input" 
+                               id="reset_code" 
+                               name="reset_code" 
+                               placeholder="000000"
+                               maxlength="6"
+                               pattern="[0-9]{6}"
+                               required
+                               autocomplete="off">
+                        <div class="form-text text-light">
+                            Enter the 6-digit code from your email
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary" id="verifyBtn">
+                            <i data-feather="unlock" class="me-2"></i>
+                            Verify Code
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center mb-3">
+                    <button type="button" class="btn btn-outline-light btn-sm" id="resendBtn">
+                        <i data-feather="refresh-cw" class="me-1"></i>
+                        Resend Code
+                    </button>
+                </div>
+                
+            {% else %}
+                <!-- Password reset step -->
+                <div class="email-info">
+                    <p>
+                        <i data-feather="check-circle" class="me-2"></i>
+                        Code verified! Now create your new password.
+                    </p>
+                </div>
+                
+                <form method="POST" id="resetPasswordForm" class="password-section">
+                    <input type="hidden" name="email" value="{{ email }}">
+                    <input type="hidden" name="reset_code" value="verified">
+                    
+                    <div class="mb-3">
+                        <label for="new_password" class="form-label text-white">
+                            <i data-feather="lock" class="me-1"></i>
+                            New Password
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="new_password" 
+                               name="new_password" 
+                               placeholder="Enter new password"
+                               minlength="8"
+                               required
+                               autocomplete="new-password">
+                        <div class="progress mt-2">
+                            <div class="progress-bar" role="progressbar" id="passwordStrength"></div>
+                        </div>
+                        <div class="form-text text-light">
+                            Must be at least 8 characters long
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label text-white">
+                            <i data-feather="check" class="me-1"></i>
+                            Confirm Password
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="confirm_password" 
+                               name="confirm_password" 
+                               placeholder="Confirm new password"
+                               required
+                               autocomplete="new-password">
+                        <div id="passwordMatch" class="form-text"></div>
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary" id="resetBtn">
+                            <i data-feather="save" class="me-2"></i>
+                            Reset Password
+                        </button>
+                    </div>
+                </form>
+            {% endif %}
+            
+            <div class="auth-links">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <a href="{{ url_for('security.login') }}">
+                            <i data-feather="arrow-left" class="me-1"></i>
+                            Back to Login
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{{ url_for('forgot_password') }}">
+                            <i data-feather="refresh-cw" class="me-1"></i>
+                            Start Over
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+        
+        {% if not code_verified and not user_not_found %}
+        // Countdown timer for code expiration
+        let timeLeft = 15 * 60; // 15 minutes in seconds
+        const countdownElement = document.getElementById('countdown');
+        
+        function updateCountdown() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                countdownElement.textContent = 'EXPIRED';
+                document.getElementById('timer').style.background = 'rgba(220, 53, 69, 0.1)';
+                document.getElementById('timer').style.borderColor = 'rgba(220, 53, 69, 0.3)';
+                clearInterval(countdownInterval);
+            }
+            timeLeft--;
+        }
+        
+        const countdownInterval = setInterval(updateCountdown, 1000);
+        updateCountdown();
+        
+        // Code input formatting
+        document.getElementById('reset_code').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+            if (value.length > 6) value = value.slice(0, 6);
+            e.target.value = value;
+        });
+        
+        // Auto-focus code input
+        document.getElementById('reset_code').focus();
+        
+        // Resend code functionality
+        document.getElementById('resendBtn').addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
+            btn.disabled = true;
+            
+            fetch('/resend-reset-code', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'email={{ email }}'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset timer
+                    timeLeft = 15 * 60;
+                    document.getElementById('timer').style.background = 'rgba(255, 193, 7, 0.1)';
+                    document.getElementById('timer').style.borderColor = 'rgba(255, 193, 7, 0.3)';
+                    
+                    // Show success message
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-success alert-dismissible fade show';
+                    alert.innerHTML = `
+                        <i data-feather="check-circle" class="me-2"></i>
+                        ${data.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.querySelector('.auth-card').insertBefore(alert, document.querySelector('.email-info'));
+                    feather.replace();
+                } else {
+                    alert('Failed to resend code: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Network error. Please try again.');
+            })
+            .finally(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        });
+        
+        {% elif code_verified %}
+        // Password strength meter
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const checks = [
+                /.{8,}/, // At least 8 characters
+                /[a-z]/, // Lowercase
+                /[A-Z]/, // Uppercase
+                /[0-9]/, // Number
+                /[^A-Za-z0-9]/ // Special character
+            ];
+            
+            checks.forEach(check => {
+                if (check.test(password)) strength++;
+            });
+            
+            return strength;
+        }
+        
+        function updatePasswordStrength() {
+            const password = document.getElementById('new_password').value;
+            const strengthBar = document.getElementById('passwordStrength');
+            const strength = checkPasswordStrength(password);
+            
+            const colors = ['', '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#198754'];
+            const widths = [0, 20, 40, 60, 80, 100];
+            
+            strengthBar.style.width = widths[strength] + '%';
+            strengthBar.style.backgroundColor = colors[strength];
+        }
+        
+        function checkPasswordMatch() {
+            const password = document.getElementById('new_password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const matchDiv = document.getElementById('passwordMatch');
+            
+            if (confirm && password !== confirm) {
+                matchDiv.innerHTML = '<span class="text-danger">Passwords do not match</span>';
+                return false;
+            } else if (confirm && password === confirm) {
+                matchDiv.innerHTML = '<span class="text-success">Passwords match</span>';
+                return true;
+            } else {
+                matchDiv.innerHTML = '';
+                return false;
+            }
+        }
+        
+        document.getElementById('new_password').addEventListener('input', function() {
+            updatePasswordStrength();
+            checkPasswordMatch();
+        });
+        
+        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+        
+        // Auto-focus new password input
+        document.getElementById('new_password').focus();
+        {% endif %}
+    </script>
+</body>
+</html>

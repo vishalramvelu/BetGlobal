@@ -76,21 +76,22 @@
                                 </div>
                             </div>
                             <div class="bets-content">
-                                <form id="depositForm" class="wallet-form">
+                                <!-- Stripe Deposit Form -->
+                                <form action="{{ url_for('create_checkout_session') }}" method="POST" class="wallet-form mb-3">
                                     <div class="form-group mb-3">
-                                        <label for="depositAmount" class="form-label text-white">Amount</label>
+                                        <label for="stripeAmount" class="form-label text-white">Amount (Credit Card)</label>
                                         <div class="input-wrapper">
                                             <div class="input-icon">
-                                                <i data-feather="dollar-sign"></i>
+                                                <i data-feather="credit-card"></i>
                                             </div>
-                                            <input type="number" class="form-control auth-input" id="depositAmount" 
+                                            <input type="number" class="form-control auth-input" name="amount" id="stripeAmount"
                                                    placeholder="Enter amount" min="1" max="10000" step="0.01" required>
                                         </div>
-                                        <div class="form-hint">Minimum: $1.00, Maximum: $10,000.00</div>
+                                        <div class="form-hint">Secure payment via Stripe • Min: $1.00, Max: $10,000.00</div>
                                     </div>
                                     <button type="submit" class="btn btn-gradient w-100">
-                                        <i data-feather="plus" class="me-2"></i>
-                                        Deposit Money
+                                        <i data-feather="credit-card" class="me-2"></i>
+                                        Pay with Stripe
                                     </button>
                                 </form>
                             </div>
@@ -112,23 +113,40 @@
                                 </div>
                             </div>
                             <div class="bets-content">
-                                <form id="withdrawForm" class="wallet-form">
-                                    <div class="form-group mb-3">
-                                        <label for="withdrawAmount" class="form-label text-white">Amount</label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="dollar-sign"></i>
+                                {% if can_withdraw %}
+                                    <!-- Stripe Withdrawal Form -->
+                                    <form action="{{ url_for('create_payout') }}" method="POST" class="wallet-form mb-3">
+                                        <div class="form-group mb-3">
+                                            <label for="stripeWithdrawAmount" class="form-label text-white">Amount (Bank Transfer)</label>
+                                            <div class="input-wrapper">
+                                                <div class="input-icon">
+                                                    <i data-feather="bank"></i>
+                                                </div>
+                                                <input type="number" class="form-control auth-input" name="amount" id="stripeWithdrawAmount"
+                                                       placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
                                             </div>
-                                            <input type="number" class="form-control auth-input" id="withdrawAmount" 
-                                                   placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
+                                            <div class="form-hint">Withdraw to your connected bank account • Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
                                         </div>
-                                        <div class="form-hint">Available: ${{ "%.2f"|format(user.balance or 0) }}</div>
+                                        <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
+                                            <i data-feather="bank" class="me-2"></i>
+                                            Withdraw to Bank
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <!-- Connect Bank Account -->
+                                    <div class="text-center mb-3">
+                                        <div class="alert alert-info">
+                                            <i data-feather="info" class="me-2"></i>
+                                            Connect your bank account to withdraw funds
+                                        </div>
+                                        <form action="{{ url_for('create_connected_account') }}" method="POST">
+                                            <button type="submit" class="btn btn-warning w-100">
+                                                <i data-feather="link" class="me-2"></i>
+                                                Connect Bank Account
+                                            </button>
+                                        </form>
                                     </div>
-                                    <button type="submit" class="btn btn-outline-danger w-100" style="border-color: #dc3545; color: #dc3545;">
-                                        <i data-feather="minus" class="me-2"></i>
-                                        Withdraw Money
-                                    </button>
-                                </form>
+                                {% endif %}                                
                             </div>
                         </div>
                     </div>

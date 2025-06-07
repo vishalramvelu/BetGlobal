@@ -210,6 +210,44 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
 }
 ```
 
+## 💳 STRIPE INTEGRATION REQUIREMENTS
+
+### Stripe Account Setup
+1. **Create Stripe Account**: Sign up for Stripe and complete verification
+2. **Enable Stripe Connect**: Required for user withdrawals to bank accounts
+3. **Configure Webhooks**: Set up endpoints for payment confirmations
+4. **Get API Keys**: Obtain publishable and secret keys for live mode
+
+### Stripe Configuration in App
+```python
+# Already implemented in app.py:
+import stripe
+stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
+# Endpoints already implemented:
+# - /create-checkout-session (deposits)
+# - /success and /cancelled (payment handling)
+# - /connect/create-account (bank account linking)
+# - /create-payout (withdrawals)
+```
+
+### Stripe Environment Variables
+```bash
+# Test Mode (for development)
+export STRIPE_PUBLISHABLE_KEY="pk_test_..."
+export STRIPE_SECRET_KEY="sk_test_..."
+
+# Live Mode (for production)
+export STRIPE_PUBLISHABLE_KEY="pk_live_..."
+export STRIPE_SECRET_KEY="sk_live_..."
+export STRIPE_ENDPOINT_SECRET="whsec_..."  # For webhook verification
+```
+
+### Database Schema (Already Applied)
+- Added `stripe_account_id` column to User model
+- Migration file: `946499a935be_add_stripe_account_id_to_user_model.py`
+- Run `flask db upgrade` on production to apply
+
 ## 🔧 PRODUCTION CONFIGURATION REQUIREMENTS
 
 ### Environment Variables (Required)
@@ -222,6 +260,11 @@ export ADMIN_PASSWORD_HASH="$pbkdf2-sha256$..."
 # Flask Configuration
 export FLASK_ENV=production
 export DATABASE_URL="postgresql://user:pass@host:port/db"
+
+# Stripe Configuration (REQUIRED for payment processing)
+export STRIPE_PUBLISHABLE_KEY="pk_live_..."
+export STRIPE_SECRET_KEY="sk_live_..."
+export STRIPE_ENDPOINT_SECRET="whsec_..."
 
 # Email Configuration
 export MAIL_SERVER=smtp.your-provider.com
@@ -313,9 +356,13 @@ from flask_migrate import Migrate
 
 migrate = Migrate(app, db)
 
-# Commands:
+# Commands for initial deployment:
 # flask db init
 # flask db migrate -m "Initial migration"
+# flask db upgrade
+
+# Commands for Stripe integration (ALREADY DONE in current codebase):
+# flask db migrate -m "Add stripe_account_id to User model"
 # flask db upgrade
 ```
 
@@ -332,13 +379,15 @@ aws s3 cp backup_$DATE.sql s3://your-backup-bucket/
 
 ### Pre-Deployment (Critical)
 - [ ] Remove hardcoded admin password
-- [ ] Set all required environment variables
+- [ ] Set all required environment variables (including Stripe keys)
 - [ ] Disable debug mode
 - [ ] Add CSRF protection
 - [ ] Implement rate limiting
 - [ ] Configure HTTPS/SSL
 - [ ] Add security headers
 - [ ] Set secure session configuration
+- [ ] Fix deprecated datetime.utcnow() calls
+- [ ] Remove unused imports and variables
 
 ### Production Setup
 - [ ] Use PostgreSQL instead of SQLite
@@ -349,6 +398,9 @@ aws s3 cp backup_$DATE.sql s3://your-backup-bucket/
 - [ ] Set up log rotation
 - [ ] Configure email provider
 - [ ] Test all notification types
+- [ ] Run database migrations (including Stripe integration migration)
+- [ ] Test Stripe payment integration in live mode
+- [ ] Configure Stripe webhook endpoints
 
 ### Security Testing
 - [ ] Run security scanner (Bandit)

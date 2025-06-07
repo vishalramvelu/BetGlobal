@@ -309,7 +309,7 @@
 
 <!-- Dispute Modal -->
 <div class="modal fade" id="disputeModal" tabindex="-1" data-bs-theme="dark">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
             <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
                 <h5 class="modal-title text-white d-flex align-items-center">
@@ -319,19 +319,61 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-white">Please explain why you disagree with the creator's decision:</p>
-                <div class="mb-3">
-                    <textarea class="form-control bg-secondary border-0 text-white" id="disputeReason" rows="4" placeholder="Provide a clear explanation of your dispute..." style="background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;"></textarea>
-                </div>
-                <div class="alert alert-warning" style="font-size: 0.9rem;">
-                    <i data-feather="info" class="me-2"></i>
-                    <strong>Note:</strong> An admin will review this dispute. Email support with supporting materials using Bet ID: <span id="disputeBetId" class="fw-bold"></span>
+                <p class="text-white">Please explain why you disagree with the creator's decision and upload any supporting evidence:</p>
+                
+                <form id="disputeForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="disputeReason" class="form-label text-white">Reason for Dispute *</label>
+                        <textarea class="form-control bg-secondary border-0 text-white" id="disputeReason" name="dispute_reason" rows="4" placeholder="Provide a clear explanation of your dispute..." style="background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="evidenceText" class="form-label text-white">Additional Evidence (Text)</label>
+                        <textarea class="form-control bg-secondary border-0 text-white" id="evidenceText" name="evidence_text" rows="3" placeholder="Any additional text evidence or explanation..." style="background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;"></textarea>
+                        <div class="form-text text-muted">
+                            <i data-feather="edit-3" class="me-1"></i>
+                            Optional: Provide any additional text evidence
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="evidenceFile" class="form-label text-white">Upload Evidence File</label>
+                        <input class="form-control bg-secondary border-0" type="file" id="evidenceFile" name="evidence_file" accept=".png,.jpg,.jpeg,.gif,.pdf,.txt,.doc,.docx" style="background: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;">
+                        <div class="form-text text-muted">
+                            <i data-feather="upload" class="me-1"></i>
+                            Optional: Upload supporting images or documents (PNG, JPG, PDF, DOC, TXT - Max 16MB)
+                        </div>
+                    </div>
+                    
+                    <div id="filePreview" style="display: none;" class="mb-3">
+                        <div class="card" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);">
+                            <div class="card-body p-3">
+                                <h6 class="card-title text-info mb-2">
+                                    <i data-feather="paperclip" class="me-1"></i>
+                                    Selected File:
+                                </h6>
+                                <div id="fileInfo" class="d-flex align-items-center">
+                                    <i data-feather="file" class="me-2 text-muted"></i>
+                                    <span id="fileName" class="text-white"></span>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="clearFileSelection()">
+                                        <i data-feather="x" class="me-1"></i>
+                                        Remove
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="alert alert-info" style="font-size: 0.9rem;">
+                    <i data-feather="shield" class="me-2"></i>
+                    <strong>Admin Review:</strong> An admin will review this dispute and any uploaded evidence. Bet ID: <span id="disputeBetId" class="fw-bold"></span>
                 </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="disputeCancel">Cancel</button>
                 <button type="button" class="btn btn-danger" id="submitDispute">
-                    <i data-feather="flag" class="me-1"></i>
+                    <i data-feather="send" class="me-1"></i>
                     Submit Dispute
                 </button>
             </div>
@@ -453,46 +495,84 @@ function respondToDecision(betId, response, disputeReason = '') {
     submitTakerResponse(betId, response, disputeReason);
 }
 
-function submitTakerResponse(betId, response, disputeReason = '') {
-    const payload = {
-        bet_id: betId,
-        response: response
-    };
-    
-    if (response === 'disputed') {
-        payload.dispute_reason = disputeReason;
-    }
-    
-    fetch('/api/taker-respond', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotificationModal('success', 'Response Submitted!', data.message);
-            if (response === 'disputed') {
-                disputeModal.hide();
-            }
-            // Refresh dashboard immediately to show updated bet status
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotificationModal('error', 'Submission Failed', data.error);
+function submitTakerResponse(betId, response, disputeReason = '', evidenceText = '', evidenceFile = null) {
+    if (response === 'disputed' && (evidenceText || evidenceFile)) {
+        // Use FormData for file uploads
+        const formData = new FormData();
+        formData.append('bet_id', betId);
+        formData.append('response', response);
+        formData.append('dispute_reason', disputeReason);
+        
+        if (evidenceText) {
+            formData.append('evidence_text', evidenceText);
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotificationModal('error', 'Connection Error', 'Failed to submit response');
-    });
+        
+        if (evidenceFile) {
+            formData.append('evidence_file', evidenceFile);
+        }
+
+        fetch('/api/taker-respond', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotificationModal('success', 'Dispute Submitted!', data.message);
+                disputeModal.hide();
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotificationModal('error', 'Submission Failed', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotificationModal('error', 'Network Error', 'Failed to submit dispute');
+        });
+    } else {
+        // Use JSON for simple responses (backward compatibility)
+        const payload = {
+            bet_id: betId,
+            response: response
+        };
+        
+        if (response === 'disputed') {
+            payload.dispute_reason = disputeReason;
+        }
+
+        fetch('/api/taker-respond', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotificationModal('success', 'Response Submitted!', data.message);
+                if (response === 'disputed') {
+                    disputeModal.hide();
+                }
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotificationModal('error', 'Submission Failed', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotificationModal('error', 'Connection Error', 'Failed to submit response');
+        });
+    }
 }
 
 function showDisputeModal(betId) {
     currentDisputeBetId = betId;
     document.getElementById('disputeBetId').textContent = betId;
     document.getElementById('disputeReason').value = '';
+    document.getElementById('evidenceText').value = '';
+    document.getElementById('evidenceFile').value = '';
+    document.getElementById('filePreview').style.display = 'none';
     
     disputeModal.show();
     feather.replace();
@@ -888,13 +968,42 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        respondToDecision(currentDisputeBetId, 'disputed', reason);
+        const evidenceText = document.getElementById('evidenceText').value.trim();
+        const evidenceFile = document.getElementById('evidenceFile').files[0];
+        
+        // Check file size if file is selected
+        if (evidenceFile && evidenceFile.size > 16 * 1024 * 1024) {
+            showNotificationModal('error', 'File Too Large', 'Please select a file smaller than 16MB');
+            return;
+        }
+        
+        submitTakerResponse(currentDisputeBetId, 'disputed', reason, evidenceText, evidenceFile);
     });
     
     // Notification modal handler - reload page after successful actions
     document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
         if (document.getElementById('notificationIcon').getAttribute('data-feather') === 'check-circle') {
             setTimeout(() => location.reload(), 500);
+        }
+    });
+    
+    // File upload handlers
+    document.getElementById('evidenceFile').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            if (file.size > maxSize) {
+                showNotificationModal('error', 'File Too Large', 'Please select a file smaller than 16MB');
+                this.value = '';
+                return;
+            }
+            
+            // Show file preview
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('filePreview').style.display = 'block';
+            feather.replace();
+        } else {
+            document.getElementById('filePreview').style.display = 'none';
         }
     });
     
@@ -905,5 +1014,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('All event handlers set up successfully');
 });
+
+// File management functions (outside document ready)
+function clearFileSelection() {
+    document.getElementById('evidenceFile').value = '';
+    document.getElementById('filePreview').style.display = 'none';
+}
 </script>
 {% endblock %}
