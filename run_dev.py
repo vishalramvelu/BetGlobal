@@ -40,18 +40,14 @@ def run_development():
         from app import app
         
         # Initialize development database
-        import subprocess
-        result = subprocess.run([sys.executable, 'init_dev_db.py'], 
-                              capture_output=True, text=True)
-        if result.returncode == 0:
-            # Only print the success lines, not all the debug output
-            for line in result.stdout.split('\n'):
-                if '✅' in line or '🎉' in line or '📊' in line:
-                    print(line)
-        else:
-            print("❌ Database initialization failed")
-            print(result.stderr)
-            return
+        try:
+            from setup_dev import init_database
+            print("🗄️  Initializing development database...")
+            init_database()
+        except Exception as e:
+            print(f"❌ Database initialization failed: {e}")
+            print("💡 This is usually normal on first run - continuing anyway...")
+            # Don't return here - let the app start even if DB init fails
         
     except Exception as e:
         print(f"❌ Error initializing app: {e}")
