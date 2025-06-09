@@ -191,7 +191,7 @@ def datetime_filter(date_string, format_string='%Y-%m-%d %H:%M'):
 # Import models after app creation to avoid circular imports
 from models import Bet, User, Role, DisputeEvidence, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount, save_dispute_evidence, get_dispute_evidence, generate_reset_code, set_user_reset_code, verify_user_reset_code, clear_reset_code, get_user_by_email
 from werkzeug.security import check_password_hash, generate_password_hash
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask_mail import Message
 
 # Setup Flask-Security-Too
@@ -229,9 +229,9 @@ def admin_required(f):
             if isinstance(admin_login_time, str):
                 admin_login_time = datetime.fromisoformat(admin_login_time.replace('Z', '+00:00'))
             elif admin_login_time.tzinfo is None:
-                admin_login_time = admin_login_time.replace(tzinfo=datetime.timezone.utc)
+                admin_login_time = admin_login_time.replace(tzinfo=timezone.utc)
             
-            if datetime.now(datetime.timezone.utc) - admin_login_time > timedelta(minutes=30):
+            if datetime.now(timezone.utc) - admin_login_time > timedelta(minutes=30):
                 session.pop('admin_authenticated', None)
                 session.pop('admin_login_time', None)
                 flash('Admin session expired', 'error')
@@ -634,7 +634,12 @@ def api_deposit():
     """API endpoint to deposit money"""
     try:
         from flask_security import current_user
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
         amount = float(data.get('amount', 0))
         
         if amount <= 0:
@@ -680,7 +685,12 @@ def api_withdraw():
     """API endpoint to withdraw money"""
     try:
         from flask_security import current_user
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
         amount = float(data.get('amount', 0))
         
         if amount <= 0:
@@ -946,7 +956,11 @@ def create_bet_page():
 def api_create_bet():
     """API endpoint to create a new bet"""
     try:
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
         
         # Validate required fields
         required_fields = ['title', 'description', 'amount', 'odds', 'category']
@@ -1016,7 +1030,12 @@ def api_create_bet():
 def api_accept_bet():
     """API endpoint to accept a bet"""
     try:
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
         bet_id = data.get('bet_id')
         
         if not bet_id:
@@ -1079,7 +1098,12 @@ def api_accept_bet():
 def api_creator_decide():
     """API endpoint for bet creator to decide outcome"""
     try:
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
         bet_id = data.get('bet_id')
         decision = data.get('decision')  # 'creator_wins' or 'acceptor_wins'
         
@@ -1230,7 +1254,12 @@ def uploaded_file(filename):
 def api_admin_resolve():
     """API endpoint for admin to resolve disputed bets"""
     try:
-        data = request.get_json()
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
         bet_id = data.get('bet_id')
         admin_decision = data.get('admin_decision')  # 'creator_wins', 'acceptor_wins', or 'void'
         
@@ -1257,20 +1286,29 @@ def api_admin_resolve():
 def admin_login():
     """Admin login page"""
     if request.method == 'POST':
+        logging.info("Admin login POST request received")
         password = request.form.get('password')
         admin_password_hash = os.environ.get('ADMIN_PASSWORD_HASH')
         
+        logging.info(f"Password provided: {'***' if password else 'None'}")
+        logging.info(f"Admin hash exists: {bool(admin_password_hash)}")
+        
         if admin_password_hash and check_password_hash(admin_password_hash, password):
+            logging.info("Admin authentication successful")
             session['admin_authenticated'] = True
-            session['admin_login_time'] = datetime.now(datetime.timezone.utc)
+            session['admin_login_time'] = datetime.now(timezone.utc)
             flash('Welcome to admin dashboard!', 'success')
+            logging.info("Redirecting to admin dashboard")
             return redirect(url_for('admin_dashboard'))
         else:
+            logging.warning("Admin authentication failed")
             flash('Invalid admin password', 'error')
     
     if 'admin_authenticated' in session:
+        logging.info("Admin already authenticated, redirecting to dashboard")
         return redirect(url_for('admin_dashboard'))
     
+    logging.info("Rendering admin login page")
     return render_template('admin_login.html')
 
 @app.route('/admin/logout')
@@ -1286,16 +1324,33 @@ def admin_logout():
 def admin_dashboard():
     """Admin dashboard main page"""
     try:
-        # Get basic statistics
-        total_users = User.query.count()
-        total_bets = Bet.query.count()
-        active_bets = Bet.query.filter(Bet.status.in_(['open', 'accepted'])).count()
-        completed_bets = Bet.query.filter_by(status='completed').count()
+        logging.info("Admin dashboard accessed")
         
-        # Calculate total money in system
-        total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
-        total_bet_volume = db.session.query(db.func.sum(Bet.amount)).scalar() or 0
+        # Simple fallback values in case of database issues
+        total_users = 0
+        total_bets = 0
+        active_bets = 0
+        completed_bets = 0
+        total_balance = 0
+        total_bet_volume = 0
         
+        try:
+            # Get basic statistics
+            total_users = User.query.count()
+            logging.info(f"Total users: {total_users}")
+            total_bets = Bet.query.count()
+            logging.info(f"Total bets: {total_bets}")
+            active_bets = Bet.query.filter(Bet.status.in_(['open', 'accepted'])).count()
+            completed_bets = Bet.query.filter_by(status='completed').count()
+            
+            # Calculate total money in system
+            total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
+            total_bet_volume = db.session.query(db.func.sum(Bet.amount)).scalar() or 0
+        except Exception as db_error:
+            logging.error(f"Database error in admin dashboard: {str(db_error)}")
+            # Continue with fallback values
+        
+        logging.info("About to render admin_dashboard.html")
         return render_template('admin_dashboard.html',
                              total_users=total_users,
                              total_bets=total_bets,
@@ -1305,7 +1360,17 @@ def admin_dashboard():
                              total_bet_volume=total_bet_volume)
     except Exception as e:
         logging.error(f"Error in admin dashboard: {str(e)}")
-        return render_template('admin_dashboard.html', error="Failed to load admin dashboard")
+        import traceback
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        # Try to render with minimal data
+        return render_template('admin_dashboard.html', 
+                             total_users=0,
+                             total_bets=0,
+                             active_bets=0,
+                             completed_bets=0,
+                             total_balance=0,
+                             total_bet_volume=0,
+                             error="Failed to load admin dashboard")
 
 @app.route('/admin/database')
 @admin_required
@@ -1438,6 +1503,9 @@ def not_found_error(_error):
     """Handle 404 errors"""
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Not found'}), 404
+    # For admin routes, try to redirect to admin login
+    if request.path.startswith('/admin'):
+        return redirect(url_for('admin_login'))
     return render_template('base.html'), 404
 
 @app.errorhandler(500)
@@ -1446,6 +1514,10 @@ def internal_error(_error):
     db.session.rollback()
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Internal server error'}), 500
+    # For admin routes, show error and redirect to admin login
+    if request.path.startswith('/admin'):
+        flash('Admin dashboard error. Please try again.', 'error')
+        return redirect(url_for('admin_login'))
     return render_template('base.html'), 500
 
 @app.errorhandler(400)

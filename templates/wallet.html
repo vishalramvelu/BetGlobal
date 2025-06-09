@@ -78,6 +78,7 @@
                             <div class="bets-content">
                                 <!-- Stripe Deposit Form -->
                                 <form action="{{ url_for('create_checkout_session') }}" method="POST" class="wallet-form mb-3">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <div class="form-group mb-3">
                                         <label for="stripeAmount" class="form-label text-white">Amount (Credit Card)</label>
                                         <div class="input-wrapper">
@@ -116,6 +117,7 @@
                                 {% if can_withdraw %}
                                     <!-- Stripe Withdrawal Form -->
                                     <form action="{{ url_for('create_payout') }}" method="POST" class="wallet-form mb-3">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                         <div class="form-group mb-3">
                                             <label for="stripeWithdrawAmount" class="form-label text-white">Amount (Bank Transfer)</label>
                                             <div class="input-wrapper">
@@ -140,6 +142,7 @@
                                             Connect your bank account to withdraw funds
                                         </div>
                                         <form action="{{ url_for('create_connected_account') }}" method="POST">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                             <button type="submit" class="btn btn-warning w-100">
                                                 <i data-feather="link" class="me-2"></i>
                                                 Connect Bank Account
@@ -395,14 +398,14 @@ document.getElementById('depositForm').addEventListener('submit', function(e) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     
+    // Send as FormData to include CSRF token
+    const formData = new FormData();
+    formData.append('amount', parseFloat(amount));
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
     fetch('{{ url_for("api_deposit") }}', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            amount: parseFloat(amount)
-        })
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -452,14 +455,14 @@ document.getElementById('withdrawForm').addEventListener('submit', function(e) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     
+    // Send as FormData to include CSRF token
+    const formData = new FormData();
+    formData.append('amount', parseFloat(amount));
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
     fetch('{{ url_for("api_withdraw") }}', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            amount: parseFloat(amount)
-        })
+        body: formData
     })
     .then(response => response.json())
     .then(data => {

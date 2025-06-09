@@ -4,3 +4,6 @@
 .STRIPE_KEY
 .env
 .env.example
+# Development files
+.env.development
+instance/bets_dev.db

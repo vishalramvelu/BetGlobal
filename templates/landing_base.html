@@ -6,14 +6,32 @@
     <title>{% block title %}BetGlobal - Global Betting Platform{% endblock %}</title>
     
     <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <!-- Feather Icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     
-    <!-- Custom CSS -->
+    <!-- Custom CSS - Load after Bootstrap to ensure proper override -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
+    
+    <!-- Dark theme override -->
+    <style>
+        html[data-bs-theme="dark"] {
+            color-scheme: dark;
+        }
+        body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+            color: #fff !important;
+        }
+        .navbar-dark {
+            background-color: rgba(0, 0, 0, 0.95) !important;
+        }
+        .card {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.125) !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Landing Navigation -->

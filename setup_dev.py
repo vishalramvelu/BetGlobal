@@ -2,6 +2,7 @@
 """Development environment setup script"""
 
 import os
+from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash
 
 def setup_development():
@@ -11,6 +12,9 @@ def setup_development():
     if not os.path.exists('instance'):
         os.makedirs('instance')
         print("✅ Created instance directory")
+    
+    # Ensure proper permissions for instance directory
+    os.chmod('instance', 0o755)
     
     # Generate development admin password
     dev_password = "admin123"  # Simple password for development
@@ -27,7 +31,7 @@ FLASK_ENV=development
 FLASK_DEBUG=True
 
 # Local Database (SQLite for easy development)
-DATABASE_URL=sqlite:///instance/bets_dev.db
+DATABASE_URL=sqlite:///{os.getcwd()}/instance/bets_dev.db
 
 # Security (DEV ONLY - NOT FOR PRODUCTION)
 SESSION_SECRET=dev-session-secret-key-not-for-production-use-only
@@ -69,6 +73,10 @@ instance/bets_dev.db
                 f.write(gitignore_content)
             print("✅ Updated .gitignore for development files")
     
+    # Initialize development database
+    print("\n🗄️  Initializing development database...")
+    init_database()
+    
     print("\n🎉 Development environment ready!")
     print("\nNext steps:")
     print("1. Update Stripe test keys in .env.development")
@@ -77,9 +85,63 @@ instance/bets_dev.db
     print("4. Main app: http://localhost:5000")
     print("\n💡 Development Tips:")
     print("- Database: SQLite (instance/bets_dev.db)")
+    print("- Sample users: testuser1/testuser2 (password: password123)")
     print("- Emails: Suppressed (check console for codes)")
     print("- Debug mode: Enabled (auto-restart on file changes)")
     print("- Use test Stripe cards: 4242424242424242")
+
+def init_database():
+    """Initialize development database with tables and sample data"""
+    try:
+        # Load development environment
+        load_dotenv('.env.development', override=True)
+        
+        # Initialize the app and database
+        from app import app
+        
+        with app.app_context():
+            from database import db
+            
+            # Create all tables
+            db.create_all()
+            print("✅ Development database tables created")
+            
+            # Create sample users if none exist
+            from models import User
+            from app import user_datastore
+            from flask_security import hash_password
+            from datetime import datetime, timezone
+            
+            if User.query.count() == 0:
+                # Create sample users
+                user1 = user_datastore.create_user(
+                    username='testuser1',
+                    email='test1@example.com',
+                    password=hash_password('password123'),
+                    balance=1000.0,
+                    active=True,
+                    confirmed_at=datetime.now(timezone.utc)
+                )
+                
+                user2 = user_datastore.create_user(
+                    username='testuser2', 
+                    email='test2@example.com',
+                    password=hash_password('password123'),
+                    balance=500.0,
+                    active=True,
+                    confirmed_at=datetime.now(timezone.utc)
+                )
+                
+                db.session.commit()
+                print("✅ Created sample users (testuser1, testuser2) with password: password123")
+            else:
+                print("ℹ️  Users already exist in database")
+                
+        print("✅ Database initialization complete")
+        
+    except Exception as e:
+        print(f"❌ Database initialization error: {e}")
+        print("💡 This is normal on first run - database will be created when app starts")
 
 if __name__ == "__main__":
     setup_development()

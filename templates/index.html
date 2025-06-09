@@ -304,14 +304,14 @@ document.addEventListener('DOMContentLoaded', function() {
         confirmButton.disabled = true;
         confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Accepting...';
         
+        // Send as FormData to include CSRF token
+        const formData = new FormData();
+        formData.append('bet_id', parseInt(currentBetId));
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
         fetch('/api/accept-bet', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                bet_id: parseInt(currentBetId)
-            })
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

@@ -57,6 +57,7 @@
                         </div>
                         <div class="bets-content">
                             <form id="createBetForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                 <div class="row g-4">
                                     <!-- Title -->
                                     <div class="col-12">
@@ -354,13 +355,15 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
         
-        // Submit to API
+        // Submit to API - send as form data for CSRF compatibility
+        const formDataToSend = new FormData();
+        for (const key in data) {
+            formDataToSend.append(key, data[key]);
+        }
+        
         fetch('/api/create-bet', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
+            body: formDataToSend
         })
         .then(function(response) {
             return response.json();

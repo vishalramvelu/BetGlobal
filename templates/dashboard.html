@@ -449,15 +449,15 @@ function resolveCreatorBet(betId, decision) {
         icon,
         iconColor,
         () => {
+            // Send as FormData to include CSRF token
+            const formData = new FormData();
+            formData.append('bet_id', betId);
+            formData.append('decision', decision);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+            
             fetch('/api/creator-decide', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    bet_id: betId,
-                    decision: decision
-                })
+                body: formData
             })
             .then(response => response.json())
             .then(data => {
@@ -502,6 +502,7 @@ function submitTakerResponse(betId, response, disputeReason = '', evidenceText =
         formData.append('bet_id', betId);
         formData.append('response', response);
         formData.append('dispute_reason', disputeReason);
+        formData.append('csrf_token', '{{ csrf_token() }}');
         
         if (evidenceText) {
             formData.append('evidence_text', evidenceText);
@@ -540,12 +541,19 @@ function submitTakerResponse(betId, response, disputeReason = '', evidenceText =
             payload.dispute_reason = disputeReason;
         }
 
+        // Send as FormData to include CSRF token
+        const formData = new FormData();
+        formData.append('bet_id', betId);
+        formData.append('response', response);
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        if (response === 'disputed') {
+            formData.append('dispute_reason', disputeReason);
+        }
+
         fetch('/api/taker-respond', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {

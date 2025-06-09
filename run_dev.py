@@ -32,17 +32,33 @@ def run_development():
     
     # Import and initialize the app
     try:
+        # Ensure instance directory exists
+        if not os.path.exists('instance'):
+            os.makedirs('instance', mode=0o755)
+            print("✅ Created instance directory")
+        
         from app import app
         
-        # Ensure development database is created
-        with app.app_context():
-            from database import db
-            db.create_all()
-            print("✅ Development database initialized")
+        # Initialize development database
+        import subprocess
+        result = subprocess.run([sys.executable, 'init_dev_db.py'], 
+                              capture_output=True, text=True)
+        if result.returncode == 0:
+            # Only print the success lines, not all the debug output
+            for line in result.stdout.split('\n'):
+                if '✅' in line or '🎉' in line or '📊' in line:
+                    print(line)
+        else:
+            print("❌ Database initialization failed")
+            print(result.stderr)
+            return
         
     except Exception as e:
         print(f"❌ Error initializing app: {e}")
-        print("💡 Try: pip3 install -r requirements.txt")
+        print("💡 Troubleshooting:")
+        print("   1. Try: pip3 install -r requirements.txt")
+        print("   2. Check if instance directory exists and is writable")
+        print("   3. Run: python3 setup_dev.py again")
         return
     
     print("\n🌐 Development Server Info:")

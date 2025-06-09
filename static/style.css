@@ -15,6 +15,43 @@ body {
     min-height: 100vh;
 }
 
+/* Override Bootstrap default styles */
+.form-control {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 107, 53, 0.5) !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
+    color: #fff !important;
+}
+
+.form-select {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+.form-select:focus {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 107, 53, 0.5) !important;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
+}
+
+.btn-outline-secondary {
+    color: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.btn-outline-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: #fff !important;
+}
+
 /* Smooth transitions for all interactive elements */
 * {
     transition: all 0.2s ease-in-out;
@@ -22,7 +59,8 @@ body {
 
 /* Custom hover effects for cards */
 .card {
-    border: 1px solid rgba(255, 255, 255, 0.125);
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.125) !important;
     transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
@@ -38,6 +76,42 @@ body {
 
 .btn:hover {
     transform: translateY(-1px);
+}
+
+/* Primary button styling */
+.btn-primary {
+    background: linear-gradient(135deg, #ffd700, #ff6b35) !important;
+    border: none !important;
+    color: #000 !important;
+    font-weight: 600;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #e6c200, #e55a2b) !important;
+    color: #000 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    border: none !important;
+    color: #000 !important;
+    font-weight: 600;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    border: none !important;
+    color: #fff !important;
+    font-weight: 600;
 }
 
 /* Enhanced navigation */
@@ -119,9 +193,48 @@ body {
 
 /* Enhanced alert styles */
 .alert {
-    border: none;
+    border: none !important;
     border-radius: 0.5rem;
     font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.15) !important;
+    border: 1px solid rgba(255, 193, 7, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert-success {
+    background-color: rgba(40, 167, 69, 0.15) !important;
+    border: 1px solid rgba(40, 167, 69, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.alert-info {
+    background-color: rgba(23, 162, 184, 0.15) !important;
+    border: 1px solid rgba(23, 162, 184, 0.3) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Table styling */
+.table {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.table th {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #fff !important;
+}
+
+.table td {
+    border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
 /* Footer styling */
@@ -155,7 +268,21 @@ footer {
 
 /* Modal enhancements */
 .modal-content {
-    border: 1px solid rgba(255, 255, 255, 0.125);
+    background-color: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.125) !important;
+    backdrop-filter: blur(20px);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.modal-title {
+    color: #fff !important;
 }
 
 /* Search and filter form */
