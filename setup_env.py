@@ -74,7 +74,7 @@ def create_env_file():
     
     print("\n=�  Database Configuration")
     print("=" * 28)
-    db_choice = input("Database type (1=SQLite, 2=PostgreSQL) [1]: ").strip() or "1"
+    db_choice = input("Database type (1=SQLite, 2=PostgreSQL) [1]: ").strip() or "2"
     
     if db_choice == "2":
         db_host = input("PostgreSQL host: ").strip()

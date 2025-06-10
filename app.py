@@ -201,7 +201,7 @@ class CustomUserDatastore(SQLAlchemyUserDatastore):
     def create_user(self, **kwargs):
         """Override create_user to handle username field"""
         # Set default balance for new users
-        kwargs.setdefault('balance', 100.0)
+        kwargs.setdefault('balance', 0.0)
         return super().create_user(**kwargs)
 
 user_datastore = CustomUserDatastore(db, User, Role)
@@ -1555,7 +1555,7 @@ with app.app_context():
                 username='john_doe',
                 email='john@example.com',
                 password=hash_password('password123'),
-                balance=100.0,
+                balance=0.0,
                 active=True,
                 confirmed_at=datetime.now(datetime.timezone.utc)
             )
@@ -1564,7 +1564,7 @@ with app.app_context():
                 username='jane_smith',
                 email='jane@example.com',
                 password=hash_password('password123'),
-                balance=100.0,
+                balance=0.0,
                 active=True,
                 confirmed_at=datetime.now(datetime.timezone.utc)
             )
