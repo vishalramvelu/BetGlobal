@@ -238,7 +238,7 @@ def run_security_audit():
         print()  # Add spacing between tests
     
     # Summary
-    print_status("= Security Audit Summary", "HEADER")
+    print_status("=Security Audit Summary", "HEADER")
     print_status("=" * 30, "INFO")
     
     passed = sum(1 for _, result in results if result)
@@ -254,9 +254,9 @@ def run_security_audit():
                 "SUCCESS" if passed == total else "WARNING")
     
     if passed == total:
-        print_status("<‰ All security tests passed!", "SUCCESS")
+        print_status("<ï¿½ All security tests passed!", "SUCCESS")
     else:
-        print_status("   Some security issues found. Please review.", "WARNING")
+        print_status("ï¿½  Some security issues found. Please review.", "WARNING")
     
     return passed == total
 
