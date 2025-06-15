@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from werkzeug.utils import secure_filename
 
 # Load environment variables from .env file
-load_dotenv()
+#load_dotenv()
 
 from flask_cors import CORS
 from flask_mail import Mail
@@ -29,7 +29,7 @@ logging.basicConfig(
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ['SESSION_SECRET']
+app.secret_key = os.getenv("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # File upload configuration
@@ -74,7 +74,11 @@ def validate_uploaded_file(file):
     return True, "File is valid"
 
 # Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
+#app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
+
+    
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///bets.db")
+    
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
