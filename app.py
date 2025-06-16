@@ -113,7 +113,7 @@ app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
 
 # Secure session configuration
 if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+    app.config['SESSION_COOKIE_SECURE'] = False  # HTTPS only
 else:
     app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
 
