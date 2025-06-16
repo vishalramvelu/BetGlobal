@@ -30,7 +30,7 @@ if IS_PROD:
     log_level = logging.INFO
 else:
     log_level = logging.DEBUG
-    
+
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s %(levelname)s %(name)s: %(message)s'
@@ -959,6 +959,25 @@ def create_bet_page():
     """Create bet page"""
     return render_template('create_bet.html')
 
+
+def validate_bet_input(title, description):
+    """
+    Validate title and description lengths.
+    Returns an error message string if invalid, or None if valid.
+    """
+    # Normalize inputs
+    title_str = title.strip() if isinstance(title, str) else ''
+    if len(title_str) < 5:
+        return "Bet title must be at least 5 characters"
+    
+    description_str = description.strip() if isinstance(description, str) else ''
+    if len(description_str) < 10:
+        return "Bet description must be at least 10 characters"
+    
+    # Passed checks
+    return None
+
+
 @app.route('/api/create-bet', methods=['POST'])
 @login_required
 @limiter.limit("5 per minute")
@@ -976,6 +995,11 @@ def api_create_bet():
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'success': False, 'error': f'{field} is required'}), 400
+            
+        error = validate_bet_input(data.get('title', ''), data.get('description', ''))
+        if error:
+            # For JSON/AJAX:
+            return jsonify({'success': False, 'error': error}), 400
         
         # Validate numeric fields
         try:
