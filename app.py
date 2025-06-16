@@ -164,8 +164,8 @@ csp = {
 
 if os.environ.get('FLASK_ENV') == 'production':
     Talisman(app, 
-        force_https=True,
-        strict_transport_security=True,
+        force_https=False,
+        strict_transport_security=False,
         content_security_policy=csp
     )
 else:
