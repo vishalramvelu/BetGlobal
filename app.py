@@ -57,7 +57,7 @@ def validate_uploaded_file(file):
     file_size = file.tell()
     file.seek(0)  # Reset to beginning
     
-    if file_size > MAX_FILE_SIZE:
+    if file_size > MAX_FILE_SIZE: 
         return False, f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB."
     
     if file_size == 0:
@@ -113,7 +113,7 @@ app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
 
 # Secure session configuration
 if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+    app.config['SESSION_COOKIE_SECURE'] = False  # HTTPS only
 else:
     app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
 
