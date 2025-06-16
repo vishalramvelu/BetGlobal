@@ -21,7 +21,7 @@ from database import db
 import stripe
 
 # Set up logging configuration
-log_level = logging.INFO if os.environ.get('FLASK_ENV') == 'production' else logging.DEBUG
+log_level = logging.DEBUG
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s %(levelname)s %(name)s: %(message)s'
@@ -93,15 +93,11 @@ app.config['SECURITY_PASSWORD_SALT'] = os.environ['SECURITY_PASSWORD_SALT']
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
 
 # Email confirmation - disable for development, enable for production
-if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SECURITY_CONFIRMABLE'] = True
-    app.config['SECURITY_SEND_REGISTER_EMAIL'] = True
-    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'security.login'
-else:
-    # Development mode - auto-confirm users, no email needed
-    app.config['SECURITY_CONFIRMABLE'] = False
-    app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
-    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'index'
+
+# Development mode - auto-confirm users, no email needed
+app.config['SECURITY_CONFIRMABLE'] = False
+app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
+app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'index'
 
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_RECOVERABLE'] = True
@@ -112,27 +108,16 @@ app.config['SECURITY_EMAIL_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'nor
 app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
 
 # Secure session configuration
-if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
-else:
-    app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
+app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JS access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # Mail configuration - Development mode
-if os.environ.get('FLASK_ENV') == 'production':
-    # Production email settings
-    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-else:
     # Development mode - suppress actual email sending, log to console
-    app.config['TESTING'] = True
-    app.config['MAIL_SUPPRESS_SEND'] = True
+app.config['TESTING'] = True
+app.config['MAIL_SUPPRESS_SEND'] = True
     
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@playstakes.com')
 
@@ -162,19 +147,13 @@ csp = {
     'img-src': "'self' data: *.stripe.com"
 }
 
-if os.environ.get('FLASK_ENV') == 'production':
-    Talisman(app, 
-        force_https=True,
-        strict_transport_security=True,
-        content_security_policy=csp
-    )
-else:
+
     # Development mode - disable HTTPS enforcement
-    Talisman(app,
-        force_https=False,
-        strict_transport_security=False,
-        content_security_policy=csp
-    )
+Talisman(app,
+    force_https=False,
+    strict_transport_security=False,
+    content_security_policy=csp
+)
 
 # Initialize Flask-Mail
 mail = Mail(app)
