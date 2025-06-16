@@ -181,8 +181,8 @@ class Bet(db.Model):
     
     @validates('odds')
     def validate_odds(self, key, odds):
-        if odds is None or odds <= 1:
-            raise ValueError("Odds must be greater than 1.0")
+        if odds is None or odds <= 0:
+            raise ValueError("Odds must be greater than 0.0")
         if odds > 100:  # Reasonable max odds
             raise ValueError("Odds cannot exceed 100.0")
         return odds

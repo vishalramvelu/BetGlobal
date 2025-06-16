@@ -1007,6 +1007,8 @@ def api_create_bet():
             odds = float(data['odds'])
             if amount <= 0 or odds <= 0:
                 return jsonify({'success': False, 'error': 'Amount and odds must be positive numbers'}), 400
+            if amount > 10000:
+                return jsonify({'success': False, 'error':'Amount must be below 10000'}), 400
         except ValueError:
             return jsonify({'success': False, 'error': 'Invalid amount or odds format'}), 400
         
