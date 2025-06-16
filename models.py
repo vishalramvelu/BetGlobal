@@ -198,7 +198,7 @@ class Bet(db.Model):
     @validates('description')
     def validate_description(self, key, description):
         if not description or len(description.strip()) < 5:
-            raise ValueError("Bet description must be at least 10 characters")
+            raise ValueError("Bet description must be at least 5 characters")
         if len(description) > 1000:
             raise ValueError("Bet description cannot exceed 1000 characters")
         return description.strip()
