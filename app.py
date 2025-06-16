@@ -971,8 +971,8 @@ def validate_bet_input(title, description):
         return "Bet title must be at least 5 characters"
     
     description_str = description.strip() if isinstance(description, str) else ''
-    if len(description_str) < 10:
-        return "Bet description must be at least 10 characters"
+    if len(description_str) < 5:
+        return "Bet description must be at least 5 characters"
     
     # Passed checks
     return None
