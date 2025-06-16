@@ -20,8 +20,17 @@ from datetime import timedelta
 from database import db
 import stripe
 
+#production level
+ENV = os.environ.get("FLASK_ENV", "development").lower()  # or use a custom var, e.g. ENVIRONMENT
+IS_PROD = ENV == "production"
+
+
 # Set up logging configuration
-log_level = logging.DEBUG
+if IS_PROD:
+    log_level = logging.INFO
+else:
+    log_level = logging.DEBUG
+    
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s %(levelname)s %(name)s: %(message)s'
@@ -30,7 +39,9 @@ logging.basicConfig(
 # Create the app
 app = Flask(__name__)
 app.secret_key = os.getenv("SESSION_SECRET", "dev-secret-key-change-in-production")
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for = 1, x_proto=1, x_host=1) #changing this to accomdate deployment
+
+
 
 # File upload configuration
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'dispute_evidence')
@@ -108,7 +119,14 @@ app.config['SECURITY_EMAIL_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'nor
 app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
 
 # Secure session configuration
-app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
+if IS_PROD:
+    app.config['SESSION_COOKIE_SECURE'] = True #make only https
+else:
+    app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
+
+if IS_PROD:
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+
 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JS access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
@@ -148,12 +166,20 @@ csp = {
 }
 
 
+if IS_PROD:
+    Talisman(
+        app,
+        force_https=False,
+        strict_transport_security=True,
+        content_security_policy=csp
+    )
+else:
     # Development mode - disable HTTPS enforcement
-Talisman(app,
-    force_https=False,
-    strict_transport_security=False,
-    content_security_policy=csp
-)
+    Talisman(app,
+        force_https=False,
+        strict_transport_security=False,
+        content_security_policy=csp
+    )
 
 # Initialize Flask-Mail
 mail = Mail(app)
