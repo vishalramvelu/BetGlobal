@@ -311,6 +311,47 @@ footer {
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3) !important;
 }
 
+/* Creator's own bet styling - grayed out */
+.bet-card-owned {
+    opacity: 0.5 !important;
+    position: relative;
+}
+
+.bet-card-owned .live-bet-card {
+    cursor: default !important;
+    pointer-events: none !important;
+    position: relative;
+    background: rgba(108, 117, 125, 0.1) !important;
+    border: 1px solid rgba(108, 117, 125, 0.2) !important;
+}
+
+.bet-card-owned .live-bet-card::after {
+    content: 'YOUR BET';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(108, 117, 125, 0.8);
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
+}
+
+.bet-card-owned:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.bet-card-owned .live-bet-card:hover {
+    transform: none !important;
+    background: rgba(108, 117, 125, 0.1) !important;
+    box-shadow: none !important;
+}
+
 .dropdown-item {
     color: rgba(255, 255, 255, 0.8) !important;
     font-weight: 500;
