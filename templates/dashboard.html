@@ -165,7 +165,13 @@
                                                     <span class="status-badge status-{{ bet.status }}">
                                                         {{ bet.status.title() }}
                                                     </span>
-                                                    {% if bet.status == 'accepted' %}
+                                                    {% if bet.status == 'open' %}
+                                                        <div class="bet-actions mt-2" onclick="event.stopPropagation();">
+                                                            <button class="btn btn-danger btn-sm" onclick="cancelBet({{ bet.id }})">
+                                                                <i data-feather="x" class="me-1"></i>Cancel Bet
+                                                            </button>
+                                                        </div>
+                                                    {% elif bet.status == 'accepted' %}
                                                         <div class="bet-actions mt-2" onclick="event.stopPropagation();">
                                                             <button class="btn btn-success btn-sm me-2" onclick="resolveCreatorBet({{ bet.id }}, 'creator_wins')">
                                                                 <i data-feather="check" class="me-1"></i>I Won
@@ -472,6 +478,42 @@ function resolveCreatorBet(betId, decision) {
             .catch(error => {
                 console.error('Error:', error);
                 showNotificationModal('error', 'Connection Error', 'Failed to submit decision');
+            });
+        }
+    );
+}
+
+function cancelBet(betId) {
+    console.log('cancelBet called with:', betId);
+    
+    showConfirmationModal(
+        'Cancel Bet',
+        'Are you sure you want to cancel this bet? Your money will be refunded.',
+        'x-circle',
+        '#dc3545',
+        () => {
+            // Send as FormData to include CSRF token
+            const formData = new FormData();
+            formData.append('bet_id', betId);
+            formData.append('csrf_token', '{{ csrf_token() }}');
+            
+            fetch('/api/cancel-bet', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotificationModal('success', 'Bet Cancelled!', data.message);
+                    // Refresh dashboard immediately to show updated bet status
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotificationModal('error', 'Cancellation Failed', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotificationModal('error', 'Connection Error', 'Failed to cancel bet');
             });
         }
     );

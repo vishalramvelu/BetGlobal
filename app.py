@@ -198,7 +198,7 @@ def datetime_filter(date_string, format_string='%Y-%m-%d %H:%M'):
         return date_string  # Return original if parsing fails
 
 # Import models after app creation to avoid circular imports
-from models import Bet, User, Role, DisputeEvidence, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount, save_dispute_evidence, get_dispute_evidence, generate_reset_code, set_user_reset_code, verify_user_reset_code, clear_reset_code, get_user_by_email
+from models import Bet, User, Role, DisputeEvidence, create_bet, accept_bet, cancel_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount, save_dispute_evidence, get_dispute_evidence, generate_reset_code, set_user_reset_code, verify_user_reset_code, clear_reset_code, get_user_by_email
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta, timezone
 from flask_mail import Message
@@ -1168,6 +1168,46 @@ def api_creator_decide():
     except Exception as e:
         logging.error(f"Error in creator decision: {str(e)}")
         return jsonify({'success': False, 'error': 'Failed to submit decision'}), 500
+
+@app.route('/api/cancel-bet', methods=['POST'])
+@login_required
+def api_cancel_bet():
+    """API endpoint for bet creator to cancel their open bet"""
+    try:
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
+        bet_id = data.get('bet_id')
+        
+        if not bet_id:
+            return jsonify({'success': False, 'error': 'Bet ID is required'}), 400
+        
+        from flask_security import current_user
+        user_id = current_user.id
+        bet = get_bet_by_id(bet_id)
+        
+        if not bet:
+            return jsonify({'success': False, 'error': 'Bet not found'}), 404
+        
+        if bet.creator_id != user_id:
+            return jsonify({'success': False, 'error': 'Only the bet creator can cancel their bet'}), 403
+        
+        if bet.status != 'open':
+            return jsonify({'success': False, 'error': 'Only open bets can be cancelled'}), 400
+        
+        success = cancel_bet(bet_id, user_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Bet cancelled successfully. Your money has been refunded.'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to cancel bet'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error cancelling bet: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to cancel bet'}), 500
 
 @app.route('/api/taker-respond', methods=['POST'])
 @login_required
