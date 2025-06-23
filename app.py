@@ -877,8 +877,8 @@ def create_connected_account():
     # 2) Create an Account Link so they can finish connecting (KYC + bank)
     account_link = stripe.AccountLink.create(
         account=account.id,
-        refresh_url=url_for("wallet", _external=True),
-        return_url=url_for("wallet", _external=True),
+        refresh_url=url_for("wallet", _external=True, _scheme = "https"),
+        return_url=url_for("wallet", _external=True, _scheme = "https"),
         type="account_onboarding",
     )
 
