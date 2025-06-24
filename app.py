@@ -814,8 +814,21 @@ def success():
 
     try:
         # Retrieve the Checkout Session from Stripe 
-        stripe_session = stripe.checkout.Session.retrieve(session_id)
-        amount_paid = stripe_session.amount_total / 100.0  # in dollars
+        stripe_session = stripe.checkout.Session.retrieve(session_id, expand=["payment_intent.charges.data.balance_transaction"]) #get actual fees amount
+
+        charge = stripe_session.payment_intent.charges.data[0]
+        bt     = charge.balance_transaction  # now already expanded object
+
+        # amounts are in cents
+        gross_cents = bt.gross      # e.g. 2000
+        fee_cents   = bt.fee        # e.g.   88
+        net_cents   = bt.net        # e.g. 1912
+
+        gross_amt = gross_cents / 100.0
+        fee_amt   = fee_cents   / 100.0
+        net_amt   = net_cents   / 100.0
+
+        amount_paid = net_amt  # in dollars
 
         # credit the user's wallet in database
         user = current_user
@@ -827,7 +840,7 @@ def success():
                 user_id=user.id,
                 transaction_type='deposit',
                 amount=amount_paid,
-                description=f'Stripe deposit: ${amount_paid:.2f}'
+                description=f'Stripe deposit (net of fees): ${amount_paid:.2f}'
             )
             
             db.session.commit()
