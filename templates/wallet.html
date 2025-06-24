@@ -125,7 +125,7 @@
                                             <label for="stripeWithdrawAmount" class="form-label text-white">Amount (Bank Transfer)</label>
                                             <div class="input-wrapper">
                                                 <div class="input-icon">
-                                                    <i data-feather="bank"></i>
+                                                    <i data-feather="home"></i>
                                                 </div>
                                                 <input type="number" class="form-control auth-input" name="amount" id="stripeWithdrawAmount"
                                                        placeholder="Enter amount" min="0.01" max="{{ user.balance or 0 }}" step="0.01" required>
@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const fee = (val * 0.029) + 0.30;
       const net = val - fee;
       feeNote.textContent = 
-        `Fee: $${fee.toFixed(2)} → Credited: $${net.toFixed(2)}`;
+        `Stripe Fee: $${fee.toFixed(2)} → Credited: $${net.toFixed(2)}`;
     }
   
     // wire it up
