@@ -551,7 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateFeeNote() {
       const val = parseFloat(amtInput.value);
       if (isNaN(val) || val < 1) {
-        feeNote.textContent = "Enter an amount to see value.";
+        feeNote.textContent = "Enter an amount to see value";
         return;
       }
       // Stripe’s 2.9% + $0.30
