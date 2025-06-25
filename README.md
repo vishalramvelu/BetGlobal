@@ -1,4 +1,4 @@
-# Bet Global
+# BetGlobal
 
 A secure, modern betting platform that connects users worldwide for 0-fee Peer-to-Peer betting. 
 
