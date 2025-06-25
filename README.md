@@ -11,7 +11,7 @@ Feel free to check out the [website here!](https://betgloballive.com/landing)
 * Frontend: Javascript, React, HTML/CSS, Bootstrap
 * Deployment: AWS Elastic Beanstalk (EC2 + RDS)
 
-### Features
+## Features
 * Reliable JWT-based Authorization + 2FA Authentication
 * Seamless Stripe Payment Integration
 * Consistent bet verification handling through photo evidence + admin involvement
