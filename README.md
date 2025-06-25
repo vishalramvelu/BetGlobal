@@ -1,54 +1,23 @@
-# 🎯 Play Stakes - Peer-to-Peer Betting Platform
+# Bet Global
 
-A secure, modern betting platform that connects users worldwide for 0-fee P2P betting
+A secure, modern betting platform that connects users worldwide for 0-fee Peer-to-Peer betting. 
 
-## 🚀 Quick Start
+## Visit the Site
+Feel free to check out the [website here!](https://betgloballive.com/landing)
+<img width="1468" alt="Screenshot 2025-06-24 at 11 22 58 PM" src="https://github.com/user-attachments/assets/640e0de3-69bc-405c-8811-3055b618671e" />
 
-### For Development (Testing Features Locally)
+## Framework
+*Backend: Python, Flask, PostegreSQL
+*Frontend: Javascript, React, HTML/CSS, Bootstrap
+*Deployment: AWS Elastic Beanstalk (EC2 + RDS)
 
-Read `DEVELOPMENT_GUIDE.md`
+### Features
+*Reliable JWT-based Authorization + 2FA Authentication
+*Seamless Stripe Payment Integration
+*Consistent bet verification handling through photo evidence + admin involvement
+*Production-level security features including CSRF protection, rate limiting, and HTTPS enforced headers
 
-### For Production Deployment
 
-Read `DEPLOYMENT_GUIDE.md`
+## Local Installation
 
-## 🛠️ Technology Stack
-
-- **Backend**: Python Flask
-- **Database**: PostgreSQL (production) / SQLite (development)
-- **Payments**: Stripe Connect
-- **Security**: Flask-Security-Too, CSRF protection, rate limiting
-- **Frontend**: Bootstrap 5, Feather Icons
-- **Email**: Flask-Mail with HTML templates
-
-## 🔒 Security Features
-
-- **Rate Limiting** - Prevents abuse on sensitive endpoints
-- **CSRF Protection** - Protects against cross-site request forgery
-- **Security Headers** - Comprehensive header security with Talisman
-- **Input Validation** - Server-side validation on all inputs
-- **2FA Authentication** - Two-factor password recovery
-- **File Upload Security** - Validated file uploads with virus scanning
-- **Admin Session Management** - Secure admin authentication
-
-## 📧 Communication Features
-
-- **Account Management** - Registration, login, password reset
-- **Bet Notifications** - Email alerts for bet activities
-- **Dispute Evidence** - File upload for bet disputes
-- **Admin Notifications** - System-wide communication tools
-
-## 🎮 User Experience
-
-- **Responsive Design** - Mobile-first responsive interface
-- **Real-time Updates** - Dynamic content updates
-- **Intuitive Navigation** - Clear user interface design
-- **Accessibility** - WCAG compliance features
-
-## 📊 Admin Features
-
-- **User Management** - View and manage user accounts
-- **Bet Oversight** - Monitor all betting activities
-- **Dispute Resolution** - Handle bet conflicts with evidence review
-- **System Statistics** - Comprehensive analytics dashboard
-- **Security Monitoring** - Track system security metrics
+For experimenting with website implementation and features locally, closely follow instructions in `DEVELOPMENT_GUIDE.md`
