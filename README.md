@@ -1,6 +1,6 @@
 # BetGlobal
 
-A secure, modern betting platform that connects users worldwide for 0-fee Peer-to-Peer betting. 
+A secure, modern betting platform that connects users worldwide for 0-fee Peer-to-Peer betting. Anyone can create a bet and anyone can accept.
 
 ## Visit the Site
 Feel free to check out the [website here!](https://betgloballive.com/landing)
