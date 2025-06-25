@@ -4,6 +4,7 @@ A secure, modern betting platform that connects users worldwide for 0-fee Peer-t
 
 ## Visit the Site
 Feel free to check out the [website here!](https://betgloballive.com/landing)
+
 <img width="1468" alt="Screenshot 2025-06-24 at 11 22 58 PM" src="https://github.com/user-attachments/assets/640e0de3-69bc-405c-8811-3055b618671e" />
 
 ## Framework
