@@ -20,4 +20,4 @@ Feel free to check out the [website here!](https://betgloballive.com/landing)
 
 ## Local Installation
 
-For experimenting with website implementation and features locally, closely follow instructions in `DEVELOPMENT_GUIDE.md`
+To access website implementation and features locally, closely follow instructions in `DEVELOPMENT_GUIDE.md`
