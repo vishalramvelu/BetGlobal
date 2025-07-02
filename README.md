@@ -8,7 +8,7 @@ Feel free to check out the [website here!](https://betgloballive.com/landing)
 <img width="1468" alt="Screenshot 2025-06-24 at 11 22 58 PM" src="https://github.com/user-attachments/assets/640e0de3-69bc-405c-8811-3055b618671e" />
 
 ## Framework
-* Backend: Python, Flask, PostegreSQL
+* Backend: Python, Flask, PostgreSQL
 * Frontend: Javascript, React, HTML/CSS, Bootstrap
 * Deployment: AWS Elastic Beanstalk (EC2 + RDS)
 
