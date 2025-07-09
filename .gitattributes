@@ -1,0 +1,8 @@
+templates/base.html linguist-vendored
+templates/contact.html linguist-vendored
+templates/create_bet.html linguist-vendored
+templates/dashboard.html linguist-vendored
+templates/index.html linguist-vendored
+templates/landing.html linguist-vendored
+templates/login.html linguist-vendored
+templates/signup.html linguist-vendored
