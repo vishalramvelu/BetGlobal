@@ -9,3 +9,4 @@ templates/signup.html linguist-vendored
 templates/terms.html linguist-vendored
 templates/wallet.html linguist-vendored
 templates/admin_login.html linguist-vendored
+templates/admin_statistics.html linguist-vendored
