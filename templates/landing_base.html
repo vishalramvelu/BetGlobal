@@ -1,167 +1,82 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BetGlobal - Global Betting Platform{% endblock %}</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS - Load after Bootstrap to ensure proper override -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-    
-    <!-- Dark theme override -->
-    <style>
-        html[data-bs-theme="dark"] {
-            color-scheme: dark;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
-            color: #fff !important;
-        }
-        .navbar-dark {
-            background-color: rgba(0, 0, 0, 0.95) !important;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.125) !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Landing Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark landing-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('landing') }}">
-                <div class="brand-icon">
-                    <i data-feather="trending-up"></i>
-                </div>
-                <span class="brand-text">BetGlobal</span>
-            </a>
-            
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean" href="{{ url_for('contact') }}">
-                            Contact
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean" href="{{ url_for('security.login') }}">
-                            Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean" href="{{ url_for('security.register') }}">
-                            Sign Up
-                        </a>
-                    </li>
-                    <li class="nav-item ms-3">
-                        <a class="btn btn-gradient-nav" href="{{ url_for('start_betting') }}">
-                            Start Betting
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+{# Public shell — marketing, auth and content pages for signed-out visitors. #}
+{% extends "_layout.html" %}
+
+{% block body %}
+<header class="site-header">
+    <a class="brand" href="{{ url_for('landing') }}">
+        <img class="brand-mark" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+        <img class="brand-wordmark" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+    </a>
+
+    <nav class="site-nav" aria-label="Main">
+        <a href="{{ url_for('index') }}"       class="{% if request.endpoint == 'index' %}is-active{% endif %}">Live Bets</a>
+        <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}is-active{% endif %}">How it works</a>
+        <a href="{{ url_for('fees') }}"        class="{% if request.endpoint == 'fees' %}is-active{% endif %}">Fees</a>
+        <a href="{{ url_for('contact') }}"     class="{% if request.endpoint == 'contact' %}is-active{% endif %}">Contact</a>
     </nav>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-3">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
+    <div class="header-actions">
+        {% if current_user.is_authenticated %}
+            <a class="btn btn-quiet" href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('index') }}">Open the board</a>
+        {% else %}
+            <a class="btn btn-quiet" href="{{ url_for('security.login') }}">Sign in</a>
+            <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
         {% endif %}
-    {% endwith %}
+    </div>
+</header>
 
-    <!-- Main Content -->
-    <main>
-        {% block content %}{% endblock %}
-    </main>
+{% include "_flash.html" %}
 
-    <!-- Footer -->
-    <footer class="landing-footer">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="footer-brand">
-                        <div class="footer-logo">
-                            <div class="brand-icon">
-                                <i data-feather="trending-up"></i>
-                            </div>
-                            <span class="brand-text">BetGlobal</span>
-                        </div>
-                        <p class="footer-description">
-                            The world's most exciting peer-to-peer betting platform. 
-                            No house, no middleman, no fees, just pure betting.
-                        </p>
-                        <!-- <div class="footer-stats">
-                            <div class="stat-item">
-                                <span class="stat-number">10K+</span>
-                                <span class="stat-label">Active Bets</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number">5K+</span>
-                                <span class="stat-label">Users</span>
-                            </div>
-                        </div> -->
-                    </div>
-                </div>
-                
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-section">
-                        <h6 class="footer-title">Support</h6>
-                        <ul class="footer-links">
-                            <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-section">
-                        <h6 class="footer-title">Legal</h6>
-                        <ul class="footer-links">
-                            <li><a href="{{ url_for('terms') }}">Terms of Service</a></li>
-                        </ul>
-                    </div>
-                </div>
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="footer-cols">
+        <div>
+            <div class="brand">
+                <img class="brand-mark" style="height:26px" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+                <img class="brand-wordmark" style="height:15px" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
             </div>
-            
-            <div class="footer-bottom">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <p class="footer-copyright">
-                            &copy; 2025 BetGlobal. All rights reserved.
-                        </p>
-                    </div>
-                </div>
+            <p class="footer-blurb">
+                Peer-to-peer betting with no house and no platform fee.
+                Anyone can create a bet, anyone can take it.
+            </p>
+        </div>
+
+        <div>
+            <div class="footer-title">Product</div>
+            <div class="footer-links">
+                <a href="{{ url_for('index') }}">Live bets</a>
+                <a href="{{ url_for('how_it_works') }}">How it works</a>
+                <a href="{{ url_for('fees') }}">Fees</a>
             </div>
         </div>
-    </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Initialize Feather Icons -->
-    <script>
-        feather.replace();
-    </script>
-    
-    {% block scripts %}{% endblock %}
-</body>
-</html>
+        <div>
+            <div class="footer-title">Account</div>
+            <div class="footer-links">
+                <a href="{{ url_for('security.login') }}">Sign in</a>
+                <a href="{{ url_for('security.register') }}">Create account</a>
+                <a href="{{ url_for('forgot_password') }}">Forgot password</a>
+            </div>
+        </div>
+
+        <div>
+            <div class="footer-title">Support &amp; legal</div>
+            <div class="footer-links">
+                <a href="{{ url_for('contact') }}">Contact support</a>
+                <a href="{{ url_for('terms') }}">Terms of Service</a>
+                <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <span>&copy; {{ current_year }} BetGlobal. All rights reserved.</span>
+        <span>18+ only. Bet responsibly.</span>
+        <a class="staff-link" href="{{ url_for('admin_login') }}">Staff sign-in</a>
+    </div>
+</footer>
+{% endblock %}

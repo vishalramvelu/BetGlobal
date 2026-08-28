@@ -12,3 +12,7 @@ instance/bets_dev.db
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# SQLite databases (dev, test, scratch)
+*.db
+*.db-journal

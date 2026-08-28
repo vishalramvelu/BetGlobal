@@ -157,11 +157,14 @@ limiter = Limiter(
 limiter.init_app(app)
 
 # Initialize security headers
+# Scripts and CSS are now served from /static (Bootstrap and the unpkg copy of
+# feather-icons were removed in the frontend rebuild), so the only remaining
+# third-party origins are Google Fonts for the typefaces the design specifies.
 csp = {
     'default-src': "'self'",
-    'script-src': "'self' 'unsafe-inline' cdn.jsdelivr.net unpkg.com",
-    'style-src': "'self' 'unsafe-inline' cdn.jsdelivr.net",
-    'font-src': "'self' cdn.jsdelivr.net",
+    'script-src': "'self' 'unsafe-inline'",
+    'style-src': "'self' 'unsafe-inline' fonts.googleapis.com",
+    'font-src': "'self' fonts.gstatic.com",
     'img-src': "'self' data: *.stripe.com"
 }
 
@@ -596,13 +599,13 @@ def wallet():
         
         # Apply time filters
         if filter_period == 'week':
-            week_ago = datetime.now(datetime.timezone.utc) - timedelta(days=7)
+            week_ago = datetime.now(timezone.utc) - timedelta(days=7)
             query = query.filter(Transaction.created_at >= week_ago)
         elif filter_period == 'month':
-            month_ago = datetime.now(datetime.timezone.utc) - timedelta(days=30)
+            month_ago = datetime.now(timezone.utc) - timedelta(days=30)
             query = query.filter(Transaction.created_at >= month_ago)
         elif filter_period == 'year':
-            year_ago = datetime.now(datetime.timezone.utc) - timedelta(days=365)
+            year_ago = datetime.now(timezone.utc) - timedelta(days=365)
             query = query.filter(Transaction.created_at >= year_ago)
         
         # Get transactions ordered by newest first
@@ -1499,6 +1502,17 @@ def admin_disputes():
                              bet_evidence={},
                              error="Failed to load disputed bets")
 
+@app.context_processor
+def inject_layout_globals():
+    """Values every template's shell needs (footer year, admin badge count)."""
+    context = {'current_year': datetime.now().year}
+    if request.path.startswith('/admin'):
+        try:
+            context['dispute_count'] = len(get_disputed_bets())
+        except Exception:
+            context['dispute_count'] = 0
+    return context
+
 @app.route('/contact')
 def contact():
     """Contact us page"""
@@ -1508,6 +1522,21 @@ def contact():
 def terms():
     """Terms of service page"""
     return render_template('terms.html')
+
+@app.route('/privacy')
+def privacy():
+    """Privacy policy page"""
+    return render_template('privacy.html')
+
+@app.route('/how-it-works')
+def how_it_works():
+    """Walkthrough of the five stages a bet moves through"""
+    return render_template('how_it_works.html')
+
+@app.route('/fees')
+def fees():
+    """Fee breakdown — zero platform fee, Stripe rates on the rails"""
+    return render_template('fees.html')
 
 @app.route('/admin/statistics')
 @admin_required
@@ -1645,7 +1674,7 @@ with app.app_context():
                 password=hash_password('password123'),
                 balance=0.0,
                 active=True,
-                confirmed_at=datetime.now(datetime.timezone.utc)
+                confirmed_at=datetime.now(timezone.utc)
             )
             
             user2 = user_datastore.create_user(
@@ -1654,7 +1683,7 @@ with app.app_context():
                 password=hash_password('password123'),
                 balance=0.0,
                 active=True,
-                confirmed_at=datetime.now(datetime.timezone.utc)
+                confirmed_at=datetime.now(timezone.utc)
             )
             
             db.session.commit()

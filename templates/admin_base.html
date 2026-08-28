@@ -1,0 +1,74 @@
+{# Admin shell — navy sidebar + topbar. Replaces the five standalone admin
+   documents, which each carried their own <head>, nav and footer. #}
+{% extends "_layout.html" %}
+
+{% block title %}{% block admin_title %}Admin{% endblock %} · BetGlobal{% endblock %}
+
+{% block body %}
+<div class="shell">
+    <div class="scrim" aria-hidden="true"></div>
+
+    <aside class="sidebar sidebar-admin">
+        <div class="brand">
+            <img class="brand-mark" style="height:26px" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+            <img class="brand-wordmark" style="height:15px" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
+            <span class="staff-tag">Staff</span>
+        </div>
+
+        <div class="sb-user">
+            <div class="avatar">AD</div>
+            <div style="line-height:1.25;min-width:0">
+                <div class="sb-user-name">admin</div>
+                <div class="sb-user-role">Superuser session</div>
+            </div>
+            <a class="sb-logout" href="{{ url_for('admin_logout') }}" title="Log out" aria-label="Log out">
+                <i data-feather="log-out" style="width:15px;height:15px"></i>
+            </a>
+        </div>
+
+        <nav class="sb-nav" aria-label="Admin sections">
+            <div class="sb-heading">Operations</div>
+            <a class="sb-link {% if request.endpoint == 'admin_dashboard' %}is-active{% endif %}" href="{{ url_for('admin_dashboard') }}">
+                <i data-feather="home"></i>Overview
+            </a>
+            <a class="sb-link {% if request.endpoint == 'admin_disputes' %}is-active{% endif %}" href="{{ url_for('admin_disputes') }}">
+                <i data-feather="alert-triangle"></i>Disputes
+                {% if dispute_count %}<span class="sb-count">{{ dispute_count }}</span>{% endif %}
+            </a>
+            <a class="sb-link {% if request.endpoint == 'admin_statistics' %}is-active{% endif %}" href="{{ url_for('admin_statistics') }}">
+                <i data-feather="bar-chart-2"></i>Statistics
+            </a>
+            <a class="sb-link {% if request.endpoint == 'admin_database' %}is-active{% endif %}" href="{{ url_for('admin_database') }}">
+                <i data-feather="database"></i>Database
+            </a>
+
+            <div class="sb-heading">Public site</div>
+            <a class="sb-link" href="{{ url_for('landing') }}">
+                <i data-feather="external-link"></i>Open live site
+            </a>
+        </nav>
+    </aside>
+
+    <main style="min-width:0">
+        <div class="topbar">
+            <button type="button" class="menu-toggle" data-sidebar-toggle aria-label="Open menu">
+                <i data-feather="menu" style="width:16px;height:16px"></i>
+            </button>
+            <h1>{{ self.admin_title() }}</h1>
+            <span class="sub">{% block admin_subtitle %}{% endblock %}</span>
+
+            {% if dispute_count %}
+            <a class="chip spacer" href="{{ url_for('admin_disputes') }}"
+               style="border-color:var(--amber-border);background:var(--amber-bg);color:var(--amber);height:32px">
+                <i data-feather="alert-triangle" style="width:13px;height:13px"></i>
+                {{ dispute_count }} dispute{{ 's' if dispute_count != 1 }} waiting
+            </a>
+            {% endif %}
+        </div>
+
+        {% include "_flash.html" %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

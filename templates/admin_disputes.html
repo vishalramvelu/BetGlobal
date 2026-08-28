@@ -1,552 +1,243 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bet Disputes - Admin Panel</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-    
-    <!-- Dark theme override -->
-    <style>
-        html[data-bs-theme="dark"] {
-            color-scheme: dark;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
-            color: #fff !important;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.125) !important;
-        }
-        /* Admin specific styling */
-        .bg-warning {
-            background: linear-gradient(135deg, #ffd700, #ff6b35) !important;
-        }
-        .text-dark {
-            color: #000 !important;
-        }
-        .navbar-brand {
-            font-weight: 700 !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Admin Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
-        <div class="container">
-            <a class="navbar-brand text-dark" href="{{ url_for('admin_dashboard') }}">
-                <i data-feather="shield" class="me-2"></i>
-                <strong>Admin Panel</strong>
+{% extends "admin_base.html" %}
+
+{% block admin_title %}Disputes{% endblock %}
+{% block admin_subtitle %}{{ disputed_bets | length }} open{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="pad">
+    <div class="alert alert-danger alert-permanent">
+        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <span>{{ error }}</span>
+    </div>
+</div>
+{% endif %}
+
+{% if not disputed_bets %}
+    <div class="pad">
+        <div class="card empty" style="padding:56px 24px">
+            <span class="tile tile-lg tile-green" style="margin:0 auto">
+                <i data-feather="check-circle" style="width:19px;height:19px"></i>
+            </span>
+            <h2 class="title-sm" style="margin-top:14px">No open disputes</h2>
+            <p style="margin-top:6px">Every bet has settled by agreement. Nothing needs a decision.</p>
+        </div>
+    </div>
+{% else %}
+
+<div class="grid" style="grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - var(--topbar-h))">
+
+    <!-- queue -->
+    <div style="border-right:1px solid var(--line)">
+        {% for bet in disputed_bets %}
+            {% set pot = bet.amount + (bet.amount * bet.odds) %}
+            <a class="queue-item {% if loop.first %}is-active{% endif %}" href="#dispute-{{ bet.id }}">
+                <div class="row-flex">
+                    <span class="mono" style="font-size:11px;color:var(--muted-2)">#{{ bet.id }}</span>
+                    <span class="mono spacer" style="font-size:11px;color:var(--amber)">
+                        ${{ '{:,.0f}'.format(pot) }}
+                    </span>
+                </div>
+                <div class="t">{{ bet.title }}</div>
+                <div class="m">
+                    {{ users.get(bet.creator_id, {}).get('username', '?') }}
+                    vs {{ users.get(bet.acceptor_id, {}).get('username', '?') }}
+                </div>
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="adminNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_dashboard') }}">
-                            <i data-feather="home" class="me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_database') }}">
-                            <i data-feather="database" class="me-1"></i>Database
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark active" href="{{ url_for('admin_disputes') }}">
-                            <i data-feather="alert-triangle" class="me-1"></i>Disputes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_statistics') }}">
-                            <i data-feather="bar-chart-2" class="me-1"></i>Statistics
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('landing') }}">
-                            <i data-feather="external-link" class="me-1"></i>Main Site
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_logout') }}">
-                            <i data-feather="log-out" class="me-1"></i>Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+        {% endfor %}
+    </div>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-3">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
+    <!-- detail -->
+    <div style="padding:24px;display:flex;flex-direction:column;gap:32px">
+        {% for bet in disputed_bets %}
+            {% set taker_stake = bet.amount * bet.odds %}
+            {% set pot = bet.amount + taker_stake %}
+            {% set creator = users.get(bet.creator_id, {}) %}
+            {% set acceptor = users.get(bet.acceptor_id, {}) %}
 
-    <div class="container my-4">
-        <div class="row mb-4">
-            <div class="col">
-                <h1 class="h3 mb-0">
-                    <i data-feather="alert-triangle" class="me-2"></i>
-                    Bet Disputes
-                </h1>
-                <p class="text-muted">Manage bet disputes and resolution</p>
-            </div>
-        </div>
+            <section id="dispute-{{ bet.id }}" style="scroll-margin-top:calc(var(--topbar-h) + 16px)">
+                <div class="row-flex" style="flex-wrap:wrap;min-width:0">
+                    <span class="mono" style="font-size:11px;color:var(--muted-2)">Bet #{{ bet.id }}</span>
+                    <span class="badge badge-disputed">Disputed</span>
+                    <span class="mono spacer" style="font-size:11px;color:var(--muted-2)">
+                        created {{ bet.created_at | strftime('%b %d, %Y') }}
+                    </span>
+                </div>
 
-        {% if error %}
-            <div class="alert alert-danger" role="alert">
-                <i data-feather="alert-circle" class="me-2"></i>
-                {{ error }}
-            </div>
-        {% endif %}
+                <h2 class="title-sm" style="margin:12px 0 0">{{ bet.title }}</h2>
+                <p class="body-sm" style="margin:7px 0 0;max-width:640px">{{ bet.description }}</p>
 
-        <!-- Disputed Bets -->
-        {% if not disputed_bets %}
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="card">
-                        <div class="card-body text-center p-5">
-                            <div class="mb-4">
-                                <i data-feather="check-circle" style="width: 64px; height: 64px;" class="text-success"></i>
-                            </div>
-                            <h4 class="mb-3">No Disputes</h4>
-                            <p class="text-muted mb-4">
-                                There are currently no bet disputes pending review.
-                            </p>
-                            <div class="alert alert-info">
-                                <i data-feather="info" class="me-2"></i>
-                                When users dispute bet outcomes, they will appear here for admin resolution.
-                            </div>
+                <div class="figure-strip" style="margin-top:18px;border-radius:var(--r);border:1px solid var(--line)">
+                    <div><div class="lbl">Creator staked</div><div class="val">${{ '%.2f' | format(bet.amount) }}</div></div>
+                    <div><div class="lbl">Taker staked</div><div class="val">${{ '%.2f' | format(taker_stake) }}</div></div>
+                    <div><div class="lbl">Total pot</div><div class="val is-green">${{ '%.2f' | format(pot) }}</div></div>
+                    <div><div class="lbl">Odds</div><div class="val">{{ bet.odds }}:1</div></div>
+                </div>
+
+                <!-- both sides -->
+                <div class="grid g2 gap-16" style="margin-top:24px">
+                    <div class="card card-pad" style="padding:16px">
+                        <div class="row-flex" style="gap:9px">
+                            <span class="avatar" style="width:24px;height:24px">
+                                {{ creator.get('username', '??')[:2] | upper }}
+                            </span>
+                            <div style="font-size:13px;font-weight:600">{{ creator.get('username', 'Unknown') }}</div>
+                            <span class="spacer" style="font-size:11px;color:var(--muted-2)">Creator</span>
                         </div>
+                        <div class="eyebrow" style="margin-top:14px">Claim</div>
+                        <div style="font-size:13.5px;font-weight:600;margin-top:4px">
+                            {{ 'Creator wins' if bet.creator_decision == 'creator_wins' else 'Taker wins' }}
+                        </div>
+                        <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:8px 0 0">
+                            Declared the result after the event closed.
+                        </p>
+                    </div>
+
+                    <div class="card card-pad" style="padding:16px">
+                        <div class="row-flex" style="gap:9px">
+                            <span class="avatar" style="width:24px;height:24px">
+                                {{ acceptor.get('username', '??')[:2] | upper }}
+                            </span>
+                            <div style="font-size:13px;font-weight:600">{{ acceptor.get('username', 'Unknown') }}</div>
+                            <span class="spacer" style="font-size:11px;color:var(--muted-2)">Taker</span>
+                        </div>
+                        <div class="eyebrow" style="margin-top:14px">Dispute reason</div>
+                        <p style="font-size:13px;line-height:1.55;color:var(--ink-2);margin:8px 0 0">
+                            {{ bet.dispute_reason or 'No reason recorded.' }}
+                        </p>
                     </div>
                 </div>
-            </div>
-        {% else %}
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i data-feather="flag" class="me-2"></i>
-                                Disputed Bets ({{ disputed_bets|length }})
-                            </h5>
-                        </div>
-                        <div class="card-body p-0">
-                            {% for bet in disputed_bets %}
-                                <div class="dispute-item border-bottom p-4">
-                                    <div class="row">
-                                        <div class="col-md-8">
-                                            <div class="d-flex align-items-start">
-                                                <div class="dispute-badge me-3">
-                                                    <span class="badge bg-danger">ID: {{ bet.id }}</span>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <h6 class="fw-bold mb-2">{{ bet.title }}</h6>
-                                                    <p class="text-muted mb-2">{{ bet.description }}</p>
-                                                    
-                                                    <div class="row g-2 mb-3">
-                                                        <div class="col-auto">
-                                                            <small class="text-muted">
-                                                                <i data-feather="dollar-sign" class="me-1"></i>
-                                                                Amount: ${{ "%.2f"|format(bet.amount) }}
-                                                            </small>
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <small class="text-muted">
-                                                                <i data-feather="calendar" class="me-1"></i>
-                                                                Created: {{ bet.created_at|strftime('%m/%d/%Y') }}
-                                                            </small>
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <small class="text-muted">
-                                                                <i data-feather="tag" class="me-1"></i>
-                                                                {{ bet.category }}
-                                                            </small>
-                                                        </div>
-                                                    </div>
 
-                                                    <div class="dispute-details">
-                                                        <div class="row g-3">
-                                                            <div class="col-md-6">
-                                                                <div class="card bg-dark">
-                                                                    <div class="card-body p-3">
-                                                                        <h6 class="card-title mb-2">
-                                                                            <i data-feather="user" class="me-1"></i>
-                                                                            Creator: {{ users[bet.creator_id].username }}
-                                                                        </h6>
-                                                                        <p class="mb-1">
-                                                                            <strong>Decision:</strong> 
-                                                                            <span class="badge bg-{% if bet.creator_decision == 'creator_wins' %}success{% else %}warning{% endif %}">
-                                                                                {{ 'Creator Wins' if bet.creator_decision == 'creator_wins' else 'Acceptor Wins' }}
-                                                                            </span>
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <div class="card bg-dark">
-                                                                    <div class="card-body p-3">
-                                                                        <h6 class="card-title mb-2">
-                                                                            <i data-feather="users" class="me-1"></i>
-                                                                            Acceptor: {{ users[bet.acceptor_id].username }}
-                                                                        </h6>
-                                                                        <p class="mb-1">
-                                                                            <strong>Response:</strong> 
-                                                                            <span class="badge bg-danger">Disputed</span>
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {% if bet.dispute_reason %}
-                                                            <div class="mt-3">
-                                                                <h6 class="text-warning">
-                                                                    <i data-feather="message-square" class="me-1"></i>
-                                                                    Dispute Reason:
-                                                                </h6>
-                                                                <div class="card bg-secondary">
-                                                                    <div class="card-body p-3">
-                                                                        <p class="mb-0">{{ bet.dispute_reason }}</p>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        {% endif %}
-                                                        
-                                                        <!-- Dispute Evidence Section -->
-                                                        {% if bet_evidence and bet.id in bet_evidence and bet_evidence[bet.id] %}
-                                                            <div class="mt-3">
-                                                                <h6 class="text-info">
-                                                                    <i data-feather="paperclip" class="me-1"></i>
-                                                                    Evidence Submitted:
-                                                                </h6>
-                                                                
-                                                                {% for evidence in bet_evidence[bet.id] %}
-                                                                    <div class="card bg-dark mb-2">
-                                                                        <div class="card-body p-3">
-                                                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                                                <small class="text-muted">
-                                                                                    <i data-feather="user" class="me-1"></i>
-                                                                                    By: {{ users[evidence.user_id].username }}
-                                                                                </small>
-                                                                                <small class="text-muted">
-                                                                                    <i data-feather="clock" class="me-1"></i>
-                                                                                    {{ evidence.uploaded_at|strftime('%m/%d/%Y %H:%M') }}
-                                                                                </small>
-                                                                            </div>
-                                                                            
-                                                                            {% if evidence.evidence_type == 'text' %}
-                                                                                <div class="evidence-text">
-                                                                                    <h6 class="small text-info mb-1">
-                                                                                        <i data-feather="file-text" class="me-1"></i>
-                                                                                        Text Evidence:
-                                                                                    </h6>
-                                                                                    <p class="mb-0 text-white">{{ evidence.text_content }}</p>
-                                                                                </div>
-                                                                            {% elif evidence.evidence_type == 'image' and evidence.file_path %}
-                                                                                <div class="evidence-file">
-                                                                                    <h6 class="small text-info mb-2">
-                                                                                        <i data-feather="image" class="me-1"></i>
-                                                                                        File Evidence:
-                                                                                    </h6>
-                                                                                    <div class="mb-2">
-                                                                                        <strong>{{ evidence.file_name }}</strong>
-                                                                                    </div>
-                                                                                    
-                                                                                    {% set file_ext = evidence.file_name.lower().split('.')[-1] if evidence.file_name else '' %}
-                                                                                    
-                                                                                    {% if file_ext in ['jpg', 'jpeg', 'png', 'gif'] %}
-                                                                                        <!-- Image preview -->
-                                                                                        <div class="text-center">
-                                                                                            <img src="{{ url_for('uploaded_file', filename=evidence.file_path) }}" 
-                                                                                                 alt="Evidence Image" 
-                                                                                                 class="img-fluid rounded" 
-                                                                                                 style="max-height: 200px; cursor: pointer;"
-                                                                                                 onclick="showImageModal('{{ url_for('uploaded_file', filename=evidence.file_path) }}', '{{ evidence.file_name }}')">
-                                                                                        </div>
-                                                                                    {% else %}
-                                                                                        <!-- Download link for other files -->
-                                                                                        <a href="{{ url_for('uploaded_file', filename=evidence.file_path) }}" 
-                                                                                           class="btn btn-sm btn-outline-info" 
-                                                                                           target="_blank">
-                                                                                            <i data-feather="download" class="me-1"></i>
-                                                                                            Download File
-                                                                                        </a>
-                                                                                    {% endif %}
-                                                                                </div>
-                                                                            {% endif %}
-                                                                        </div>
-                                                                    </div>
-                                                                {% endfor %}
-                                                            </div>
-                                                        {% endif %}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="admin-actions">
-                                                <h6 class="mb-3">Admin Resolution</h6>
-                                                <div class="d-grid gap-2">
-                                                    <button class="btn btn-success" onclick="resolveDispute({{ bet.id }}, 'creator_wins')">
-                                                        <i data-feather="check" class="me-1"></i>
-                                                        Creator Wins
-                                                    </button>
-                                                    <button class="btn btn-primary" onclick="resolveDispute({{ bet.id }}, 'acceptor_wins')">
-                                                        <i data-feather="award" class="me-1"></i>
-                                                        Acceptor Wins
-                                                    </button>
-                                                    <button class="btn btn-warning" onclick="resolveDispute({{ bet.id }}, 'void')">
-                                                        <i data-feather="x-circle" class="me-1"></i>
-                                                        Void Bet
-                                                    </button>
-                                                </div>
-                                                <div class="mt-3">
-                                                    <small class="text-muted">
-                                                        <i data-feather="mail" class="me-1"></i>
-                                                        Support Email: support@betglobal.com<br>
-                                                        Reference Bet ID: {{ bet.id }}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                <!-- evidence -->
+                {% set items = bet_evidence.get(bet.id, []) if bet_evidence else [] %}
+                <div class="card" style="margin-top:16px">
+                    <header class="card-head" style="padding:11px 14px">
+                        <h3>Evidence</h3>
+                        <span class="mono" style="font-size:11px;color:var(--muted-2)">
+                            {{ items | length }} item{{ 's' if items | length != 1 }} · max 16 MB each
+                        </span>
+                    </header>
+
+                    {% for ev in items %}
+                        <div class="card-row" style="align-items:center;padding:12px 14px">
+                            <span class="tile" style="width:30px;height:30px;border-radius:6px">
+                                <i data-feather="{{ 'file-text' if ev.evidence_type == 'text' else 'image' }}"
+                                   style="width:15px;height:15px"></i>
+                            </span>
+
+                            <div style="min-width:0;flex:1">
+                                {% if ev.evidence_type == 'text' %}
+                                    <div style="font-size:13px;font-weight:500">Written statement</div>
+                                    <p style="font-size:12.5px;color:var(--ink-2);margin:4px 0 0;line-height:1.5">{{ ev.text_content }}</p>
+                                {% else %}
+                                    <div class="clip" style="font-size:13px;font-weight:500">{{ ev.file_name }}</div>
+                                {% endif %}
+                                <div style="font-size:11.5px;color:var(--muted-2);margin-top:2px">
+                                    Uploaded by {{ users.get(ev.user_id, {}).get('username', 'unknown') }}
+                                    · {{ ev.uploaded_at | strftime('%b %d, %Y %H:%M') }}
                                 </div>
-                            {% endfor %}
+                            </div>
+
+                            {% if ev.evidence_type != 'text' and ev.file_path %}
+                                {% set ext = (ev.file_name or '').lower().split('.')[-1] %}
+                                {% set href = url_for('uploaded_file', filename=ev.file_path) %}
+                                {% if ext in ('png', 'jpg', 'jpeg', 'gif') %}
+                                    <button type="button" class="btn btn-ghost btn-xs" style="flex-shrink:0"
+                                            data-image-src="{{ href }}" data-image-name="{{ ev.file_name }}">View</button>
+                                {% else %}
+                                    <a class="btn btn-ghost btn-xs" style="flex-shrink:0" href="{{ href }}" target="_blank" rel="noopener">Open</a>
+                                {% endif %}
+                            {% endif %}
                         </div>
+                    {% else %}
+                        <div class="empty" style="padding:24px 14px"><p>Neither side attached evidence.</p></div>
+                    {% endfor %}
+                </div>
+
+                <!-- resolution -->
+                <div class="card card-pad" style="margin-top:16px;padding:16px">
+                    <h3 style="font-size:12.5px;font-weight:600;margin:0">Admin resolution</h3>
+                    <p style="font-size:12.5px;color:var(--muted);margin:5px 0 14px">
+                        Payout is final and both users are emailed the outcome.
+                    </p>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button type="button" class="btn btn-primary btn-sm"
+                                onclick="resolveDispute({{ bet.id }}, 'creator_wins')">
+                            Award {{ creator.get('username', 'creator') }} · ${{ '{:,.2f}'.format(pot) }}
+                        </button>
+                        <button type="button" class="btn btn-ink btn-sm"
+                                onclick="resolveDispute({{ bet.id }}, 'acceptor_wins')">
+                            Award {{ acceptor.get('username', 'taker') }} · ${{ '{:,.2f}'.format(pot) }}
+                        </button>
+                        <button type="button" class="btn btn-ghost btn-sm"
+                                onclick="resolveDispute({{ bet.id }}, 'void')">Void &amp; refund both</button>
                     </div>
                 </div>
-            </div>
-        {% endif %}
+            </section>
+        {% endfor %}
     </div>
+</div>
+{% endif %}
+{% endblock %}
 
-    <!-- Confirmation Modal -->
-    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title d-flex align-items-center" id="confirmationModalLabel">
-                        <i id="confirmationIcon" data-feather="help-circle" class="me-2"></i>
-                        <span id="confirmationTitle">Confirm Action</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="confirmationMessage">Are you sure you want to perform this action?</p>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="confirmationCancel">Cancel</button>
-                    <button type="button" class="btn btn-warning" id="confirmationConfirm">Confirm</button>
-                </div>
-            </div>
-        </div>
-    </div>
+{% block scripts %}
+<script>
+var CSRF = {{ csrf_token() | tojson }};
 
-    <!-- Notification Modal -->
-    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title d-flex align-items-center" id="notificationModalLabel">
-                        <i id="notificationIcon" data-feather="check-circle" class="me-2"></i>
-                        <span id="notificationTitle">Success!</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="notificationMessage">Action completed successfully.</p>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" id="notificationOk">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
+function resolveDispute(betId, decision) {
+    var label = decision === 'creator_wins' ? 'award the creator'
+              : decision === 'acceptor_wins' ? 'award the taker'
+              : 'void the bet and refund both sides';
 
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title d-flex align-items-center" id="imageModalLabel">
-                        <i data-feather="image" class="me-2"></i>
-                        <span id="imageModalTitle">Evidence Image</span>
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" alt="Evidence Image" class="img-fluid rounded">
-                </div>
-                <div class="modal-footer border-0">
-                    <a id="downloadImageBtn" href="" class="btn btn-primary" target="_blank">
-                        <i data-feather="download" class="me-1"></i>
-                        Download Original
-                    </a>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    showConfirmationModal(
+        'Resolve dispute #' + betId,
+        'You are about to ' + label + '. The payout is final and both users are notified.',
+        decision === 'void' ? 'rotate-ccw' : 'check-circle',
+        decision === 'void' ? '#A9660B' : '#00A331',
+        function () {
+            var body = new FormData();
+            body.append('bet_id', betId);
+            body.append('admin_decision', decision);
+            body.append('csrf_token', CSRF);
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Initialize Feather Icons -->
-    <script>
-        feather.replace();
-        
-        let currentConfirmationAction = null;
-        let confirmationModal, notificationModal, imageModal;
-        
-        // Set up event handlers
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize Bootstrap modals
-            confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-            notificationModal = new bootstrap.Modal(document.getElementById('notificationModal'));
-            imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
-            
-            // Confirmation modal handlers
-            document.getElementById('confirmationConfirm').addEventListener('click', function() {
-                if (currentConfirmationAction) {
-                    currentConfirmationAction();
-                    confirmationModal.hide();
-                }
-            });
-            
-            // Notification modal handler - reload page after successful actions
-            document.getElementById('notificationModal').addEventListener('hidden.bs.modal', function() {
-                if (document.getElementById('notificationIcon').getAttribute('data-feather') === 'check-circle') {
-                    setTimeout(() => location.reload(), 500);
-                }
-            });
+            fetch('/api/admin-resolve', { method: 'POST', body: body })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data.success) {
+                        showNotificationModal('success', 'Dispute resolved', data.message || 'The payout has been made.');
+                        setTimeout(function () { location.reload(); }, 1000);
+                    } else {
+                        showNotificationModal('error', 'Resolution failed', data.error || 'Please try again.');
+                    }
+                })
+                .catch(function () {
+                    showNotificationModal('error', 'Connection error', 'Failed to resolve the dispute.');
+                });
+        }
+    );
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-image-src]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            showImageModal(this.dataset.imageSrc, this.dataset.imageName);
         });
-        
-        function resolveDispute(betId, decision) {
-            const decisionText = decision === 'creator_wins' ? 'Creator Wins' : 
-                               decision === 'acceptor_wins' ? 'Acceptor Wins' : 'Void Bet';
-            
-            let icon, iconColor;
-            switch(decision) {
-                case 'creator_wins':
-                    icon = 'check';
-                    iconColor = '#28a745';
-                    break;
-                case 'acceptor_wins':
-                    icon = 'award';
-                    iconColor = '#007bff';
-                    break;
-                case 'void':
-                    icon = 'x-circle';
-                    iconColor = '#ffc107';
-                    break;
-            }
-            
-            showConfirmationModal(
-                'Resolve Dispute',
-                `Are you sure you want to resolve this dispute as: ${decisionText}?`,
-                icon,
-                iconColor,
-                () => {
-                    // Send as FormData to include CSRF token
-                    const formData = new FormData();
-                    formData.append('bet_id', betId);
-                    formData.append('admin_decision', decision);
-                    formData.append('csrf_token', '{{ csrf_token() }}');
-                    
-                    fetch('/api/admin-resolve', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showNotificationModal('success', 'Dispute Resolved!', data.message);
-                        } else {
-                            showNotificationModal('error', 'Resolution Failed', data.error);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showNotificationModal('error', 'Connection Error', 'Failed to resolve dispute');
-                    });
-                }
-            );
-        }
-        
-        function showConfirmationModal(title, message, icon, iconColor, action) {
-            const iconElement = document.getElementById('confirmationIcon');
-            const titleElement = document.getElementById('confirmationTitle');
-            const messageElement = document.getElementById('confirmationMessage');
-            
-            titleElement.textContent = title;
-            messageElement.textContent = message;
-            iconElement.setAttribute('data-feather', icon);
-            iconElement.style.color = iconColor;
-            
-            currentConfirmationAction = action;
-            
-            confirmationModal.show();
-            feather.replace();
-        }
-        
-        function showNotificationModal(type, title, message) {
-            const icon = document.getElementById('notificationIcon');
-            const titleEl = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-            
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-            
-            // Configure modal based on type
-            if (type === 'success') {
-                icon.setAttribute('data-feather', 'check-circle');
-                icon.style.color = '#28a745';
-            } else {
-                icon.setAttribute('data-feather', 'x-circle');
-                icon.style.color = '#dc3545';
-            }
-            
-            notificationModal.show();
-            feather.replace();
-        }
-        
-        function showImageModal(imageSrc, fileName) {
-            const modalImage = document.getElementById('modalImage');
-            const modalTitle = document.getElementById('imageModalTitle');
-            const downloadBtn = document.getElementById('downloadImageBtn');
-            
-            modalImage.src = imageSrc;
-            modalTitle.textContent = fileName || 'Evidence Image';
-            downloadBtn.href = imageSrc;
-            
-            imageModal.show();
-            feather.replace();
-        }
-    </script>
-</body>
-</html>
+    });
+
+    /* highlight the queue entry matching the section in view */
+    var links = document.querySelectorAll('.queue-item');
+    var sections = document.querySelectorAll('[id^="dispute-"]');
+    if ('IntersectionObserver' in window && sections.length) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                if (!e.isIntersecting) return;
+                links.forEach(function (l) {
+                    l.classList.toggle('is-active', l.getAttribute('href') === '#' + e.target.id);
+                });
+            });
+        }, { rootMargin: '-30% 0px -60% 0px' });
+        sections.forEach(function (s) { io.observe(s); });
+    }
+});
+</script>
+{% endblock %}

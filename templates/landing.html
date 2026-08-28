@@ -1,510 +1,130 @@
 {% extends "landing_base.html" %}
-
-{% block title %}BetGlobal - The Ultimate Betting Platform{% endblock %}
+{% block title %}BetGlobal — Bet against people, not a house{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="hero-section position-relative overflow-hidden">
-    <div class="hero-bg"></div>
-    <div class="container py-5">
-        <div class="row align-items-center min-vh-100">
-            <div class="col-lg-6">
-                <div class="hero-content">
-                    <h1 class="display-3 fw-bold mb-4 text-white">
-                        Welcome to <span class="text-gradient">BetGlobal</span>
-                    </h1>
-                    <p class="lead mb-4 text-light">
-                        The world's most exciting betting platform where you can create, accept, and win big on bets with people from around the globe.
-                    </p>
-                    <p class="lead mb-4 text-gradient">
-                        No House. No Middleman. Zero Fees.
-                    </p>
-                    <div class="d-flex gap-3 flex-wrap mb-4">
-                        <!-- <a href="#features" class="btn btn-outline-light btn-lg px-4 py-3">
-                            <i data-feather="activity" class="me-2"></i>
-                            Learn More
-                        </a> -->
-                    </div>
-                    <div class="hero-stats d-flex gap-4 flex-wrap">
-                        <div class="stat-item">
-                            <div class="stat-number">800+</div>
-                            <div class="stat-label">Bets</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">300+</div>
-                            <div class="stat-label">Users</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">1,500$+</div>
-                            <div class="stat-label">Won</div>
-                        </div>
-                    </div>
+<div class="grid pad-lg wrap" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center;padding:76px 40px 64px">
+    <div>
+        <span class="pill">0% platform fee, always</span>
+        <h1 class="display" style="margin:18px 0 0">Bet against people, not a house.</h1>
+        <p class="lede" style="margin:18px 0 0;max-width:470px">
+            Write your own bet, set your own odds, settle peer-to-peer.
+            No house edge, no spread, no cut.
+        </p>
+        <div style="display:flex;gap:9px;margin-top:28px;flex-wrap:wrap">
+            <a class="btn btn-primary" href="{{ url_for('security.register') }}">Create free account</a>
+            <a class="btn btn-ghost" href="{{ url_for('index') }}">Browse live bets</a>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,max-content);gap:40px;margin-top:48px;border-top:1px solid var(--line);padding-top:20px">
+            <div>
+                <div class="mono" style="font-size:22px;font-weight:500;letter-spacing:-.02em">{{ stat_bets | default('800+') }}</div>
+                <div class="eyebrow-sm" style="margin-top:3px">Bets placed</div>
+            </div>
+            <div>
+                <div class="mono" style="font-size:22px;font-weight:500;letter-spacing:-.02em">{{ stat_paid | default('$1,500+') }}</div>
+                <div class="eyebrow-sm" style="margin-top:3px">Paid out</div>
+            </div>
+            <div>
+                <div class="mono text-green" style="font-size:22px;font-weight:500;letter-spacing:-.02em">0%</div>
+                <div class="eyebrow-sm" style="margin-top:3px">Our cut</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="row-flex" style="padding:12px 14px;border-bottom:1px solid var(--line)">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--green)"></span>
+            <span style="font-size:12.5px;font-weight:500">Live now</span>
+            <span class="mono spacer" style="font-size:11px;color:var(--muted-2)">updated just now</span>
+        </div>
+
+        {% for bet in live_bets | default([]) %}
+        <a href="{{ url_for('index') }}" style="padding:13px 14px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:14px;color:inherit;text-decoration:none">
+            <div style="min-width:0;flex:1">
+                <div class="bet-cat">{{ bet.category }}</div>
+                <div style="font-size:13.5px;font-weight:600;margin-top:3px;letter-spacing:-.01em">{{ bet.title }}</div>
+                <div style="font-size:11.5px;color:var(--muted-2);margin-top:2px">
+                    by {{ users.get(bet.creator_id, {}).get('username', 'a member') }}{% if bet.expire_time %} · {{ bet.expire_time }}{% endif %}
                 </div>
             </div>
-            <div class="col-lg-6 text-center">
-                <div class="hero-graphic position-relative">
-                    <!-- Sample Floating Cards -->
-                    <div class="floating-card card-1">
-                        <div class="live-bet-card" style="width: 280px; border: 1px solid rgba(255, 215, 0, 0.3);">
-                            <div class="bet-header">
-                                <div class="bet-category">
-                                    <i data-feather="activity"></i>
-                                    <span>Sports</span>
-                                </div>
-                                <div class="bet-status live">
-                                    <span class="pulse-dot"></span>
-                                    Live
-                                </div>
-                            </div>
-                            <h6 class="bet-title">NBA Finals Winner 2025</h6>
-                            <p class="bet-description">OKC vs Pacers - who takes the championship trophy home?</p>
-                            <div class="bet-details">
-                                <div class="bet-amount">
-                                    <i data-feather="dollar-sign"></i>
-                                    $25
-                                </div>
-                                <div class="bet-odds">
-                                    <i data-feather="trending-up"></i>
-                                    2.5:1
-                                </div>
-                                <div class="bet-users">
-                                    <i data-feather="user"></i>
-                                    Jacobdan45
-                                </div>
-                            </div>
-                        </div>
+            <div style="text-align:right;flex-shrink:0">
+                <div class="mono text-green" style="font-size:14px;font-weight:500">${{ '%.0f' | format(bet.amount * (1 + bet.odds)) }}</div>
+                <div class="mono" style="font-size:11px;color:var(--muted-2)">at {{ bet.odds }}:1</div>
+            </div>
+        </a>
+        {% else %}
+        <div class="empty" style="padding:28px 14px">
+            <p>The board is quiet right now.</p>
+            <a class="btn btn-ghost btn-sm" style="margin-top:10px" href="{{ url_for('security.register') }}">Post the first bet</a>
+        </div>
+        {% endfor %}
+
+        <a href="{{ url_for('index') }}" style="display:block;padding:12px 14px;font-size:12.5px;font-weight:500;color:var(--green-text)">See all open bets →</a>
+    </div>
+</div>
+
+<section style="border-top:1px solid var(--line);padding:56px 40px">
+    <div class="wrap">
+        <h2 class="section-label" style="margin:0 0 28px">How it works</h2>
+        <div class="grid g3" style="gap:40px">
+            <div style="border-top:2px solid var(--ink);padding-top:16px">
+                <div class="mono text-green" style="font-size:11px">01</div>
+                <h3 style="font-size:19px;margin:8px 0 0">Write the bet</h3>
+                <p class="body-sm" style="margin:8px 0 0">State the claim and the exact terms that settle it. You set the stake and the odds.</p>
+            </div>
+            <div style="border-top:2px solid var(--ink);padding-top:16px">
+                <div class="mono text-green" style="font-size:11px">02</div>
+                <h3 style="font-size:19px;margin:8px 0 0">Someone takes it</h3>
+                <p class="body-sm" style="margin:8px 0 0">Your bet goes on the public board. Anyone with the funds can take the other side.</p>
+            </div>
+            <div style="border-top:2px solid var(--ink);padding-top:16px">
+                <div class="mono text-green" style="font-size:11px">03</div>
+                <h3 style="font-size:19px;margin:8px 0 0">Both sides confirm</h3>
+                <p class="body-sm" style="margin:8px 0 0">Agree on the result and the pot moves instantly. Disagree and an admin reviews the evidence.</p>
+            </div>
+        </div>
+        <a class="btn btn-ghost btn-sm" style="margin-top:28px" href="{{ url_for('how_it_works') }}">Read the full walkthrough</a>
+    </div>
+</section>
+
+<section style="border-top:1px solid var(--line);padding:56px 40px;background:var(--surface-2)">
+    <div class="wrap grid" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center">
+        <div>
+            <h2 class="title-lg" style="margin:0">The house edge is the product. We don't sell it.</h2>
+            <p style="font-size:15.5px;line-height:1.6;color:var(--muted);margin:14px 0 0;max-width:440px;text-wrap:pretty">
+                A sportsbook prices every line so it wins over time. Here the two of you agree
+                the terms and the platform takes nothing.
+            </p>
+            <a class="btn-link" style="display:inline-flex;margin-top:22px" href="{{ url_for('fees') }}">See the fee breakdown →</a>
+        </div>
+
+        <div class="card card-pad" style="padding:22px">
+            <div class="eyebrow">Cut of every $100 wagered</div>
+            <div style="margin-top:18px;display:flex;flex-direction:column;gap:16px">
+                <div>
+                    <div style="display:flex;align-items:baseline;gap:8px">
+                        <span style="font-size:13.5px;font-weight:500">Traditional sportsbook</span>
+                        <span class="mono spacer" style="font-size:13.5px;font-weight:500">$5 – $15</span>
                     </div>
-                    <div class="floating-card card-2">
-                        <div class="live-bet-card" style="width: 280px; border: 1px solid rgba(40, 167, 69, 0.3);">
-                            <div class="bet-header">
-                                <div class="bet-category">
-                                    <i data-feather="trending-up"></i>
-                                    <span>Finance</span>
-                                </div>
-                                <div class="bet-status live">
-                                    <span class="pulse-dot"></span>
-                                    Live
-                                </div>
-                            </div>
-                            <h6 class="bet-title">Tesla Stock Above $380</h6>
-                            <p class="bet-description">TSLA will reach $380+ by end of Q4 2025</p>
-                            <div class="bet-details">
-                                <div class="bet-amount">
-                                    <i data-feather="dollar-sign"></i>
-                                    $50
-                                </div>
-                                <div class="bet-odds">
-                                    <i data-feather="trending-up"></i>
-                                    3.2:1
-                                </div>
-                                <div class="bet-users">
-                                    <i data-feather="user"></i>
-                                    markkray
-                                </div>
-                            </div>
-                        </div>
+                    <div class="meter meter-lg meter-red"><span style="width:64%"></span></div>
+                </div>
+                <div>
+                    <div style="display:flex;align-items:baseline;gap:8px">
+                        <span style="font-size:13.5px;font-weight:500">BetGlobal</span>
+                        <span class="mono spacer text-green" style="font-size:13.5px;font-weight:500">$0</span>
                     </div>
-                    <div class="floating-card card-3">
-                        <div class="live-bet-card" style="width: 280px; border: 1px solid rgba(108, 117, 125, 0.3);">
-                            <div class="bet-header">
-                                <div class="bet-category">
-                                    <i data-feather="target"></i>
-                                    <span>Challenge</span>
-                                </div>
-                                <div class="bet-status live">
-                                    <span class="pulse-dot"></span>
-                                    Live
-                                </div>
-                            </div>
-                            <h6 class="bet-title">I'll run a marathon in under 3h</h6>
-                            <p class="bet-description">Chicago Marathon 2025 - sub-3 hour finish time bet</p>
-                            <div class="bet-details">
-                                <div class="bet-amount">
-                                    <i data-feather="dollar-sign"></i>
-                                    $100
-                                </div>
-                                <div class="bet-odds">
-                                    <i data-feather="trending-up"></i>
-                                    4.0:1 
-                                </div>
-                                <div class="bet-users">
-                                    <i data-feather="user"></i>
-                                    patrickcarloss
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-icon">
-                        <i data-feather="trending-up" class="text-gradient-icon"></i>
-                    </div>
+                    <div class="meter meter-lg"><span style="width:2%"></span></div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Features Section -->
-<section id="features" class="features-section py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center mb-5">
-                <h2 class="display-5 fw-bold text-white">Why Choose BetGlobal?</h2>
-                <p class="lead text-light opacity-75">Experience the future of social betting</p>
-            </div>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i data-feather="users"></i>
-                    </div>
-                    <h5 class="feature-title">Global Community</h5>
-                    <p class="feature-text">Connect and bet with users from around the world in a safe and secure environment.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i data-feather="zap"></i>
-                    </div>
-                    <h5 class="feature-title">Instant Betting</h5>
-                    <p class="feature-text">Create custom bets on anything and get instant responses from the community.</p>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="feature-card h-100">
-                    <div class="feature-icon">
-                        <i data-feather="shield"></i>
-                    </div>
-                    <h5 class="feature-title">Secure & Fair</h5>
-                    <p class="feature-text">Advanced security measures and transparent betting ensure a fair experience for all.</p>
-                </div>
-            </div>
-        </div>
+<section style="border-top:1px solid var(--line);padding:64px 40px;text-align:center">
+    <h2 class="title-lg" style="margin:0">Post your first bet in a minute.</h2>
+    <div style="display:flex;gap:9px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+        <a class="btn btn-primary" href="{{ url_for('security.register') }}">Create free account</a>
+        <a class="btn btn-ghost" href="{{ url_for('security.login') }}">Sign in</a>
     </div>
 </section>
-
-<!-- No Middleman Section -->
-<section class="no-middleman-section py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <div class="no-middleman-content">
-                    <h2 class="display-5 fw-bold mb-4">
-                        No House. No Middleman. <span class="text-gradient">Zero Fees.</span>
-                    </h2>
-                    <p class="lead mb-4">
-                        Unlike traditional betting platforms, BetGlobal connects you directly with other users. 
-                        No house edge, no unfair odds - just pure peer-to-peer betting.
-                    </p>
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i data-feather="users"></i>
-                                </div>
-                                <div class="benefit-text">
-                                    <h6>Peer-to-Peer</h6>
-                                    <p class="small text-gray">Bet directly with other users</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i data-feather="trending-up"></i>
-                                </div>
-                                <div class="benefit-text">
-                                    <h6>Custom Odds</h6>
-                                    <p class="small text-gray">You make your odds</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i data-feather="dollar-sign"></i>
-                                </div>
-                                <div class="benefit-text">
-                                    <h6>Zero Fees</h6>
-                                    <p class="small text-gray">0 Platform Fees!!</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="benefit-item">
-                                <div class="benefit-icon">
-                                    <i data-feather="shield"></i>
-                                </div>
-                                <div class="benefit-text">
-                                    <h6>Transparent</h6>
-                                    <p class="small text-gray">All bets are public and verifiable</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="comparison-chart">
-                    <div class="chart-title text-center mb-4">
-                        <h5>Traditional vs BetGlobal</h5>
-                    </div>
-                    <div class="comparison-row">
-                        <div class="comparison-item traditional">
-                            <h6>Traditional Betting</h6>
-                            <div class="comparison-bar traditional-bar">
-                                <span class="bar-label">House Edge: ~5-15%</span>
-                            </div>
-                        </div>
-                        <div class="comparison-item betglobal">
-                            <h6><span class="text-gradient">BetGlobal</span></h6>
-                            <div class="comparison-bar betglobal-bar">
-                                <span class="bar-label">Platform Edge: 0%</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Live Bets Preview Section -->
-<section class="live-bets-section py-5">
-    <div class="container">
-        <div class="row">
-            <div class="col-12 text-center mb-5">
-                <h2 class="display-5 fw-bold text-white">Live Bets Happening Now</h2>
-                <p class="lead text-light opacity-75">Join the action with real bets from our community</p>
-            </div>
-        </div>
-        
-        <div class="row g-4">
-            {% if live_bets|length > 0 %}
-                {% for bet in live_bets %}
-                <div class="col-lg-4 col-md-6">
-                    <div class="live-bet-card">
-                        <div class="bet-header">
-                            <div class="bet-category">
-                                {% if bet.category == 'Sports' %}
-                                    <i data-feather="activity"></i>
-                                {% elif bet.category == 'Finance' %}
-                                    <i data-feather="trending-up"></i>
-                                {% elif bet.category == 'Technology' %}
-                                    <i data-feather="cpu"></i>
-                                {% elif bet.category == 'Politics' %}
-                                    <i data-feather="flag"></i>
-                                {% elif bet.category == 'Entertainment' %}
-                                    <i data-feather="tv"></i>
-                                {% elif bet.category == 'Weather' %}
-                                    <i data-feather="cloud"></i>
-                                {% else %}
-                                    <i data-feather="target"></i>
-                                {% endif %}
-                                <span>{{ bet.category }}</span>
-                            </div>
-                            <div class="bet-status live">
-                                <span class="pulse-dot"></span>
-                                Live
-                            </div>
-                        </div>
-                        <h6 class="bet-title">{{ bet.title }}</h6>
-                        <p class="bet-description">{{ bet.description[:80] }}{% if bet.description|length > 80 %}...{% endif %}</p>
-                        <div class="bet-details">
-                            <div class="bet-amount">
-                                <i data-feather="dollar-sign"></i>
-                                ${{ "%.0f"|format(bet.amount) }}
-                            </div>
-                            <div class="bet-odds">
-                                <i data-feather="trending-up"></i>
-                                {{ "%.1f"|format(bet.odds) }}:1
-                            </div>
-                            <div class="bet-users">
-                                <i data-feather="user"></i>
-                                {% if users[bet.creator_id] %}{{ users[bet.creator_id].username }}{% else %}User{% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-                
-                <!-- Fill remaining slots with placeholder cards if less than 3 bets -->
-                {% for i in range(3 - live_bets|length) %}
-                <div class="col-lg-4 col-md-6">
-                    <div class="live-bet-card" style="opacity: 0.6;">
-                        <div class="bet-header">
-                            <div class="bet-category">
-                                <i data-feather="plus"></i>
-                                <span>No Active Bets</span>
-                            </div>
-                            <div class="bet-status" style="color: rgba(255, 255, 255, 0.5);">
-                                <span class="pulse-dot" style="background: rgba(255, 255, 255, 0.3);"></span>
-                                Waiting
-                            </div>
-                        </div>
-                        <h6 class="bet-title">Be the first to create a bet!</h6>
-                        <p class="bet-description">Join our platform and start creating exciting bets for the community.</p>
-                        <div class="bet-details">
-                            <div class="bet-amount">
-                                <i data-feather="dollar-sign"></i>
-                                $0
-                            </div>
-                            <div class="bet-odds">
-                                <i data-feather="trending-up"></i>
-                                -:1
-                            </div>
-                            <div class="bet-users">
-                                <i data-feather="user-plus"></i>
-                                You?
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <!-- Fallback static cards if no live bets at all -->
-                <div class="col-lg-4 col-md-6">
-                    <div class="live-bet-card" style="opacity: 0.6;">
-                        <div class="bet-header">
-                            <div class="bet-category">
-                                <i data-feather="plus"></i>
-                                <span>No Active Bets</span>
-                            </div>
-                            <div class="bet-status" style="color: rgba(255, 255, 255, 0.5);">
-                                <span class="pulse-dot" style="background: rgba(255, 255, 255, 0.3);"></span>
-                                Waiting
-                            </div>
-                        </div>
-                        <h6 class="bet-title">Be the first to create a bet!</h6>
-                        <p class="bet-description">Join our platform and start creating exciting bets for the community.</p>
-                        <div class="bet-details">
-                            <div class="bet-amount">
-                                <i data-feather="dollar-sign"></i>
-                                $0
-                            </div>
-                            <div class="bet-odds">
-                                <i data-feather="trending-up"></i>
-                                -:1
-                            </div>
-                            <div class="bet-users">
-                                <i data-feather="user-plus"></i>
-                                You?
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="live-bet-card" style="opacity: 0.6;">
-                        <div class="bet-header">
-                            <div class="bet-category">
-                                <i data-feather="plus"></i>
-                                <span>No Active Bets</span>
-                            </div>
-                            <div class="bet-status" style="color: rgba(255, 255, 255, 0.5);">
-                                <span class="pulse-dot" style="background: rgba(255, 255, 255, 0.3);"></span>
-                                Waiting
-                            </div>
-                        </div>
-                        <h6 class="bet-title">Be the first to create a bet!</h6>
-                        <p class="bet-description">Join our platform and start creating exciting bets for the community.</p>
-                        <div class="bet-details">
-                            <div class="bet-amount">
-                                <i data-feather="dollar-sign"></i>
-                                $0
-                            </div>
-                            <div class="bet-odds">
-                                <i data-feather="trending-up"></i>
-                                -:1
-                            </div>
-                            <div class="bet-users">
-                                <i data-feather="user-plus"></i>
-                                You?
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="live-bet-card" style="opacity: 0.6;">
-                        <div class="bet-header">
-                            <div class="bet-category">
-                                <i data-feather="plus"></i>
-                                <span>No Active Bets</span>
-                            </div>
-                            <div class="bet-status" style="color: rgba(255, 255, 255, 0.5);">
-                                <span class="pulse-dot" style="background: rgba(255, 255, 255, 0.3);"></span>
-                                Waiting
-                            </div>
-                        </div>
-                        <h6 class="bet-title">Be the first to create a bet!</h6>
-                        <p class="bet-description">Join our platform and start creating exciting bets for the community.</p>
-                        <div class="bet-details">
-                            <div class="bet-amount">
-                                <i data-feather="dollar-sign"></i>
-                                $0
-                            </div>
-                            <div class="bet-odds">
-                                <i data-feather="trending-up"></i>
-                                -:1
-                            </div>
-                            <div class="bet-users">
-                                <i data-feather="user-plus"></i>
-                                You?
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        </div>
-        
-        <div class="row mt-4">
-            <div class="col-12 text-center">
-                <a href="{{ url_for('start_betting') }}" class="btn btn-gradient btn-lg px-5 py-3">
-                    <i data-feather="eye" class="me-2"></i>
-                    View All Live Bets
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Call to Action Section -->
-<section class="cta-section py-5 position-relative overflow-hidden">
-    <div class="cta-bg"></div>
-    <div class="container text-center position-relative">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <h2 class="display-5 fw-bold mb-4 text-white">Ready to Start Winning?</h2>
-                <p class="lead mb-4 text-light opacity-75">Join hundreds of users already betting on BetGlobal</p>
-                <div class="d-flex gap-3 justify-content-center flex-wrap">
-                    <a href="{{ url_for('security.register') }}" class="btn btn-outline-light btn-lg px-5 py-3">
-                        <i data-feather="user-plus" class="me-2"></i>
-                        Create Account
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-</script>
 {% endblock %}

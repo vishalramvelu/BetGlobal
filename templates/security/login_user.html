@@ -1,149 +1,82 @@
 {% extends "landing_base.html" %}
-
-{% block title %}Login - BetGlobal{% endblock %}
+{% block title %}Sign in · BetGlobal{% endblock %}
 
 {% block content %}
-<section class="auth-section">
-    <div class="auth-bg"></div>
-    <div class="container py-5">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-lg-5 col-md-7">
-                <div class="auth-card">
-                    <div class="auth-header text-center mb-4">
-                        <div class="auth-brand mb-3">
-                            <a href="{{ url_for('landing') }}" class="text-decoration-none">
-                                <div class="brand-icon">
-                                    <i data-feather="trending-up"></i>
-                                </div>
-                                <span class="brand-text">BetGlobal</span>
-                            </a>
-                        </div>
-                        <h2 class="auth-title">Welcome Back</h2>
-                        <p class="auth-subtitle">Sign in to your account and start winning</p>
-                    </div>
+<div class="split">
+    <div class="split-main">
+        <div class="split-form">
+            <h1 class="title-md">Sign in</h1>
+            <p style="font-size:14.5px;color:var(--muted);margin:7px 0 26px">Welcome back.</p>
 
-                    <form action="{{ url_for_security('login') }}" method="post" class="auth-form">
-                        {{ login_user_form.hidden_tag() }}
-                        
-                        <div class="form-group mb-4">
-                            <label for="email" class="form-label">Email</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="mail"></i>
-                                </div>
-                                {{ login_user_form.email(class="form-control auth-input", placeholder="Enter your email") }}
-                            </div>
-                            {% if login_user_form.email.errors %}
-                                {% for error in login_user_form.email.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
+            <form action="{{ url_for_security('login') }}" method="post">
+                {{ login_user_form.hidden_tag() }}
 
-                        <div class="form-group mb-4">
-                            <label for="password" class="form-label">Password</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="lock"></i>
-                                </div>
-                                {{ login_user_form.password(class="form-control auth-input", placeholder="Enter your password") }}
-                            </div>
-                            {% if login_user_form.password.errors %}
-                                {% for error in login_user_form.password.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        {% if login_user_form.remember %}
-                        <div class="form-check mb-4">
-                            {{ login_user_form.remember(class="form-check-input auth-checkbox") }}
-                            <label class="form-check-label" for="remember">
-                                Remember me for 30 days
-                            </label>
-                        </div>
-                        {% endif %}
-
-                        <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
-                            <i data-feather="log-in" class="me-2"></i>
-                            <span>Sign In</span>
-                        </button>
-                    </form>
-
-                    <div class="auth-divider">
-                        <span>or</span>
-                    </div>
-
-                    <div class="auth-links text-center">
-                        <p class="mb-3">Don't have an account? 
-                            <a href="{{ url_for_security('register') }}" class="auth-link">
-                                Create one now
-                            </a>
-                        </p>
-                        <p class="mb-3">
-                            <a href="{{ url_for('forgot_password') }}" class="auth-link">
-                                <i data-feather="key" class="me-1"></i>
-                                Forgot your password?
-                            </a>
-                        </p>
-                        <a href="{{ url_for('landing') }}" class="back-link">
-                            <i data-feather="arrow-left" class="me-1"></i>
-                            Back to Home
-                        </a>
-                    </div>
+                <div class="field">
+                    <label class="label" for="{{ login_user_form.email.id }}">Email</label>
+                    {{ login_user_form.email(class="input" + (" is-invalid" if login_user_form.email.errors else ""),
+                                             placeholder="you@example.com", autocomplete="username") }}
+                    {% for error in login_user_form.email.errors %}
+                        <div class="hint hint-err">{{ error }}</div>
+                    {% endfor %}
                 </div>
-            </div>
-            
-            <div class="col-lg-6 d-none d-lg-block">
-                <div class="auth-visual">
-                    <div class="visual-content">
-                        <h3 class="visual-title">Join the Global Betting Revolution</h3>
-                        <p class="visual-subtitle">Connect with hundreds of users worldwide. No house edge, just peer-to-peer betting at its finest.</p>
-                        
-                        <div class="feature-highlights">
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="users"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>Global Community</h6>
-                                    <p>Bet with users worldwide</p>
-                                </div>
-                            </div>
-                            
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="shield"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>Secure & Fair</h6>
-                                    <p>Advanced security measures</p>
-                                </div>
-                            </div>
-                            
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="trending-up"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>Better Odds</h6>
-                                    <p>No house edge means better returns</p>
-                                </div>
-                            </div>
-                        </div>
+
+                <div class="field">
+                    <div class="label-row">
+                        <label class="label" for="{{ login_user_form.password.id }}">Password</label>
+                        <a class="spacer" style="font-size:12px;font-weight:500" href="{{ url_for('forgot_password') }}">Forgot password?</a>
                     </div>
+                    {{ login_user_form.password(class="input" + (" is-invalid" if login_user_form.password.errors else ""),
+                                                placeholder="Enter your password", autocomplete="current-password") }}
+                    {% for error in login_user_form.password.errors %}
+                        <div class="hint hint-err">{{ error }}</div>
+                    {% endfor %}
                 </div>
-            </div>
+
+                {% if login_user_form.remember %}
+                <div class="field">
+                    <label class="check">
+                        {{ login_user_form.remember() }}
+                        <span class="box"><i data-feather="check"></i></span>
+                        <span class="check-text">Remember me for 30 days</span>
+                    </label>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
+                    <i data-feather="log-in" style="width:16px;height:16px"></i>Sign in
+                </button>
+
+                <p style="font-size:13px;color:var(--muted);margin:12px 0 0">
+                    No account yet? <a href="{{ url_for_security('register') }}" style="font-weight:500">Create one</a>
+                </p>
+            </form>
         </div>
     </div>
-</section>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    // Initialize Feather Icons after page load
-    document.addEventListener('DOMContentLoaded', function() {
-        feather.replace();
-    });
-</script>
+    <aside class="split-aside">
+        <div style="max-width:400px;width:100%">
+            <div class="mono" style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)">
+                Why peer-to-peer
+            </div>
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+                {% for item in [
+                    ('Zero platform fee', 'The whole pot goes to the winner.'),
+                    ('You set the odds', 'No book pricing a line against you.'),
+                    ('Evidence-backed settlement', 'Disputes go to human review.'),
+                    ('Stripe in and out', 'Card deposits, bank payouts in 1–2 days.')
+                ] %}
+                <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:12px">
+                    <div style="min-width:0;flex:1">
+                        <div style="font-size:13px;font-weight:600">{{ item[0] }}</div>
+                        <div style="font-size:11.5px;color:var(--muted-2);margin-top:2px">{{ item[1] }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <p style="font-size:13.5px;line-height:1.55;color:var(--muted);margin:20px 0 0">
+                Every bet is public and verifiable. Both sides confirm the result before money moves.
+            </p>
+        </div>
+    </aside>
+</div>
 {% endblock %}

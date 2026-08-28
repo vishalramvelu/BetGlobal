@@ -1,103 +1,64 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - BetGlobal</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-    
-    <!-- Dark theme override -->
-    <style>
-        html[data-bs-theme="dark"] {
-            color-scheme: dark;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
-            color: #fff !important;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.125) !important;
-        }
-    </style>
-</head>
-<body class="d-flex align-items-center min-vh-100 bg-dark">
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-md-6">
+{# Staff sign-in. Deliberately NOT on admin_base.html — there is no admin
+   session yet, so it renders standalone on the navy field. #}
+{% extends "_layout.html" %}
+{% block title %}Admin login · BetGlobal{% endblock %}
+
+{% block body %}
+<div class="staff-page">
+    <div class="staff-card">
+        <div class="brand" style="justify-content:center;margin-bottom:24px">
+            <img src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="" style="height:30px;width:auto">
+            <img src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal" style="height:17px;width:auto">
+        </div>
+
+        <div class="card" style="padding:28px;border:0">
+            <div style="text-align:center">
+                <span class="tile tile-lg" style="margin:0 auto;background:var(--surface-5)">
+                    <i data-feather="shield" style="width:20px;height:20px;color:var(--ink)"></i>
+                </span>
+                <h1 style="font-size:20px;letter-spacing:-.025em;margin:16px 0 0">Admin login</h1>
+                <p style="font-size:13px;color:var(--muted);margin:6px 0 0">Enter admin password to continue</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div style="margin-top:18px">
                         {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            {% set tone = 'danger' if category in ('error', 'danger') else category %}
+                            <div class="alert alert-{{ tone }}">
+                                <i data-feather="{{ 'alert-circle' if tone == 'danger' else 'info' }}"
+                                   style="width:15px;height:15px;flex-shrink:0"></i>
+                                <span>{{ message }}</span>
                             </div>
                         {% endfor %}
                     </div>
-                </div>
-            </div>
-        {% endif %}
-    {% endwith %}
+                {% endif %}
+            {% endwith %}
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <div class="card">
-                    <div class="card-body p-4">
-                        <div class="text-center mb-4">
-                            <i data-feather="shield" class="text-warning mb-3" style="width: 48px; height: 48px;"></i>
-                            <h2 class="h4 mb-1">Admin Login</h2>
-                            <p class="text-muted">Enter admin password to continue</p>
-                        </div>
-                        
-                        <form method="POST">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Admin Password</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <i data-feather="lock"></i>
-                                    </span>
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-warning">
-                                    <i data-feather="log-in" class="me-2"></i>
-                                    Access Admin Panel
-                                </button>
-                            </div>
-                        </form>
-                        
-                        <div class="text-center mt-3">
-                            <a href="{{ url_for('landing') }}" class="text-muted text-decoration-none">
-                                <i data-feather="arrow-left" class="me-1"></i>
-                                Back to Site
-                            </a>
-                        </div>
-                    </div>
+            <form method="POST" style="margin-top:22px">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <label class="label" for="password">Admin password</label>
+                <div class="input-affix">
+                    <i data-feather="lock" style="width:15px;height:15px;color:var(--muted-2);flex-shrink:0"></i>
+                    <input type="password" id="password" name="password" required autofocus
+                           autocomplete="current-password" style="letter-spacing:.2em">
                 </div>
-            </div>
+
+                <button type="submit" class="btn btn-ink btn-block" style="margin-top:16px">
+                    <i data-feather="log-in" style="width:16px;height:16px"></i>Access admin panel
+                </button>
+
+                <div class="note">
+                    <i data-feather="info"></i>
+                    Sign-in attempts are rate-limited and every session is logged.
+                </div>
+            </form>
+        </div>
+
+        <div class="staff-back">
+            <a href="{{ url_for('landing') }}" style="color:inherit">← Back to site</a>
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Initialize Feather Icons -->
-    <script>
-        feather.replace();
-    </script>
-</body>
-</html>
+</div>
+{% endblock %}

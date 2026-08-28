@@ -1,252 +1,215 @@
 {% extends "base.html" %}
 
-{% block title %}All Bets - BetGlobal{% endblock %}
+{% block title %}All Bets · BetGlobal{% endblock %}
+{% block page_title %}All Bets{% endblock %}
+{% block page_subtitle %}
+    <span class="sub">{{ bets | length }} shown{% if current_status %} · {{ current_status }}{% endif %}</span>
+{% endblock %}
 
-{% block main_class %}{% endblock %}
+{% block topbar_extra %}
+<form class="searchbox" method="GET" action="{{ url_for('index') }}" role="search">
+    <i data-feather="search"></i>
+    <input type="search" name="search" value="{{ current_search or '' }}" placeholder="Search bets"
+           aria-label="Search bets">
+    {% if current_category %}<input type="hidden" name="category" value="{{ current_category }}">{% endif %}
+    {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+</form>
+{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="dashboard-bg"></div>
-    
-    <!-- Page Header -->
-    <div class="dashboard-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <div class="user-welcome">
-                        <div class="welcome-icon">
-                            <i data-feather="layers"></i>
-                        </div>
-                        <div class="welcome-content">
-                            <h1 class="welcome-title">All <span class="text-gradient">Bets</span></h1>
-                            <p class="welcome-subtitle">Discover and join exciting betting opportunities</p>
-                            <div class="user-badge">
-                                <i data-feather="trending-up" class="me-1"></i>
-                                <span>{{ bets|length }} Active Bets</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 text-lg-end">
-                    <a href="{{ url_for('create_bet_page') }}" class="btn btn-gradient btn-lg">
-                        <i data-feather="plus" class="me-2"></i>
-                        Create New Bet
-                    </a>
-                </div>
+{% set me = current_user.id if current_user.is_authenticated else None %}
+
+<div class="filterbar">
+    {% set base_args = {'search': current_search or None, 'category': current_category or None} %}
+    <a class="chip {% if not current_status %}is-active{% endif %}"
+       href="{{ url_for('index', search=current_search or None, category=current_category or None, status='') }}">All</a>
+    {% for st in ['open', 'accepted', 'completed', 'expired'] %}
+        <a class="chip {% if current_status == st %}is-active{% endif %}"
+           href="{{ url_for('index', search=current_search or None, category=current_category or None, status=st) }}">
+            {{ st | capitalize }}
+        </a>
+    {% endfor %}
+
+    {% if categories %}
+        <span style="width:1px;height:20px;background:var(--line);margin:0 4px"></span>
+        <a class="chip chip-sm {% if not current_category %}is-active{% endif %}"
+           href="{{ url_for('index', search=current_search or None, status=current_status or None) }}">All categories</a>
+        {% for cat in categories %}
+            <a class="chip chip-sm {% if current_category == cat %}is-active{% endif %}"
+               href="{{ url_for('index', search=current_search or None, category=cat, status=current_status or None) }}">{{ cat }}</a>
+        {% endfor %}
+    {% endif %}
+
+    {% if current_search or current_category or current_status %}
+        <a class="chip chip-sm spacer" href="{{ url_for('index') }}">
+            <i data-feather="x" style="width:12px;height:12px"></i>Clear filters
+        </a>
+    {% endif %}
+</div>
+
+<div class="pad">
+    {% if error %}
+        <div class="alert alert-danger alert-permanent">
+            <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+            <span>{{ error }}</span>
+        </div>
+
+    {% elif not bets %}
+        <div class="card empty" style="padding:56px 24px">
+            <span class="tile tile-lg" style="margin:0 auto"><i data-feather="inbox" style="width:19px;height:19px"></i></span>
+            <h2 class="title-sm" style="margin-top:14px">No bets found</h2>
+            <p style="margin-top:6px">
+                {% if current_search or current_category or current_status %}
+                    Nothing matches those filters.
+                {% else %}
+                    The board is empty. Be the first to post one.
+                {% endif %}
+            </p>
+            <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+                {% if current_search or current_category or current_status %}
+                    <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">View all bets</a>
+                {% endif %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('create_bet_page') }}">Create a bet</a>
             </div>
         </div>
-    </div>
 
-    <!-- Search and Filters -->
-    <div class="dashboard-stats">
-        <div class="container">
-            <div class="bets-card">
-                <div class="bets-header">
-                    <div class="bets-title">
-                        <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
-                            <i data-feather="filter"></i>
+    {% else %}
+        <div class="bet-grid">
+            {% for bet in bets %}
+                {% set mine = (bet.creator_id == me) %}
+                {% set taker_stake = bet.amount * bet.odds %}
+                {% set pot = bet.amount + taker_stake %}
+                <div class="bet-card" data-bet-id="{{ bet.id }}" role="button" tabindex="0">
+                    <div class="row-flex">
+                        <span class="bet-cat">{{ bet.category }}</span>
+                        <span class="spacer status-dot {% if bet.status == 'accepted' %}is-amber{% elif bet.status not in ('open',) %}is-grey{% endif %}">
+                            {{ bet.status.replace('_', ' ') | title }}
+                        </span>
+                    </div>
+
+                    <div>
+                        <div class="bet-title">{{ bet.title }}</div>
+                        <div class="bet-desc">{{ bet.description | truncate(110) }}</div>
+                    </div>
+
+                    <div class="bet-figures">
+                        <div>
+                            <div class="lbl">Stake</div>
+                            <div class="val">${{ '%.2f' | format(taker_stake) }}</div>
                         </div>
                         <div>
-                            <h5>Filter & Search</h5>
-                            <p>Find the perfect bet for you</p>
+                            <div class="lbl">Total pot</div>
+                            <div class="val is-green">${{ '%.2f' | format(pot) }}</div>
+                        </div>
+                        <div>
+                            <div class="lbl">Odds</div>
+                            <div class="val">{{ bet.odds }}:1</div>
                         </div>
                     </div>
-                </div>
-                <div class="bets-content">
-                    <form method="GET" class="row g-3">
-                        <div class="col-md-4">
-                            <label for="search" class="form-label text-white">Search</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="search"></i>
-                                </div>
-                                <input type="text" class="form-control auth-input" id="search" name="search" 
-                                       placeholder="Search bets..." value="{{ current_search }}">
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="category" class="form-label text-white">Category</label>
-                            <select class="form-control auth-input" id="category" name="category">
-                                <option value="">All Categories</option>
-                                {% for category in categories %}
-                                    <option value="{{ category }}" {% if category == current_category %}selected{% endif %}>
-                                        {{ category }}
-                                    </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="status" class="form-label text-white">Status</label>
-                            <select class="form-control auth-input" id="status" name="status">
-                                <option value="">All Status</option>
-                                <option value="open" {% if current_status == 'open' %}selected{% endif %}>Open</option>
-                                <option value="accepted" {% if current_status == 'accepted' %}selected{% endif %}>Accepted</option>
-                                <option value="completed" {% if current_status == 'completed' %}selected{% endif %}>Completed</option>
-                                <option value="expired" {% if current_status == 'expired' %}selected{% endif %}>Expired</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-gradient w-100">
-                                <i data-feather="search" class="me-1"></i>
-                                Filter
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Bets Grid -->
-    <div class="dashboard-bets">
-        <div class="container">
-            {% if error %}
-                <div class="alert alert-danger dashboard-alert" role="alert">
-                    <i data-feather="alert-circle" class="me-2"></i>
-                    {{ error }}
-                </div>
-            {% elif not bets %}
-                <div class="dashboard-empty">
-                    <div class="empty-icon">
-                        <i data-feather="inbox"></i>
-                    </div>
-                    <h3>No bets found</h3>
-                    <p>
-                        {% if current_search or current_category or current_status %}
-                            Try adjusting your filters or <a href="{{ url_for('index') }}" class="text-warning">view all bets</a>.
-                        {% else %}
-                            Be the first to <a href="{{ url_for('create_bet_page') }}" class="text-warning">create a bet</a>!
+                    <div class="bet-meta">
+                        <i data-feather="user"></i>{{ users.get(bet.creator_id, {}).get('username', 'Unknown') }}
+                        {% if bet.expire_time %}
+                            <span class="spacer" style="display:inline-flex;align-items:center;gap:4px">
+                                <i data-feather="clock"></i>{{ bet.expire_time | strftime('%b %d') }}
+                            </span>
                         {% endif %}
-                    </p>
+                    </div>
+
+                    {% if bet.status == 'open' %}
+                        {% if mine %}
+                            <span class="bet-cta is-mine">Your bet</span>
+                        {% else %}
+                            <button type="button" class="bet-cta accept-bet-btn"
+                                    data-bet-id="{{ bet.id }}"
+                                    data-bet-title="{{ bet.title }}"
+                                    data-stake="{{ '%.2f' | format(taker_stake) }}">
+                                Accept for ${{ '%.2f' | format(taker_stake) }}
+                            </button>
+                        {% endif %}
+                    {% elif bet.status == 'accepted' %}
+                        <span class="bet-cta is-mine">
+                            Taken by {{ users.get(bet.acceptor_id, {}).get('username', 'someone') }}
+                        </span>
+                    {% else %}
+                        <span class="bet-cta is-mine">{{ bet.status.replace('_', ' ') | title }}</span>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="row g-4">
-                    {% for bet in bets %}
-                        {% set current_user_id = session.get('user_id') %}
-                        <div class="col-lg-6 col-xl-4 {% if bet.creator_id == current_user_id %}bet-card-owned{% endif %}">
-                            <div class="live-bet-card" style="cursor: {% if bet.creator_id == current_user_id %}default{% else %}pointer{% endif %};" {% if bet.creator_id != current_user_id %}onclick="showBetDetails({{ bet.id }})"{% endif %}>
-                                <div class="bet-header">
-                                    <div class="bet-category">
-                                        <i data-feather="tag"></i>
-                                        {{ bet.category }}
-                                    </div>
-                                    <div class="bet-status">
-                                        <div class="pulse-dot"></div>
-                                        <span class="status-badge status-{{ bet.status }}">{{ bet.status.title() }}</span>
-                                    </div>
-                                </div>
-                                
-                                <h6 class="bet-title">{{ bet.title }}</h6>
-                                <p class="bet-description">{{ bet.description[:100] }}{% if bet.description|length > 100 %}...{% endif %}</p>
-                                
-                                <div class="bet-details">
-                                    <div class="bet-amount">
-                                        <i data-feather="dollar-sign"></i>
-                                        ${{ "%.2f"|format(bet.amount * bet.odds) }}
-                                    </div>
-                                    <div class="bet-odds">
-                                        <i data-feather="trending-up"></i>
-                                        {{ bet.odds }}:1
-                                    </div>
-                                    <div class="bet-users">
-                                        <i data-feather="user"></i>
-                                        {{ users.get(bet.creator_id).username if users.get(bet.creator_id) else 'Unknown' }}
-                                    </div>
-                                </div>
-                                
-                                <div class="bet-breakdown" style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 0.25rem;">
-                                    <div style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); display: flex; justify-content: space-between;">
-                                        <span>Creator wagers: ${{ "%.2f"|format(bet.amount) }}</span>
-                                        <span>You wager: ${{ "%.2f"|format(bet.amount * bet.odds) }}</span>
-                                    </div>
-                                </div>
-                                
-                                {% if bet.expire_time %}
-                                    <div class="bet-expire" style="margin-top: 0.75rem; padding: 0.5rem; background: rgba(255, 193, 7, 0.1); border-left: 3px solid #ffc107; border-radius: 0.25rem;">
-                                        <div style="color: #ffc107; font-size: 0.85rem; display: flex; align-items: center;">
-                                            <i data-feather="calendar" style="width: 16px; height: 16px; margin-right: 0.5rem;"></i>
-                                            <span>Expires: {{ bet.expire_time|strftime('%b %d, %Y') }} at EST midnight</span>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                                
-                                {% if bet.status == 'open' %}
-                                    <div class="mt-3">
-                                        {% if bet.creator_id == current_user_id %}
-                                            <button class="btn btn-outline-secondary w-100" disabled>
-                                                <i data-feather="user" class="me-2"></i>
-                                                Your Bet
-                                            </button>
-                                        {% else %}
-                                            <button class="btn btn-gradient w-100 accept-bet-btn" data-bet-id="{{ bet.id }}" onclick="event.stopPropagation();">
-                                                <i data-feather="check" class="me-2"></i>
-                                                Accept Bet
-                                            </button>
-                                        {% endif %}
-                                    </div>
-                                {% elif bet.status == 'accepted' %}
-                                    <div class="mt-3 text-center">
-                                        <small style="color: rgba(255, 255, 255, 0.6);">
-                                            Accepted by {{ users.get(bet.acceptor_id).username if users.get(bet.acceptor_id) else 'Unknown' }}
-                                        </small>
-                                    </div>
-                                {% endif %}
-                            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- bet detail -->
+<div class="modal-backdrop" id="betDetailsModal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal modal-lg">
+        <div class="modal-head">
+            <span class="mono eyebrow-sm" id="bdMeta"></span>
+            <span class="status-dot" id="bdStatus"></span>
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <h2 class="title-sm" id="bdTitle"></h2>
+            <p class="body-sm" style="margin:8px 0 0" id="bdDescription"></p>
+        </div>
+
+        <div class="figure-strip">
+            <div><div class="lbl">Creator wagers</div><div class="val" id="bdCreatorAmt"></div></div>
+            <div><div class="lbl">You wager</div><div class="val" id="bdTakerAmt"></div></div>
+            <div><div class="lbl">Total pot</div><div class="val is-green" id="bdPot"></div></div>
+            <div><div class="lbl">Odds</div><div class="val" id="bdOdds"></div></div>
+        </div>
+
+        <div class="modal-body grid g2" style="gap:20px">
+            <div>
+                <div class="eyebrow" style="margin-bottom:10px">Participants</div>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    <div class="row-flex" style="gap:10px">
+                        <span class="avatar" id="bdCreatorInitials"></span>
+                        <div>
+                            <div style="font-size:13.5px;font-weight:500" id="bdCreator"></div>
+                            <div style="font-size:11.5px;color:var(--muted-2)" id="bdCreatorRole"></div>
                         </div>
-                    {% endfor %}
+                    </div>
+                    <div class="row-flex" style="gap:10px">
+                        <span class="avatar avatar-dashed" id="bdTakerInitials">
+                            <i data-feather="user-plus" style="width:12px;height:12px"></i>
+                        </span>
+                        <div>
+                            <div style="font-size:13.5px;font-weight:500" id="bdTaker"></div>
+                            <div style="font-size:11.5px;color:var(--muted-2)" id="bdTakerRole"></div>
+                        </div>
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+            </div>
 
-<!-- Accept Bet Modal -->
-<div class="modal fade" id="acceptBetModal" tabindex="-1" data-bs-theme="dark">
-    <div class="modal-dialog">
-        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
-            <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                <h5 class="modal-title text-white">
-                    <i data-feather="check-circle" class="me-2 text-warning"></i>
-                    Accept Bet
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-white">Are you sure you want to accept this bet?</p>
-                <div id="betDetails"></div>
-            </div>
-            <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-gradient" id="confirmAcceptBet">
-                    <i data-feather="check" class="me-2"></i>
-                    Accept Bet
-                </button>
+            <div>
+                <div class="eyebrow" style="margin-bottom:10px">Timeline</div>
+                <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
+                    <div style="display:flex;gap:10px">
+                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">Created</span>
+                        <span id="bdCreated"></span>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">Expires</span>
+                        <span id="bdExpires"></span>
+                    </div>
+                    <div style="display:flex;gap:10px">
+                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">After</span>
+                        <span class="text-muted">Both sides confirm the result</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Bet Details Modal -->
-<div class="modal fade" id="betDetailsModal" tabindex="-1" data-bs-theme="dark">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="background: rgba(45, 45, 45, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(253, 126, 20, 0.2);">
-            <div class="modal-header" style="border-bottom: 1px solid rgba(253, 126, 20, 0.2);">
-                <h5 class="modal-title text-white">
-                    <i data-feather="info" class="me-2" style="color: #fd7e14;"></i>
-                    Bet Details
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="betDetailsContent">
-                    <!-- Content will be populated by JavaScript -->
-                </div>
-            </div>
-            <div class="modal-footer" style="border-top: 1px solid rgba(253, 126, 20, 0.2);">
-                <button type="button" class="btn" style="background: rgba(108, 117, 125, 0.8); color: white; border: 1px solid #6c757d;" data-bs-dismiss="modal">Close</button>
-                <div id="betDetailsActions">
-                    <!-- Action buttons will be populated by JavaScript -->
-                </div>
+        <div class="modal-foot">
+            <span style="font-size:12.5px;color:var(--muted)" id="bdHold"></span>
+            <div class="spacer" style="display:flex;gap:8px">
+                <button type="button" class="btn btn-ghost btn-sm" data-modal-close>Close</button>
+                <button type="button" class="btn btn-primary btn-sm" id="bdAccept" hidden></button>
             </div>
         </div>
     </div>
@@ -255,308 +218,148 @@
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const acceptBetButtons = document.querySelectorAll('.accept-bet-btn');
-    const acceptBetModal = new bootstrap.Modal(document.getElementById('acceptBetModal'));
-    const betDetailsModal = new bootstrap.Modal(document.getElementById('betDetailsModal'));
-    const confirmButton = document.getElementById('confirmAcceptBet');
-    let currentBetId = null;
+(function () {
+    var BETS  = {{ bets | tojson }};
+    var USERS = {{ users | tojson }};
+    var ME    = {{ (current_user.id if current_user.is_authenticated else None) | tojson }};
+    var CSRF  = {{ csrf_token() | tojson }};
 
-    acceptBetButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            currentBetId = this.dataset.betId;
-            
-            // Get bet details from the card
-            const card = this.closest('.live-bet-card');
-            const title = card.querySelector('.bet-title').textContent;
-            const amount = card.querySelector('.bet-amount').textContent;
-            const breakdown = card.querySelector('.bet-breakdown').textContent.trim();
-            
-            document.getElementById('betDetails').innerHTML = `
-                <div class="bets-card" style="margin: 1rem 0;">
-                    <div class="bets-content" style="padding: 1rem;">
-                        <div class="row">
-                            <div class="col-12 mb-2">
-                                <small style="color: rgba(255, 255, 255, 0.7);">Bet Title:</small>
-                                <div class="text-white fw-bold">${title}</div>
-                            </div>
-                            <div class="col-12 mb-2">
-                                <small style="color: rgba(255, 255, 255, 0.7);">Your Wager Amount:</small>
-                                <div class="text-warning fw-bold">${amount}</div>
-                            </div>
-                            <div class="col-12">
-                                <small style="color: rgba(255, 255, 255, 0.7);">Breakdown:</small>
-                                <div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">${breakdown}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            acceptBetModal.show();
-        });
-    });
+    function money(n) { return '$' + Number(n).toFixed(2); }
+    function initials(name) { return (name || '??').slice(0, 2).toUpperCase(); }
+    function set(id, text) { document.getElementById(id).textContent = text; }
 
-    confirmButton.addEventListener('click', function() {
-        if (!currentBetId) return;
-        
-        // Disable button and show loading
-        confirmButton.disabled = true;
-        confirmButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Accepting...';
-        
-        // Send as FormData to include CSRF token
-        const formData = new FormData();
-        formData.append('bet_id', parseInt(currentBetId));
-        formData.append('csrf_token', '{{ csrf_token() }}');
-        
-        fetch('/api/accept-bet', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.reload();
-            } else {
-                alert('Error: ' + data.error);
-                confirmButton.disabled = false;
-                confirmButton.innerHTML = '<i data-feather="check" class="me-2"></i>Accept Bet';
-                feather.replace();
+    function nameOf(id) {
+        var u = USERS[id] || USERS[String(id)];
+        return u ? u.username : 'Unknown';
+    }
+
+    function fmtDate(iso, withTime) {
+        if (!iso) return '—';
+        /* A bare YYYY-MM-DD parses as UTC midnight, which renders a day early
+           in any behind-UTC locale. Build those from local components. */
+        var dateOnly = /^\d{4}-\d{2}-\d{2}$/.exec(iso);
+        var d = dateOnly
+            ? new Date(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10))
+            : new Date(iso);
+        if (isNaN(d)) return iso;
+        var opts = { year: 'numeric', month: 'short', day: 'numeric' };
+        if (withTime && !dateOnly) { opts.hour = '2-digit'; opts.minute = '2-digit'; }
+        return d.toLocaleDateString('en-US', opts);
+    }
+
+    /* ---- accept flow ---------------------------------------------------- */
+    function acceptBet(betId, title, stake) {
+        showConfirmationModal(
+            'Accept this bet?',
+            '"' + title + '" — ' + money(stake) + ' will be held from your balance until the bet settles.',
+            'check-circle', '#00A331',
+            function () {
+                var body = new FormData();
+                body.append('bet_id', parseInt(betId, 10));
+                body.append('csrf_token', CSRF);
+
+                fetch('/api/accept-bet', { method: 'POST', body: body })
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (data.success) {
+                            showNotificationModal('success', 'Bet accepted', 'Your stake is now held. Good luck.');
+                            setTimeout(function () { location.reload(); }, 900);
+                        } else {
+                            showNotificationModal('error', 'Could not accept', data.error || 'Please try again.');
+                        }
+                    })
+                    .catch(function () {
+                        showNotificationModal('error', 'Connection error', 'Failed to accept the bet.');
+                    });
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to accept bet. Please try again.');
-            confirmButton.disabled = false;
-            confirmButton.innerHTML = '<i data-feather="check" class="me-2"></i>Accept Bet';
-            feather.replace();
+        );
+    }
+
+    document.querySelectorAll('.accept-bet-btn').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            acceptBet(this.dataset.betId, this.dataset.betTitle, this.dataset.stake);
         });
     });
-});
 
-// Bet details functionality
-function showBetDetails(betId) {
-    // Get bet data from the current page
-    const bets = {{ bets|tojson|safe }};
-    const users = {{ users|tojson|safe }};
-    const bet = bets.find(b => b.id === betId);
-    
-    if (!bet) {
-        alert('Bet not found');
-        return;
+    /* ---- detail --------------------------------------------------------- */
+    function openDetails(betId) {
+        var bet = BETS.filter(function (b) { return b.id === betId; })[0];
+        if (!bet) return;
+
+        var takerStake = bet.amount * bet.odds;
+        var pot = bet.amount + takerStake;
+        var mine = bet.creator_id === ME;
+
+        set('bdMeta', bet.category + ' · Bet #' + bet.id);
+        set('bdStatus', bet.status.replace(/_/g, ' '));
+        document.getElementById('bdStatus').className =
+            'status-dot' + (bet.status === 'open' ? '' : (bet.status === 'accepted' ? ' is-amber' : ' is-grey'));
+
+        /* user-authored text — assign as text, never as markup */
+        set('bdTitle', bet.title);
+        set('bdDescription', bet.description);
+
+        set('bdCreatorAmt', money(bet.amount));
+        set('bdTakerAmt', money(takerStake));
+        set('bdPot', money(pot));
+        set('bdOdds', bet.odds + ':1');
+
+        var creator = nameOf(bet.creator_id);
+        set('bdCreatorInitials', initials(creator));
+        set('bdCreator', creator);
+        set('bdCreatorRole', 'Creator · staked ' + money(bet.amount));
+
+        var takerEl = document.getElementById('bdTakerInitials');
+        if (bet.acceptor_id) {
+            var taker = nameOf(bet.acceptor_id);
+            takerEl.classList.remove('avatar-dashed');
+            takerEl.textContent = initials(taker);
+            set('bdTaker', taker);
+            set('bdTakerRole', 'Taker · staked ' + money(takerStake));
+        } else {
+            takerEl.classList.add('avatar-dashed');
+            takerEl.replaceChildren();
+            var icon = document.createElement('i');
+            icon.setAttribute('data-feather', 'user-plus');
+            icon.style.width = '12px';
+            icon.style.height = '12px';
+            takerEl.appendChild(icon);
+            set('bdTaker', 'Open for anyone');
+            set('bdTakerRole', 'Taker stakes ' + money(takerStake));
+        }
+
+        set('bdCreated', fmtDate(bet.created_at, true));
+        set('bdExpires', bet.expire_time ? fmtDate(bet.expire_time) + ' at EST midnight' : 'No expiration');
+
+        var acceptBtn = document.getElementById('bdAccept');
+        if (bet.status === 'open' && !mine) {
+            acceptBtn.hidden = false;
+            acceptBtn.textContent = 'Accept for ' + money(takerStake);
+            acceptBtn.onclick = function () {
+                BG.closeModal('betDetailsModal');
+                acceptBet(bet.id, bet.title, takerStake);
+            };
+            set('bdHold', money(takerStake) + ' will be held from your balance until settlement.');
+        } else {
+            acceptBtn.hidden = true;
+            acceptBtn.onclick = null;
+            set('bdHold', mine ? 'This is your own bet.' : 'This bet is no longer open.');
+        }
+
+        BG.openModal('betDetailsModal');
     }
-    
-    const creator = users[bet.creator_id];
-    const acceptor = bet.acceptor_id ? users[bet.acceptor_id] : null;
-    const currentUserId = {{ session.get('user_id')|tojson|safe }};
-    
-    // Calculate amounts
-    const creatorAmount = bet.amount;
-    const takerAmount = bet.amount * bet.odds;
-    const totalPot = creatorAmount + takerAmount;
-    
-    // Format dates
-    const createdDate = new Date(bet.created_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+
+    document.querySelectorAll('.bet-card').forEach(function (card) {
+        function go(e) {
+            if (e.target.closest('.accept-bet-btn')) return;
+            openDetails(parseInt(card.dataset.betId, 10));
+        }
+        card.addEventListener('click', go);
+        card.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(e); }
+        });
     });
-    
-    const expireDate = bet.expire_time ? 
-        new Date(bet.expire_time).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        }) + ' at EST midnight' : 'No expiration';
-    
-    // Build content using main app styling
-    const content = `
-        <div class="row g-4">
-            <!-- Basic Info -->
-            <div class="col-12">
-                <div class="bets-card">
-                    <div class="bets-header">
-                        <div class="bets-title">
-                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
-                                <i data-feather="file-text"></i>
-                            </div>
-                            <div>
-                                <h5>Bet Information</h5>
-                                <p>Complete bet details</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bets-content">
-                        <div class="mb-3">
-                            <h6 class="fw-bold">${bet.title}</h6>
-                        </div>
-                        <p class="mb-0">${bet.description}</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Financial Details -->
-            <div class="col-md-6">
-                <div class="bets-card">
-                    <div class="bets-header">
-                        <div class="bets-title">
-                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
-                                <i data-feather="dollar-sign"></i>
-                            </div>
-                            <div>
-                                <h5>Financial Details</h5>
-                                <p>Wager amounts and odds</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bets-content">
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <small class="text-muted">Creator Wagers:</small>
-                                <div class="fw-bold">$${creatorAmount.toFixed(2)}</div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Taker Must Wager:</small>
-                                <div class="fw-bold" style="color: #fd7e14;">$${takerAmount.toFixed(2)}</div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Total Pot:</small>
-                                <div class="fw-bold" style="color: #fd7e14;">$${totalPot.toFixed(2)}</div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Odds:</small>
-                                <div class="fw-bold" style="color: #6c757d;">${bet.odds}:1</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Participants & Status -->
-            <div class="col-md-6">
-                <div class="bets-card">
-                    <div class="bets-header">
-                        <div class="bets-title">
-                            <div class="bets-icon" style="background: linear-gradient(135deg, #6c757d, #495057);">
-                                <i data-feather="users"></i>
-                            </div>
-                            <div>
-                                <h5>Participants & Status</h5>
-                                <p>Current bet status</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bets-content">
-                        <div class="row g-2">
-                            <div class="col-12">
-                                <small class="text-muted">Created by:</small>
-                                <div class="fw-bold">
-                                    <i data-feather="user" class="me-1"></i>
-                                    ${creator ? creator.username : 'Unknown'}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Accepted by:</small>
-                                <div class="fw-bold">
-                                    <i data-feather="user-check" class="me-1"></i>
-                                    ${acceptor ? acceptor.username : 'Open for anyone'}
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Status:</small>
-                                <div>
-                                    <span class="badge bg-${getStatusColor(bet.status)} status-${bet.status}">
-                                        ${bet.status.charAt(0).toUpperCase() + bet.status.slice(1)}
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <small class="text-muted">Category:</small>
-                                <div class="fw-bold">
-                                    <i data-feather="tag" class="me-1"></i>
-                                    ${bet.category}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Timeline -->
-            <div class="col-12">
-                <div class="bets-card">
-                    <div class="bets-header">
-                        <div class="bets-title">
-                            <div class="bets-icon" style="background: linear-gradient(135deg, #fd7e14, #e55a00);">
-                                <i data-feather="clock"></i>
-                            </div>
-                            <div>
-                                <h5>Timeline</h5>
-                                <p>Important dates</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bets-content">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <small class="text-muted">Created:</small>
-                                <div class="fw-bold">${createdDate}</div>
-                            </div>
-                            <div class="col-md-6">
-                                <small class="text-muted">Expires:</small>
-                                <div class="fw-bold">${expireDate}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('betDetailsContent').innerHTML = content;
-    
-    // Add action buttons based on bet status and user
-    let actions = '';
-    if (bet.status === 'open' && bet.creator_id !== currentUserId) {
-        actions = `<button class="btn btn-gradient" onclick="acceptBetFromDetails(${bet.id})">
-                       <i data-feather="check" class="me-2"></i>Accept Bet
-                   </button>`;
-    }
-    
-    document.getElementById('betDetailsActions').innerHTML = actions;
-    
-    // Replace feather icons
-    feather.replace();
-    
-    // Show modal
-    const betDetailsModal = new bootstrap.Modal(document.getElementById('betDetailsModal'));
-    betDetailsModal.show();
-}
-
-function getStatusColor(status) {
-    switch(status) {
-        case 'open': return 'success';
-        case 'accepted': return 'warning';
-        case 'completed': return 'secondary';
-        case 'disputed': return 'danger';
-        case 'expired': return 'dark';
-        case 'cancelled': return 'dark';
-        default: return 'secondary';
-    }
-}
-
-function acceptBetFromDetails(betId) {
-    // Close bet details modal and trigger accept bet flow
-    const betDetailsModal = bootstrap.Modal.getInstance(document.getElementById('betDetailsModal'));
-    betDetailsModal.hide();
-    
-    // Find the accept button for this bet and trigger click
-    const acceptButton = document.querySelector(`[data-bet-id="${betId}"]`);
-    if (acceptButton) {
-        acceptButton.click();
-    }
-}
+})();
 </script>
 {% endblock %}

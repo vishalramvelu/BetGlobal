@@ -1,460 +1,247 @@
 {% extends "base.html" %}
 
-{% block title %}Create Bet - BetGlobal{% endblock %}
-
-{% block main_class %}{% endblock %}
+{% block title %}Create bet · BetGlobal{% endblock %}
+{% block page_title %}Create bet{% endblock %}
+{% block page_subtitle %}<span class="sub">Draft · not published</span>{% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="dashboard-bg"></div>
-    
-    <!-- Page Header -->
-    <div class="dashboard-header">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-8">
-                    <div class="user-welcome">
-                        <div class="welcome-icon">
-                            <i data-feather="plus-circle"></i>
-                        </div>
-                        <div class="welcome-content">
-                            <h1 class="welcome-title">Create <span class="text-gradient">New Bet</span></h1>
-                            <p class="welcome-subtitle">Set up your betting challenge and attract participants</p>
-                            <div class="user-badge">
-                                <i data-feather="target" class="me-1"></i>
-                                <span>Fair & Transparent</span>
-                            </div>
-                        </div>
+<div class="grid" style="grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - var(--topbar-h))">
+
+    <form id="createBetForm" style="padding:24px;display:flex;flex-direction:column;gap:22px;max-width:640px">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div>
+            <div class="eyebrow" style="margin-bottom:14px">The claim</div>
+            <label class="label" for="title">Bet title <span class="req">*</span></label>
+            <input type="text" class="input" id="title" name="title" required maxlength="200"
+                   placeholder="Bitcoin closes above $120k this year" autofocus>
+            <div class="hint" data-hint-for="title">One sentence, stated so it can only be true or false.</div>
+        </div>
+
+        <div>
+            <label class="label" for="description">Description <span class="req">*</span></label>
+            <textarea class="textarea" id="description" name="description" rows="3" required data-auto-resize
+                      placeholder="Settled on the Dec 31 daily close on Coinbase. Wick highs don't count."></textarea>
+            <div class="hint" data-hint-for="description">Be specific about the conditions and how the bet will be resolved.</div>
+        </div>
+
+        <hr class="rule">
+
+        <div>
+            <div class="eyebrow" style="margin-bottom:14px">Stake and odds</div>
+            <div class="grid g2 gap-16">
+                <div>
+                    <label class="label" for="amount">Bet amount <span class="req">*</span></label>
+                    <div class="input-affix">
+                        <span class="affix">$</span>
+                        <input type="number" id="amount" name="amount" required
+                               min="0.01" step="0.01" placeholder="0.00" data-currency>
                     </div>
+                    <div class="hint" data-hint-for="amount">Minimum $0.01</div>
                 </div>
-                <div class="col-lg-4 text-lg-end">
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                        <i data-feather="arrow-left" class="me-2"></i>
-                        Back to All Bets
-                    </a>
+                <div>
+                    <label class="label" for="odds">Odds (X:1) <span class="req">*</span></label>
+                    <input type="number" class="input mono" id="odds" name="odds" required
+                           min="0.1" step="0.1" placeholder="1.8">
+                    <div class="hint" data-hint-for="odds">Higher odds, higher potential payout</div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:6px;margin-top:10px">
+                {% for preset in ['1', '1.8', '2', '3'] %}
+                <button type="button" class="preset" data-preset-target="#odds" data-preset-value="{{ preset }}">{{ preset }}:1</button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="grid g2 gap-16">
+            <div>
+                <label class="label" for="category">Category <span class="req">*</span></label>
+                <select class="select" id="category" name="category" required>
+                    <option value="">Select a category</option>
+                    {% for cat in ['Sports', 'Politics', 'Entertainment', 'Technology', 'Finance', 'Weather', 'Other'] %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <div class="hint" data-hint-for="category">&nbsp;</div>
+            </div>
+            <div>
+                <label class="label" for="expire_time">Expiration date</label>
+                <input type="date" class="input" id="expire_time" name="expire_time">
+                <div class="hint">Optional. Expires at EST midnight.</div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:9px;padding-top:4px">
+            <button type="submit" class="btn btn-primary" id="submitBtn" style="flex:1;height:42px;padding:0">
+                <i data-feather="check" style="width:16px;height:16px"></i>Create bet
+            </button>
+            <a class="btn btn-ghost" href="{{ url_for('index') }}" style="width:120px;height:42px;padding:0">Cancel</a>
+        </div>
+    </form>
+
+    <aside class="panel" style="padding:24px;display:flex;flex-direction:column;gap:18px">
+        <div>
+            <div class="eyebrow" style="margin-bottom:10px">Live preview</div>
+            <div class="bet-card" style="cursor:default">
+                <div class="row-flex">
+                    <span class="bet-cat" id="pvCategory">Category</span>
+                    <span class="spacer status-dot">Open</span>
+                </div>
+                <div>
+                    <div class="bet-title" id="pvTitle">Your bet title</div>
+                    <div class="bet-desc" id="pvDescription">Your description will appear here.</div>
+                </div>
+                <div class="bet-figures">
+                    <div><div class="lbl">Taker stakes</div><div class="val" id="pvTakerStake">$0.00</div></div>
+                    <div><div class="lbl">Total pot</div><div class="val is-green" id="pvPot">$0.00</div></div>
+                    <div><div class="lbl">Odds</div><div class="val" id="pvOdds">—</div></div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Create Bet Form -->
-    <div class="dashboard-stats">
-        <div class="container">
-            <div class="row g-4">
-                <!-- Main Form Card -->
-                <div class="col-lg-8">
-                    <div class="bets-card">
-                        <div class="bets-header">
-                            <div class="bets-title">
-                                <div class="bets-icon" style="background: linear-gradient(135deg, #ffd700, #ff6b35);">
-                                    <i data-feather="edit-3"></i>
-                                </div>
-                                <div>
-                                    <h5>Bet Details</h5>
-                                    <p>Fill in the information for your bet</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bets-content">
-                            <form id="createBetForm">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                <div class="row g-4">
-                                    <!-- Title -->
-                                    <div class="col-12">
-                                        <label for="title" class="form-label text-white">Bet Title <span class="text-warning">*</span></label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="type"></i>
-                                            </div>
-                                            <input type="text" class="form-control auth-input" id="title" name="title" required
-                                                   placeholder="Enter a descriptive title for your bet">
-                                        </div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
+        <div class="card card-pad" style="padding:14px">
+            <div class="eyebrow">Payout calculator</div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px;font-size:13px">
+                <div style="display:flex"><span class="text-muted">You stake</span><span class="mono spacer" style="font-weight:500" id="calcStake">$0.00</span></div>
+                <div style="display:flex"><span class="text-muted">Taker must wager</span><span class="mono spacer" style="font-weight:500" id="calcTaker">$0.00</span></div>
+                <div style="display:flex"><span class="text-muted">Total pot</span><span class="mono spacer" style="font-weight:500" id="calcPot">$0.00</span></div>
+                <div style="display:flex"><span class="text-muted">Platform fee</span><span class="mono spacer text-green" style="font-weight:500">$0.00</span></div>
+                <hr class="rule">
+                <div style="display:flex"><span style="font-weight:500">If you win</span><span class="mono spacer text-green" style="font-weight:500" id="calcWin">+$0.00</span></div>
+                <div style="display:flex"><span style="font-weight:500">If you lose</span><span class="mono spacer text-red" style="font-weight:500" id="calcLose">−$0.00</span></div>
+            </div>
+        </div>
 
-                                    <!-- Description -->
-                                    <div class="col-12">
-                                        <label for="description" class="form-label text-white">Description <span class="text-warning">*</span></label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="file-text"></i>
-                                            </div>
-                                            <textarea class="form-control auth-input" id="description" name="description" rows="3" required
-                                                      placeholder="Provide detailed information about the bet conditions and terms" style="padding-left: 3rem;"></textarea>
-                                        </div>
-                                        <div class="form-hint">Be specific about the conditions and how the bet will be resolved</div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-
-                                    <!-- Amount and Odds -->
-                                    <div class="col-md-6">
-                                        <label for="amount" class="form-label text-white">Bet Amount <span class="text-warning">*</span></label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="dollar-sign"></i>
-                                            </div>
-                                            <input type="number" class="form-control auth-input" id="amount" name="amount" 
-                                                   min="0.01" step="0.01" required placeholder="0.00">
-                                        </div>
-                                        <div class="form-hint">Minimum: $0.01</div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label for="odds" class="form-label text-white">Odds (X:1) <span class="text-warning">*</span></label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="trending-up"></i>
-                                            </div>
-                                            <input type="number" class="form-control auth-input" id="odds" name="odds" 
-                                                   min="0.1" step="0.1" required placeholder="2.0">
-                                        </div>
-                                        <div class="form-hint">Higher odds = higher potential payout</div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-
-                                    <!-- Category -->
-                                    <div class="col-md-6">
-                                        <label for="category" class="form-label text-white">Category <span class="text-warning">*</span></label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="tag"></i>
-                                            </div>
-                                            <select class="form-control auth-input" id="category" name="category" required>
-                                                <option value="">Select a category</option>
-                                                <option value="Sports">Sports</option>
-                                                <option value="Politics">Politics</option>
-                                                <option value="Entertainment">Entertainment</option>
-                                                <option value="Technology">Technology</option>
-                                                <option value="Finance">Finance</option>
-                                                <option value="Weather">Weather</option>
-                                                <option value="Other">Other</option>
-                                            </select>
-                                        </div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-
-                                    <!-- Expiration Date -->
-                                    <div class="col-md-6">
-                                        <label for="expire_time" class="form-label text-white">Expiration Date</label>
-                                        <div class="input-wrapper">
-                                            <div class="input-icon">
-                                                <i data-feather="calendar"></i>
-                                            </div>
-                                            <input type="date" class="form-control auth-input" id="expire_time" name="expire_time"
-                                                   placeholder="Select expiration date">
-                                        </div>
-                                        <div class="form-hint">Optional: Bet expires at EST midnight on this date</div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-
-                                    <!-- Potential Payout Calculation -->
-                                    <div class="col-12">
-                                        <div class="stat-card" style="padding: 1.5rem;">
-                                            <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
-                                                <i data-feather="calculator"></i>
-                                            </div>
-                                            <div class="stat-content">
-                                                <div class="stat-label">Payout Calculator</div>
-                                                <div id="payoutInfo" style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem;">
-                                                    Enter amount and odds to see potential payout
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Submit Button -->
-                                    <div class="col-12">
-                                        <div class="d-flex gap-3">
-                                            <button type="submit" class="btn btn-gradient flex-fill" id="submitBtn">
-                                                <i data-feather="check" class="me-2"></i>
-                                                Create Bet
-                                            </button>
-                                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                                                <i data-feather="x" class="me-2"></i>
-                                                Cancel
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+        <div class="card card-pad" style="padding:14px">
+            <div class="eyebrow">Tips for great bets</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
+                    <i data-feather="check" style="width:13px;height:13px;color:var(--green-text);margin-top:2px;flex-shrink:0"></i>
+                    State the claim so it can only resolve true or false.
                 </div>
-
-                <!-- Tips Card -->
-                <div class="col-lg-4">
-                    <div class="bets-card h-100">
-                        <div class="bets-header">
-                            <div class="bets-title">
-                                <div class="bets-icon" style="background: linear-gradient(135deg, #17a2b8, #138496);">
-                                    <i data-feather="help-circle"></i>
-                                </div>
-                                <div>
-                                    <h5>Tips for Creating Great Bets</h5>
-                                    <p>Best practices for successful betting</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bets-content">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
-                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
-                                            <i data-feather="target"></i>
-                                        </div>
-                                        <div class="benefit-text">
-                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Be Specific</h6>
-                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Clear conditions prevent disputes</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
-                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
-                                            <i data-feather="trending-up"></i>
-                                        </div>
-                                        <div class="benefit-text">
-                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Set Fair Odds</h6>
-                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Competitive odds attract participants</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
-                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
-                                            <i data-feather="check-circle"></i>
-                                        </div>
-                                        <div class="benefit-text">
-                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Verifiable Outcomes</h6>
-                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Ensure results can be determined</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <div class="benefit-item" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem; border-radius: 0.5rem;">
-                                        <div class="benefit-icon" style="margin-bottom: 0.5rem;">
-                                            <i data-feather="clock"></i>
-                                        </div>
-                                        <div class="benefit-text">
-                                            <h6 style="color: #fff; margin-bottom: 0.5rem;">Include Time Limits</h6>
-                                            <p style="color: rgba(255, 255, 255, 0.7); margin: 0; font-size: 0.9rem;">Specify when bet expires</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
+                    <i data-feather="check" style="width:13px;height:13px;color:var(--green-text);margin-top:2px;flex-shrink:0"></i>
+                    Name the source that settles it — a dispute review reads this.
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
+                    <i data-feather="alert-circle" style="width:13px;height:13px;color:var(--amber);margin-top:2px;flex-shrink:0"></i>
+                    <span id="tipHold">Your stake is held from your balance on publish.</span>
                 </div>
             </div>
         </div>
-    </div>
+    </aside>
 </div>
-
-<!-- Success/Error Popup -->
-<div class="popup-overlay" id="popupOverlay">
-    <div class="popup-container">
-        <div class="popup-icon">
-            <i id="popupIcon" data-feather="check-circle"></i>
-        </div>
-        <h4 id="popupTitle">Success!</h4>
-        <p id="popupMessage">Your bet has been created successfully.</p>
-        <div class="popup-actions">
-            <button type="button" class="btn btn-gradient" id="popupPrimaryBtn">Go to Dashboard</button>
-            <button type="button" class="btn btn-outline-secondary" id="popupSecondaryBtn">Create Another</button>
-        </div>
-    </div>
-</div>
-
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('createBetForm');
-    const amountInput = document.getElementById('amount');
-    const oddsInput = document.getElementById('odds');
-    const payoutInfo = document.getElementById('payoutInfo');
-    const submitBtn = document.getElementById('submitBtn');
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('createBetForm');
+    var amount = document.getElementById('amount');
+    var odds = document.getElementById('odds');
+    var title = document.getElementById('title');
+    var description = document.getElementById('description');
+    var category = document.getElementById('category');
+    var submitBtn = document.getElementById('submitBtn');
 
-    // Calculate and display potential payout
-    function updatePayout() {
-        const amount = parseFloat(amountInput.value) || 0;
-        const odds = parseFloat(oddsInput.value) || 0;
-        
-        if (amount > 0 && odds > 0) {
-            const potentialWin = amount * odds;
-            const totalPayout = amount + potentialWin;
-            
-            payoutInfo.innerHTML = 
-                '<div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem;"><strong>Your stake:</strong> <span class="text-warning">$' + amount.toFixed(2) + '</span></div>' +
-                '<div style="color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem;"><strong>Potential win:</strong> <span class="text-success">$' + potentialWin.toFixed(2) + '</span></div>' +
-                '<div style="color: rgba(255, 255, 255, 0.9);"><strong>Total return:</strong> <span class="text-info">$' + totalPayout.toFixed(2) + '</span></div>';
-        } else {
-            payoutInfo.innerHTML = 'Enter amount and odds to see potential payout';
-        }
+    function money(n) { return '$' + Number(n || 0).toFixed(2); }
+    function set(id, v) { document.getElementById(id).textContent = v; }
+
+    function recalc() {
+        var a = parseFloat(amount.value) || 0;
+        var o = parseFloat(odds.value) || 0;
+        var takerStake = a * o;
+        var pot = a + takerStake;
+
+        set('calcStake', money(a));
+        set('calcTaker', money(takerStake));
+        set('calcPot', money(pot));
+        set('calcWin', '+' + money(takerStake));
+        set('calcLose', '−' + money(a));
+
+        set('pvTakerStake', money(takerStake));
+        set('pvPot', money(pot));
+        set('pvOdds', o ? o + ':1' : '—');
+        set('tipHold', a ? money(a) + ' will be held from your balance on publish.'
+                         : 'Your stake is held from your balance on publish.');
     }
 
-    // Add event listeners for payout calculation
-    amountInput.addEventListener('input', updatePayout);
-    oddsInput.addEventListener('input', updatePayout);
+    function repaintPreview() {
+        set('pvTitle', title.value.trim() || 'Your bet title');
+        set('pvDescription', description.value.trim() || 'Your description will appear here.');
+        set('pvCategory', category.value || 'Category');
+    }
 
-    // Form validation and submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Clear previous validation states
-        form.querySelectorAll('.is-invalid').forEach(function(el) {
-            el.classList.remove('is-invalid');
-        });
-        
-        const formData = new FormData(form);
-        const data = {};
-        
-        // Collect form data
-        formData.forEach(function(value, key) {
-            if (key === 'expire_time' && value) {
-                // Use date value directly (YYYY-MM-DD format)
-                data[key] = value + 'T23:59:59'; // Set to end of day for conversion
-            } else {
-                data[key] = value.trim();
-            }
-        });
-        
-        // Basic client-side validation
-        let isValid = true;
-        
-        if (!data.title) {
-            showFieldError('title', 'Title is required');
-            isValid = false;
-        }
-        
-        if (!data.description) {
-            showFieldError('description', 'Description is required');
-            isValid = false;
-        }
-        
-        if (!data.amount || parseFloat(data.amount) <= 0) {
-            showFieldError('amount', 'Amount must be greater than 0');
-            isValid = false;
-        }
-        
-        if (!data.odds || parseFloat(data.odds) <= 0) {
-            showFieldError('odds', 'Odds must be greater than 0');
-            isValid = false;
-        }
-        
-        if (!data.category) {
-            showFieldError('category', 'Category is required');
-            isValid = false;
-        }
-        
-        if (!isValid) return;
-        
-        // Show loading state
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
-        
-        // Submit to API - send as form data for CSRF compatibility
-        const formDataToSend = new FormData();
-        for (const key in data) {
-            formDataToSend.append(key, data[key]);
-        }
-        
-        fetch('/api/create-bet', {
-            method: 'POST',
-            body: formDataToSend
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(result) {
-            if (result.success) {
-                // Show success popup - user will choose action
-                showPopup('success', 'Bet Created!', 'Your bet has been created successfully and is now live.');
-                form.reset();
-                updatePayout();
-            } else {
-                showPopup('error', 'Creation Failed', result.error);
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            showPopup('error', 'Connection Error', 'Failed to create bet. Please check your connection and try again.');
-        })
-        .finally(function() {
-            // Reset button state
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i data-feather="check" class="me-2"></i>Create Bet';
-            feather.replace();
-        });
+    [amount, odds].forEach(function (el) { el.addEventListener('input', recalc); });
+    [title, description, category].forEach(function (el) {
+        el.addEventListener('input', repaintPreview);
+        el.addEventListener('change', repaintPreview);
     });
-    
-    function showFieldError(fieldName, message) {
-        const field = document.getElementById(fieldName);
-        let feedback = field.parentElement.querySelector('.invalid-feedback');
-        if (!feedback) {
-            feedback = field.nextElementSibling;
-        }
-        
+    recalc();
+    repaintPreview();
+
+    function fieldError(name, message) {
+        var field = document.getElementById(name);
         field.classList.add('is-invalid');
-        if (feedback && feedback.classList.contains('invalid-feedback')) {
-            feedback.textContent = message;
+        var hint = document.querySelector('[data-hint-for="' + name + '"]');
+        if (hint) {
+            if (!hint.dataset.original) hint.dataset.original = hint.textContent;
+            hint.textContent = message;
+            hint.className = 'hint hint-err';
         }
     }
-    
-    function showPopup(type, title, message) {
-        const overlay = document.getElementById('popupOverlay');
-        const icon = document.getElementById('popupIcon');
-        const titleEl = document.getElementById('popupTitle');
-        const messageEl = document.getElementById('popupMessage');
-        const primaryBtn = document.getElementById('popupPrimaryBtn');
-        const secondaryBtn = document.getElementById('popupSecondaryBtn');
-        
-        // Set content
-        titleEl.textContent = title;
-        messageEl.textContent = message;
-        
-        // Configure popup based on type
-        if (type === 'success') {
-            icon.setAttribute('data-feather', 'check-circle');
-            icon.style.color = '#28a745';
-            primaryBtn.textContent = 'Go to Dashboard';
-            secondaryBtn.textContent = 'Create Another';
-            secondaryBtn.style.display = 'inline-block';
-        } else {
-            icon.setAttribute('data-feather', 'x-circle');
-            icon.style.color = '#dc3545';
-            primaryBtn.textContent = 'Try Again';
-            secondaryBtn.style.display = 'none';
-        }
-        
-        // Show popup
-        overlay.style.display = 'flex';
-        feather.replace();
-        
-        // Handle button clicks
-        primaryBtn.onclick = function() {
-            if (type === 'success') {
-                window.location.href = '/dashboard';
-            } else {
-                overlay.style.display = 'none';
-            }
-        };
-        
-        secondaryBtn.onclick = function() {
-            overlay.style.display = 'none';
-            form.reset();
-            updatePayout();
-        };
-        
-        // Close on overlay click
-        overlay.onclick = function(e) {
-            if (e.target === overlay) {
-                overlay.style.display = 'none';
-            }
-        };
+
+    function clearErrors() {
+        form.querySelectorAll('.is-invalid').forEach(function (el) { el.classList.remove('is-invalid'); });
+        form.querySelectorAll('[data-hint-for]').forEach(function (hint) {
+            if (hint.dataset.original) hint.textContent = hint.dataset.original;
+            hint.className = 'hint';
+        });
     }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearErrors();
+
+        var ok = true;
+        if (!title.value.trim())       { fieldError('title', 'Title is required'); ok = false; }
+        if (!description.value.trim()) { fieldError('description', 'Description is required'); ok = false; }
+        if (!(parseFloat(amount.value) > 0)) { fieldError('amount', 'Amount must be greater than 0'); ok = false; }
+        if (!(parseFloat(odds.value) > 0))   { fieldError('odds', 'Odds must be greater than 0'); ok = false; }
+        if (!category.value)           { fieldError('category', 'Category is required'); ok = false; }
+        if (!ok) return;
+
+        var payload = new FormData(form);
+        /* backend expects end-of-day for the expiry date */
+        var expiry = payload.get('expire_time');
+        if (expiry) payload.set('expire_time', expiry + 'T23:59:59');
+
+        BG.setButtonLoading(submitBtn, true);
+
+        fetch('/api/create-bet', { method: 'POST', body: payload })
+            .then(function (r) { return r.json(); })
+            .then(function (result) {
+                if (result.success) {
+                    showConfirmationModal(
+                        'Bet created',
+                        'Your bet is live on the board. Go to your dashboard, or post another?',
+                        'check-circle', '#00A331',
+                        function () { window.location.href = '{{ url_for("dashboard") }}'; }
+                    );
+                    document.getElementById('bgConfirmOk').textContent = 'Go to dashboard';
+                    form.reset();
+                    recalc();
+                    repaintPreview();
+                } else {
+                    showNotificationModal('error', 'Could not create bet', result.error || 'Please try again.');
+                }
+            })
+            .catch(function () {
+                showNotificationModal('error', 'Connection error', 'Failed to create the bet. Check your connection and try again.');
+            })
+            .finally(function () { BG.setButtonLoading(submitBtn, false); });
+    });
 });
 </script>
 {% endblock %}

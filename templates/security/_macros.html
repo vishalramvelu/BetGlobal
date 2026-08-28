@@ -1,20 +1,16 @@
 {% macro render_field_with_errors(field) %}
-  <div class="form-group">
-    {{ field.label(class="form-label") }}
-    {{ field(**kwargs) }}
-    {% if field.errors %}
-      {% for error in field.errors %}
-        <div class="text-danger small">{{ error }}</div>
-      {% endfor %}
-    {% endif %}
+  <div class="field">
+    {{ field.label(class="label") }}
+    {{ field(class=(kwargs.pop('class', 'input') ~ (' is-invalid' if field.errors else '')), **kwargs) }}
+    {% for error in field.errors %}
+      <div class="hint hint-err">{{ error }}</div>
+    {% endfor %}
   </div>
 {% endmacro %}
 
 {% macro render_field(field) %}
   {{ field(**kwargs) }}
-  {% if field.errors %}
-    {% for error in field.errors %}
-      <div class="text-danger small">{{ error }}</div>
-    {% endfor %}
-  {% endif %}
+  {% for error in field.errors %}
+    <div class="hint hint-err">{{ error }}</div>
+  {% endfor %}
 {% endmacro %}

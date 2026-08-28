@@ -1,245 +1,118 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - BetGlobal</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-    
-    <!-- Dark theme override -->
-    <style>
-        html[data-bs-theme="dark"] {
-            color-scheme: dark;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
-            color: #fff !important;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.125) !important;
-        }
-        /* Admin specific styling */
-        .bg-warning {
-            background: linear-gradient(135deg, #ffd700, #ff6b35) !important;
-        }
-        .text-dark {
-            color: #000 !important;
-        }
-        .navbar-brand {
-            font-weight: 700 !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Admin Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-warning">
-        <div class="container">
-            <a class="navbar-brand text-dark" href="{{ url_for('admin_dashboard') }}">
-                <i data-feather="shield" class="me-2"></i>
-                <strong>Admin Panel</strong>
-            </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="adminNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark active" href="{{ url_for('admin_dashboard') }}">
-                            <i data-feather="home" class="me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_database') }}">
-                            <i data-feather="database" class="me-1"></i>Database
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_disputes') }}">
-                            <i data-feather="alert-triangle" class="me-1"></i>Disputes
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_statistics') }}">
-                            <i data-feather="bar-chart-2" class="me-1"></i>Statistics
-                        </a>
-                    </li>
-                </ul>
-                
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('landing') }}">
-                            <i data-feather="external-link" class="me-1"></i>Main Site
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-dark" href="{{ url_for('admin_logout') }}">
-                            <i data-feather="log-out" class="me-1"></i>Logout
-                        </a>
-                    </li>
-                </ul>
+{% extends "admin_base.html" %}
+
+{% block admin_title %}Overview{% endblock %}
+{% block admin_subtitle %}live platform totals{% endblock %}
+
+{% block content %}
+{% if error %}
+<div class="pad">
+    <div class="alert alert-danger alert-permanent">
+        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <span>{{ error }}</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="kpi-strip g5">
+    <div class="kpi">
+        <div class="kpi-label">Total users</div>
+        <div class="kpi-value sm">{{ total_users }}</div>
+        <div class="kpi-note">Registered accounts</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Total bets</div>
+        <div class="kpi-value sm">{{ total_bets }}</div>
+        <div class="kpi-note">All time</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Active bets</div>
+        <div class="kpi-value sm">{{ active_bets }}</div>
+        <div class="kpi-note">Open or accepted</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Completed</div>
+        <div class="kpi-value sm">{{ completed_bets }}</div>
+        <div class="kpi-note">Settled</div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Disputes</div>
+        <div class="kpi-value sm {% if dispute_count %}is-amber{% endif %}">{{ dispute_count | default(0) }}</div>
+        <div class="kpi-note">Awaiting review</div>
+    </div>
+</div>
+
+<div class="pad grid gap-16" style="grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)">
+
+    <div class="card">
+        <header class="card-head" style="padding:12px 16px">
+            <h2>Money on the platform</h2>
+        </header>
+        <div style="padding:18px 16px;display:flex;flex-direction:column;gap:18px">
+            <div>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                    <span style="font-size:13.5px;font-weight:500">Total user balances</span>
+                    <span class="mono spacer" style="font-size:15px;font-weight:500">${{ '%.2f' | format(total_balance or 0) }}</span>
+                </div>
+                <div class="meter meter-lg"><span style="width:100%"></span></div>
+                <div class="hint">Sum of every account's available funds</div>
+            </div>
+
+            <div>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                    <span style="font-size:13.5px;font-weight:500">Total bet volume</span>
+                    <span class="mono spacer" style="font-size:15px;font-weight:500">${{ '%.2f' | format(total_bet_volume or 0) }}</span>
+                </div>
+                {% set ratio = ((total_bet_volume or 0) / (total_balance or 1) * 100) if total_balance else 0 %}
+                <div class="meter meter-lg"><span style="width:{{ [ratio, 100] | min }}%"></span></div>
+                <div class="hint">Creator stakes across every bet ever posted</div>
+            </div>
+
+            <div>
+                <div style="display:flex;align-items:baseline;gap:8px">
+                    <span style="font-size:13.5px;font-weight:500">Platform revenue</span>
+                    <span class="mono spacer text-green" style="font-size:15px;font-weight:500">$0.00</span>
+                </div>
+                <div class="meter meter-lg"><span style="width:0"></span></div>
+                <div class="hint">Zero platform fee, by design</div>
             </div>
         </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-3">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <div class="container my-4">
-        <div class="row mb-4">
-            <div class="col">
-                <h1 class="h3 mb-0">
-                    <i data-feather="shield" class="me-2"></i>
-                    Admin Dashboard
-                </h1>
-                <p class="text-muted">Overview of BetGlobal platform</p>
-            </div>
-        </div>
-
-        {% if error %}
-            <div class="alert alert-danger">
-                <i data-feather="alert-circle" class="me-2"></i>{{ error }}
-            </div>
-        {% else %}
-            <!-- Statistics Cards -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-primary text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title mb-0">Total Users</h6>
-                                    <h2 class="mb-0">{{ total_users }}</h2>
-                                </div>
-                                <i data-feather="users" style="width: 48px; height: 48px; opacity: 0.8;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="card bg-success text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title mb-0">Total Bets</h6>
-                                    <h2 class="mb-0">{{ total_bets }}</h2>
-                                </div>
-                                <i data-feather="trending-up" style="width: 48px; height: 48px; opacity: 0.8;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="card bg-warning text-dark">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title mb-0">Active Bets</h6>
-                                    <h2 class="mb-0">{{ active_bets }}</h2>
-                                </div>
-                                <i data-feather="activity" style="width: 48px; height: 48px; opacity: 0.8;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-3">
-                    <div class="card bg-info text-white">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="card-title mb-0">Completed</h6>
-                                    <h2 class="mb-0">{{ completed_bets }}</h2>
-                                </div>
-                                <i data-feather="check-circle" style="width: 48px; height: 48px; opacity: 0.8;"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Financial Overview -->
-            <div class="row g-4 mb-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i data-feather="dollar-sign" class="me-2"></i>
-                                Financial Overview
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row text-center">
-                                <div class="col-6">
-                                    <h4 class="text-success">${{ "%.2f"|format(total_balance) }}</h4>
-                                    <p class="text-muted mb-0">Total User Balance</p>
-                                </div>
-                                <div class="col-6">
-                                    <h4 class="text-primary">${{ "%.2f"|format(total_bet_volume) }}</h4>
-                                    <p class="text-muted mb-0">Total Bet Volume</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">
-                                <i data-feather="navigation" class="me-2"></i>
-                                Quick Actions
-                            </h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="{{ url_for('admin_database') }}" class="btn btn-outline-primary">
-                                    <i data-feather="database" class="me-2"></i>View Database
-                                </a>
-                                <a href="{{ url_for('admin_statistics') }}" class="btn btn-outline-info">
-                                    <i data-feather="bar-chart-2" class="me-2"></i>Live Statistics
-                                </a>
-                                <a href="{{ url_for('admin_disputes') }}" class="btn btn-outline-warning">
-                                    <i data-feather="alert-triangle" class="me-2"></i>Manage Disputes
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endif %}
     </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Initialize Feather Icons -->
-    <script>
-        feather.replace();
-    </script>
-</body>
-</html>
+    <div class="card" style="height:max-content">
+        <header class="card-head" style="padding:12px 16px">
+            <h2>Jump to</h2>
+        </header>
+
+        <a class="card-row" href="{{ url_for('admin_disputes') }}" style="text-decoration:none;color:inherit;align-items:center">
+            <span class="tile" {% if dispute_count %}style="background:var(--amber-bg);color:var(--amber)"{% endif %}>
+                <i data-feather="alert-triangle" style="width:15px;height:15px"></i>
+            </span>
+            <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:500">Disputes</div>
+                <div style="font-size:11.5px;color:var(--muted-2)">
+                    {% if dispute_count %}{{ dispute_count }} awaiting a decision{% else %}Nothing waiting{% endif %}
+                </div>
+            </div>
+            <i data-feather="chevron-right" style="width:15px;height:15px;color:var(--muted-2);flex-shrink:0"></i>
+        </a>
+
+        <a class="card-row" href="{{ url_for('admin_statistics') }}" style="text-decoration:none;color:inherit;align-items:center">
+            <span class="tile"><i data-feather="bar-chart-2" style="width:15px;height:15px"></i></span>
+            <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:500">Statistics</div>
+                <div style="font-size:11.5px;color:var(--muted-2)">Volume, categories, top winners</div>
+            </div>
+            <i data-feather="chevron-right" style="width:15px;height:15px;color:var(--muted-2);flex-shrink:0"></i>
+        </a>
+
+        <a class="card-row" href="{{ url_for('admin_database') }}" style="text-decoration:none;color:inherit;align-items:center">
+            <span class="tile"><i data-feather="database" style="width:15px;height:15px"></i></span>
+            <div style="min-width:0;flex:1">
+                <div style="font-size:13px;font-weight:500">Database</div>
+                <div style="font-size:11.5px;color:var(--muted-2)">Read-only users and bets tables</div>
+            </div>
+            <i data-feather="chevron-right" style="width:15px;height:15px;color:var(--muted-2);flex-shrink:0"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

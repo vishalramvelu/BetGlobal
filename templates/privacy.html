@@ -1,0 +1,28 @@
+{% extends "base.html" if current_user.is_authenticated else "landing_base.html" %}
+{% block title %}Privacy Policy · BetGlobal{% endblock %}
+{% block page_title %}Privacy Policy{% endblock %}
+
+{% block content %}
+{% set nav_label = 'Contents' %}
+{% set heading = 'Privacy Policy' %}
+{% set intro = 'What we collect, why we hold it, and who else sees it. We do not sell your data and we do not run advertising trackers.' %}
+{% set stamp = 'Version 2.0 · updated ' ~ current_year %}
+{% set foot_note = 'To request a copy of your data or deletion of your account, email support@betglobal.com.' %}
+{% set sections = [
+    {'num': '1', 'title': 'What we collect',
+     'body': 'Your username, email address, and a hashed password. For each bet: its title, description, category, stake, odds, timestamps, and the result. For money movement: amounts, timestamps, and the Stripe references for deposits and payouts.'},
+    {'num': '2', 'title': 'What we never hold',
+     'body': "We do not store card numbers or bank details. Payment data is entered on Stripe's own pages and stays with Stripe. We only keep the identifiers Stripe returns to us."},
+    {'num': '3', 'title': 'What is public',
+     'body': 'Bets are public by design. Your username, the bet text, the stake, the odds, and the outcome are visible to anyone on the board. Your email address, balance, and transaction history are never public.'},
+    {'num': '4', 'title': 'Dispute evidence',
+     'body': 'Files you upload to a dispute — images, PDFs, or documents up to 16 MB — are visible to the other party in that bet and to the administrators who review it. We keep them only as long as needed to resolve the dispute and defend the outcome.'},
+    {'num': '5', 'title': 'Security and email',
+     'body': 'We enforce HTTPS, protect forms against cross-site request forgery, and rate-limit sign-in and reset endpoints. Password reset codes are six digits, expire after 15 minutes, and allow three attempts. We email you only about your account, your bets, and their results.'},
+    {'num': '6', 'title': 'Cookies',
+     'body': 'We set a session cookie to keep you signed in and, if you choose it, a longer-lived one for 30 days. There are no advertising or third-party analytics cookies.'},
+    {'num': '7', 'title': 'Your rights',
+     'body': 'You can ask for a copy of your data, correct it, or delete your account once no bets are open. We keep settled bet and transaction records where the law requires it, and we will tell you if we are ever compelled to hand data to an authority.'}
+] %}
+{% include "_content_page.html" %}
+{% endblock %}

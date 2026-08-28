@@ -1,0 +1,56 @@
+{% extends "landing_base.html" %}
+{% block title %}What it costs · BetGlobal{% endblock %}
+
+{% block content %}
+<div class="pad-lg wrap-md">
+    <h1 class="title-xl">What it costs</h1>
+    <p class="lede-sm" style="margin:12px 0 0;max-width:600px">
+        One number to remember: zero. We make nothing on your bets. Card and bank rails
+        are the only place money leaves the system, and that is Stripe's fee, not ours.
+    </p>
+
+    {% set fee_rows = [
+        {'action': 'Creating a bet',    'fee': '$0', 'green': true,  'note': 'No listing fee, no minimum volume'},
+        {'action': 'Accepting a bet',   'fee': '$0', 'green': true,  'note': 'You stake exactly stake × odds'},
+        {'action': 'Winning a bet',     'fee': '$0', 'green': true,  'note': 'The full pot moves to you'},
+        {'action': 'Opening a dispute', 'fee': '$0', 'green': true,  'note': 'Review is free however it resolves'},
+        {'action': 'Card deposit',      'fee': 'Stripe rate', 'green': false, 'note': '$1 to $10,000 per transaction'},
+        {'action': 'Bank withdrawal',   'fee': 'Stripe rate', 'green': false, 'note': 'Requires a connected bank account'}
+    ] %}
+
+    <div class="card dtable" style="margin-top:36px">
+        <div class="dtable-head" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);gap:12px;padding:11px 18px">
+            <span>Action</span><span style="text-align:right">Our fee</span><span>Notes</span>
+        </div>
+        {% for f in fee_rows %}
+        <div class="dtable-row" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);gap:12px;padding:14px 18px;font-size:14px">
+            <span style="font-weight:500">{{ f.action }}</span>
+            <span class="mono" style="text-align:right;font-weight:500;{% if f.green %}color:var(--green-text){% endif %}">{{ f.fee }}</span>
+            <span style="font-size:13px;color:var(--muted)">{{ f.note }}</span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card card-pad" style="margin-top:24px;padding:20px;max-width:620px">
+        <div class="eyebrow">Worked example</div>
+        <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:10px 0 14px">
+            You post a bet staking $500 at 1.8:1. Someone takes it for $900. The pot is $1,400.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:14px">
+            <div style="display:flex">
+                <span class="text-muted">Winner receives</span>
+                <span class="mono spacer" style="font-weight:500">$1,400.00</span>
+            </div>
+            <div style="display:flex">
+                <span class="text-muted">BetGlobal keeps</span>
+                <span class="mono spacer text-green" style="font-weight:500">$0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top:32px;display:flex;gap:9px;flex-wrap:wrap">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('how_it_works') }}">How a bet runs</a>
+    </div>
+</div>
+{% endblock %}

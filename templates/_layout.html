@@ -1,0 +1,29 @@
+{# Single document shell. Every page inherits its <head> from here — public,
+   member and admin shells all extend this file. #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}BetGlobal{% endblock %}</title>
+    <meta name="description" content="{% block description %}Peer-to-peer betting with no house and no platform fee. Anyone can create a bet, anyone can take it.{% endblock %}">
+    <meta name="theme-color" content="#011E3F">
+
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-mark.png') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='betglobal.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% block body %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='feather.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='betglobal.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

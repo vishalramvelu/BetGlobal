@@ -1,164 +1,106 @@
 {% extends "landing_base.html" %}
-
-{% block title %}Sign Up - BetGlobal{% endblock %}
+{% block title %}Create account · BetGlobal{% endblock %}
 
 {% block content %}
-<section class="auth-section">
-    <div class="auth-bg"></div>
-    <div class="container py-5">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-lg-5 col-md-7">
-                <div class="auth-card">
-                    <div class="auth-header text-center mb-4">
-                        <div class="auth-brand mb-3">
-                            <a href="{{ url_for('landing') }}" class="text-decoration-none">
-                                <div class="brand-icon">
-                                    <i data-feather="trending-up"></i>
-                                </div>
-                                <span class="brand-text">BetGlobal</span>
-                            </a>
-                        </div>
-                        <h2 class="auth-title">Join BetGlobal</h2>
-                        <p class="auth-subtitle">Create your account and start winning today</p>
-                    </div>
+<div class="split" style="min-height:760px">
+    <div class="split-main">
+        <div class="split-form">
+            <h1 class="title-md">Create account</h1>
+            <p style="font-size:14.5px;color:var(--muted);margin:7px 0 26px">Join the future of betting in just minutes.</p>
 
-                    <form action="{{ url_for_security('register') }}" method="post" class="auth-form">
-                        {{ register_user_form.hidden_tag() }}
-                        
-                        <div class="form-group mb-4">
-                            <label for="username" class="form-label">Username</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="user"></i>
-                                </div>
-                                {{ register_user_form.username(class="form-control auth-input", placeholder="Choose a username") }}
-                            </div>
-                            {% if register_user_form.username.errors %}
-                                {% for error in register_user_form.username.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-                        
-                        <div class="form-group mb-4">
-                            <label for="email" class="form-label">Email</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="mail"></i>
-                                </div>
-                                {{ register_user_form.email(class="form-control auth-input", placeholder="Enter your email") }}
-                            </div>
-                            {% if register_user_form.email.errors %}
-                                {% for error in register_user_form.email.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
+            <form action="{{ url_for_security('register') }}" method="post">
+                {{ register_user_form.hidden_tag() }}
 
-                        <div class="form-group mb-4">
-                            <label for="password" class="form-label">Password</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="lock"></i>
-                                </div>
-                                {{ register_user_form.password(class="form-control auth-input", placeholder="Create a password") }}
-                            </div>
-                            {% if register_user_form.password.errors %}
-                                {% for error in register_user_form.password.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <div class="form-group mb-4">
-                            <label for="password_confirm" class="form-label">Confirm Password</label>
-                            <div class="input-wrapper">
-                                <div class="input-icon">
-                                    <i data-feather="lock"></i>
-                                </div>
-                                {{ register_user_form.password_confirm(class="form-control auth-input", placeholder="Confirm your password") }}
-                            </div>
-                            {% if register_user_form.password_confirm.errors %}
-                                {% for error in register_user_form.password_confirm.errors %}
-                                    <div class="text-danger small">{{ error }}</div>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        <button type="submit" class="btn btn-gradient auth-submit w-100 mb-4">
-                            <i data-feather="user-plus" class="me-2"></i>
-                            <span>Create Account</span>
-                        </button>
-                    </form>
-
-                    <div class="auth-divider">
-                        <span>or</span>
-                    </div>
-
-                    <div class="auth-links text-center">
-                        <p class="mb-3">Already have an account? 
-                            <a href="{{ url_for_security('login') }}" class="auth-link">
-                                Sign in here
-                            </a>
-                        </p>
-                        <a href="{{ url_for('landing') }}" class="back-link">
-                            <i data-feather="arrow-left" class="me-1"></i>
-                            Back to Home
-                        </a>
-                    </div>
+                <div class="field">
+                    <label class="label" for="{{ register_user_form.username.id }}">Username</label>
+                    {{ register_user_form.username(class="input" + (" is-invalid" if register_user_form.username.errors else ""),
+                                                   placeholder="Choose a username", autocomplete="username") }}
+                    {% if register_user_form.username.errors %}
+                        {% for error in register_user_form.username.errors %}
+                            <div class="hint hint-err">{{ error }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="hint">3–20 characters, letters and numbers only</div>
+                    {% endif %}
                 </div>
-            </div>
-            
-            <div class="col-lg-6 d-none d-lg-block">
-                <div class="auth-visual">
-                    <div class="visual-content">
-                        <h3 class="visual-title">Start Your Betting Journey</h3>
-                        <p class="visual-subtitle">Join hundreds of users worldwide in the most exciting peer-to-peer betting platform.</p>
-                        
-                        <div class="feature-highlights">
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="gift"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>Instant Wallet Credit</h6>
-                                    <p>Funds appear instantly after payment</p>
-                                </div>
-                            </div>
-                            
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="check-circle"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>Email Verification</h6>
-                                    <p>Secure account confirmation</p>
-                                </div>
-                            </div>
-                            
-                            <div class="highlight-item">
-                                <div class="highlight-icon">
-                                    <i data-feather="trending-up"></i>
-                                </div>
-                                <div class="highlight-text">
-                                    <h6>No Fees</h6>
-                                    <p>Zero platform fees forever</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
+                <div class="field">
+                    <label class="label" for="{{ register_user_form.email.id }}">Email address</label>
+                    {{ register_user_form.email(class="input" + (" is-invalid" if register_user_form.email.errors else ""),
+                                                placeholder="Enter your email", autocomplete="email") }}
+                    {% for error in register_user_form.email.errors %}
+                        <div class="hint hint-err">{{ error }}</div>
+                    {% endfor %}
                 </div>
-            </div>
+
+                <div class="field">
+                    <label class="label" for="{{ register_user_form.password.id }}">Password</label>
+                    {{ register_user_form.password(class="input" + (" is-invalid" if register_user_form.password.errors else ""),
+                                                   placeholder="Create a password", autocomplete="new-password") }}
+                    {% if register_user_form.password.errors %}
+                        {% for error in register_user_form.password.errors %}
+                            <div class="hint hint-err">{{ error }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="hint">Minimum 6 characters</div>
+                    {% endif %}
+                </div>
+
+                <div class="field">
+                    <label class="label" for="{{ register_user_form.password_confirm.id }}">Confirm password</label>
+                    {{ register_user_form.password_confirm(class="input" + (" is-invalid" if register_user_form.password_confirm.errors else ""),
+                                                           placeholder="Confirm your password", autocomplete="new-password") }}
+                    {% for error in register_user_form.password_confirm.errors %}
+                        <div class="hint hint-err">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <span class="check-text" style="display:block">
+                        By creating an account you agree to the
+                        <a href="{{ url_for('terms') }}" style="font-weight:500">Terms of Service</a> and
+                        <a href="{{ url_for('privacy') }}" style="font-weight:500">Privacy Policy</a>.
+                    </span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
+                    <i data-feather="user-plus" style="width:16px;height:16px"></i>Create account
+                </button>
+
+                <p style="font-size:13px;color:var(--muted);margin:12px 0 0">
+                    Already registered? <a href="{{ url_for_security('login') }}" style="font-weight:500">Sign in</a>
+                </p>
+            </form>
         </div>
     </div>
-</section>
-{% endblock %}
 
-{% block scripts %}
-<script>
-    // Initialize Feather Icons after page load
-    document.addEventListener('DOMContentLoaded', function() {
-        feather.replace();
-    });
-</script>
+    <aside class="split-aside">
+        <div style="max-width:400px">
+            <h2 style="font-size:26px;letter-spacing:-.03em;margin:0;text-wrap:balance">Start your betting journey</h2>
+            <p style="font-size:14.5px;line-height:1.6;color:var(--muted);margin:10px 0 0">
+                Join users who are already winning with peer-to-peer betting.
+                No house edge, just pure competition.
+            </p>
+
+            <div style="margin-top:26px;display:flex;flex-direction:column;gap:18px">
+                {% for perk in [
+                    ('Post any bet you can define', 'Sports, markets, weather, or a promise about yourself.'),
+                    ('Keep the whole pot', 'Zero platform fee on every bet, win or lose.'),
+                    ('Evidence-backed settlement', 'Disputes go to human review with files attached.'),
+                    ('Stripe in and out', 'Card deposits, bank payouts in 1–2 days.')
+                ] %}
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                    <span style="width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <i data-feather="check" style="width:13px;height:13px;color:var(--ink)"></i>
+                    </span>
+                    <div>
+                        <div style="font-size:14px;font-weight:600">{{ perk[0] }}</div>
+                        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:2px">{{ perk[1] }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </aside>
+</div>
 {% endblock %}

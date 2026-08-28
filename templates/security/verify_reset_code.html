@@ -1,528 +1,223 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Reset Code - Play Stakes</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    
-    <style>
-        .auth-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-        }
-        
-        .auth-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-        
-        .auth-logo {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .auth-logo h1 {
-            color: white;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        
-        .auth-logo p {
-            color: rgba(255, 255, 255, 0.8);
-            margin: 0;
-        }
-        
-        .form-control {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            border-radius: 8px;
-            padding: 12px 15px;
-        }
-        
-        .form-control:focus {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: #4dabf7;
-            box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
-            color: white;
-        }
-        
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.6);
-        }
-        
-        .code-input {
-            font-size: 24px;
-            text-align: center;
-            letter-spacing: 8px;
-            font-weight: bold;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(45deg, #4dabf7, #339af0);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(45deg, #339af0, #228be6);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-        }
-        
-        .btn-outline-light {
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: rgba(255, 255, 255, 0.9);
-        }
-        
-        .btn-outline-light:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
-            color: white;
-        }
-        
-        .auth-links {
-            text-align: center;
-            margin-top: 25px;
-        }
-        
-        .auth-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        
-        .auth-links a:hover {
-            color: white;
-        }
-        
-        .email-info {
-            background: rgba(52, 152, 219, 0.1);
-            border: 1px solid rgba(52, 152, 219, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .email-info p {
-            margin: 0;
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-        }
-        
-        .timer {
-            background: rgba(255, 193, 7, 0.1);
-            border: 1px solid rgba(255, 193, 7, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        
-        .password-section {
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
-            padding-top: 25px;
-            margin-top: 25px;
-        }
-        
-        .progress {
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .step {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 10px;
-            font-weight: bold;
-            color: white;
-        }
-        
-        .step.active {
-            background: #4dabf7;
-        }
-        
-        .step.completed {
-            background: #28a745;
-        }
-        
-        .step.pending {
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .step-line {
-            width: 50px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .step-line.completed {
-            background: #28a745;
-        }
-    </style>
-</head>
-<body>
-    <div class="auth-container">
-        <div class="auth-card">
-            <div class="auth-logo">
-                <h1>
-                    <i data-feather="key" class="me-2"></i>
-                    {% if code_verified %}Reset Password{% else %}Verify Code{% endif %}
-                </h1>
-                <p>{% if code_verified %}Create your new password{% else %}Enter the verification code sent to your email{% endif %}</p>
+{% extends "landing_base.html" %}
+{% block title %}{% if code_verified %}Reset password{% else %}Verify code{% endif %} · BetGlobal{% endblock %}
+
+{% block content %}
+<div class="centered-page">
+    <div class="centered-card">
+        <div class="card card-pad" style="padding:28px">
+
+            <div class="steps">
+                <span class="step is-done">✓</span><span class="step-line"></span>
+                <span class="step {% if code_verified %}is-done{% else %}is-current{% endif %}">{% if code_verified %}✓{% else %}2{% endif %}</span>
+                <span class="step-line"></span>
+                <span class="step {% if code_verified %}is-current{% endif %}">3</span>
+                <span class="step-label" style="margin-left:4px">Step {% if code_verified %}3{% else %}2{% endif %} of 3</span>
             </div>
-            
-            <!-- Step Indicator -->
-            <div class="step-indicator">
-                <div class="step completed">1</div>
-                <div class="step-line completed"></div>
-                <div class="step {% if code_verified %}completed{% else %}active{% endif %}">2</div>
-                <div class="step-line {% if code_verified %}completed{% endif %}"></div>
-                <div class="step {% if code_verified %}active{% else %}pending{% endif %}">3</div>
-            </div>
-            
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                            {% if category == 'error' %}
-                                <i data-feather="alert-circle" class="me-2"></i>
-                            {% elif category == 'success' %}
-                                <i data-feather="check-circle" class="me-2"></i>
-                            {% else %}
-                                <i data-feather="info" class="me-2"></i>
-                            {% endif %}
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
+
             {% if user_not_found %}
-                <!-- User not found message -->
-                <div class="email-info">
-                    <p>
-                        <i data-feather="info" class="me-2"></i>
-                        If an account with that email exists, a verification code has been sent.
-                    </p>
+                <h1 class="title-sm" style="margin:18px 0 0">Check your inbox</h1>
+                <div class="note" style="margin-top:12px">
+                    <i data-feather="info"></i>
+                    If an account with that email exists, a verification code has been sent.
                 </div>
-                
-                <div class="auth-links">
-                    <a href="{{ url_for('forgot_password') }}">
-                        <i data-feather="arrow-left" class="me-1"></i>
-                        Try Different Email
-                    </a>
-                </div>
-                
+                <a class="btn btn-ghost btn-block" style="margin-top:18px" href="{{ url_for('forgot_password') }}">
+                    Try a different email
+                </a>
+
             {% elif not code_verified %}
-                <!-- Code verification step -->
-                <div class="email-info">
-                    <p>
-                        <i data-feather="mail" class="me-2"></i>
-                        Verification code sent to: <strong>{{ email }}</strong>
-                    </p>
+                <h1 class="title-sm" style="margin:18px 0 0">Verify code</h1>
+                <p style="font-size:13.5px;color:var(--muted);margin:6px 0 18px;line-height:1.5">
+                    Verification code sent to <span style="color:var(--ink);font-weight:500">{{ email }}</span>
+                </p>
+
+                <div class="alert alert-warning alert-permanent" id="timer" style="margin-bottom:16px;font-size:12.5px">
+                    <i data-feather="clock" style="width:14px;height:14px;flex-shrink:0"></i>
+                    <span>Code expires in <span class="mono" style="font-weight:600" id="countdown">15:00</span></span>
                 </div>
-                
-                <div class="timer" id="timer">
-                    <p class="mb-0">
-                        <i data-feather="clock" class="me-1"></i>
-                        Code expires in: <span id="countdown">15:00</span>
-                    </p>
-                </div>
-                
+
                 <form method="POST" id="verifyCodeForm">
+                    {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
                     <input type="hidden" name="email" value="{{ email }}">
-                    
-                    <div class="mb-3">
-                        <label for="reset_code" class="form-label text-white">
-                            <i data-feather="shield" class="me-1"></i>
-                            6-Digit Verification Code
-                        </label>
-                        <input type="text" 
-                               class="form-control code-input" 
-                               id="reset_code" 
-                               name="reset_code" 
-                               placeholder="000000"
-                               maxlength="6"
-                               pattern="[0-9]{6}"
-                               required
-                               autocomplete="off">
-                        <div class="form-text text-light">
-                            Enter the 6-digit code from your email
-                        </div>
+                    <input type="hidden" name="reset_code" id="reset_code">
+
+                    <label class="label" for="cell-0">6-digit verification code</label>
+                    <div class="code-row" id="codeRow">
+                        {% for i in range(6) %}
+                        <input class="code-cell" id="cell-{{ i }}" type="text" inputmode="numeric"
+                               maxlength="1" autocomplete="off" aria-label="Digit {{ i + 1 }}">
+                        {% endfor %}
                     </div>
-                    
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-primary" id="verifyBtn">
-                            <i data-feather="unlock" class="me-2"></i>
-                            Verify Code
-                        </button>
-                    </div>
-                </form>
-                
-                <div class="text-center mb-3">
-                    <button type="button" class="btn btn-outline-light btn-sm" id="resendBtn">
-                        <i data-feather="refresh-cw" class="me-1"></i>
-                        Resend Code
+                    <div class="hint">Three attempts allowed before the code is invalidated.</div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="verifyBtn" style="margin-top:18px">
+                        <i data-feather="unlock" style="width:16px;height:16px"></i>Verify code
                     </button>
-                </div>
-                
+                </form>
+
+                <button type="button" class="btn btn-quiet" id="resendBtn"
+                        style="display:flex;margin:14px auto 0;font-size:12.5px">
+                    <i data-feather="refresh-cw" style="width:13px;height:13px"></i>Resend code
+                </button>
+
             {% else %}
-                <!-- Password reset step -->
-                <div class="email-info">
-                    <p>
-                        <i data-feather="check-circle" class="me-2"></i>
-                        Code verified! Now create your new password.
-                    </p>
-                </div>
-                
-                <form method="POST" id="resetPasswordForm" class="password-section">
+                <h1 class="title-sm" style="margin:18px 0 0">Set a new password</h1>
+                <p style="font-size:13.5px;color:var(--muted);margin:6px 0 18px;line-height:1.5">
+                    Code verified. Choose a password you haven't used here before.
+                </p>
+
+                <form method="POST" id="resetPasswordForm">
+                    {% if csrf_token is defined %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
                     <input type="hidden" name="email" value="{{ email }}">
                     <input type="hidden" name="reset_code" value="verified">
-                    
-                    <div class="mb-3">
-                        <label for="new_password" class="form-label text-white">
-                            <i data-feather="lock" class="me-1"></i>
-                            New Password
-                        </label>
-                        <input type="password" 
-                               class="form-control" 
-                               id="new_password" 
-                               name="new_password" 
-                               placeholder="Enter new password"
-                               minlength="8"
-                               required
-                               autocomplete="new-password">
-                        <div class="progress mt-2">
-                            <div class="progress-bar" role="progressbar" id="passwordStrength"></div>
-                        </div>
-                        <div class="form-text text-light">
-                            Must be at least 8 characters long
-                        </div>
+
+                    <div class="field">
+                        <label class="label" for="new_password">New password</label>
+                        <input type="password" class="input" id="new_password" name="new_password"
+                               placeholder="Enter new password" minlength="8" required
+                               autocomplete="new-password" autofocus>
+                        <div class="meter" id="strengthMeter"><span style="width:0"></span></div>
+                        <div class="hint">Must be at least 8 characters long</div>
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="confirm_password" class="form-label text-white">
-                            <i data-feather="check" class="me-1"></i>
-                            Confirm Password
-                        </label>
-                        <input type="password" 
-                               class="form-control" 
-                               id="confirm_password" 
-                               name="confirm_password" 
-                               placeholder="Confirm new password"
-                               required
-                               autocomplete="new-password">
-                        <div id="passwordMatch" class="form-text"></div>
+
+                    <div class="field">
+                        <label class="label" for="confirm_password">Confirm password</label>
+                        <input type="password" class="input" id="confirm_password" name="confirm_password"
+                               placeholder="Confirm new password" required autocomplete="new-password">
+                        <div class="hint" id="passwordMatch"></div>
                     </div>
-                    
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-primary" id="resetBtn">
-                            <i data-feather="save" class="me-2"></i>
-                            Reset Password
-                        </button>
-                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="resetBtn" style="margin-top:16px">
+                        <i data-feather="save" style="width:16px;height:16px"></i>Reset password
+                    </button>
                 </form>
             {% endif %}
-            
-            <div class="auth-links">
-                <div class="row text-center">
-                    <div class="col-6">
-                        <a href="{{ url_for('security.login') }}">
-                            <i data-feather="arrow-left" class="me-1"></i>
-                            Back to Login
-                        </a>
-                    </div>
-                    <div class="col-6">
-                        <a href="{{ url_for('forgot_password') }}">
-                            <i data-feather="refresh-cw" class="me-1"></i>
-                            Start Over
-                        </a>
-                    </div>
-                </div>
-            </div>
+        </div>
+
+        <div style="display:flex;justify-content:center;gap:20px;margin-top:16px;font-size:13px">
+            <a href="{{ url_for('security.login') }}" style="color:var(--muted)">← Back to sign in</a>
+            <a href="{{ url_for('forgot_password') }}" style="color:var(--muted)">Start over</a>
         </div>
     </div>
+</div>
+{% endblock %}
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        // Initialize Feather icons
-        feather.replace();
-        
-        {% if not code_verified and not user_not_found %}
-        // Countdown timer for code expiration
-        let timeLeft = 15 * 60; // 15 minutes in seconds
-        const countdownElement = document.getElementById('countdown');
-        
-        function updateCountdown() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            countdownElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 0) {
-                countdownElement.textContent = 'EXPIRED';
-                document.getElementById('timer').style.background = 'rgba(220, 53, 69, 0.1)';
-                document.getElementById('timer').style.borderColor = 'rgba(220, 53, 69, 0.3)';
-                clearInterval(countdownInterval);
-            }
-            timeLeft--;
+{% block scripts %}
+<script>
+{% if not code_verified and not user_not_found %}
+/* ---- countdown ------------------------------------------------------- */
+var timeLeft = 15 * 60;
+var countdownEl = document.getElementById('countdown');
+var timerEl = document.getElementById('timer');
+
+function tick() {
+    var m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+    countdownEl.textContent = m + ':' + String(s).padStart(2, '0');
+    if (timeLeft <= 0) {
+        countdownEl.textContent = 'EXPIRED';
+        timerEl.classList.remove('alert-warning');
+        timerEl.classList.add('alert-danger');
+        clearInterval(timerId);
+    }
+    timeLeft--;
+}
+var timerId = setInterval(tick, 1000);
+tick();
+
+/* ---- six cells writing into one hidden field ------------------------- */
+var cells = Array.prototype.slice.call(document.querySelectorAll('.code-cell'));
+var hidden = document.getElementById('reset_code');
+
+function sync() {
+    hidden.value = cells.map(function (c) { return c.value; }).join('');
+}
+
+cells.forEach(function (cell, i) {
+    cell.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '').slice(0, 1);
+        sync();
+        if (this.value && i < cells.length - 1) cells[i + 1].focus();
+    });
+    cell.addEventListener('keydown', function (e) {
+        if (e.key === 'Backspace' && !this.value && i > 0) cells[i - 1].focus();
+        if (e.key === 'ArrowLeft' && i > 0) cells[i - 1].focus();
+        if (e.key === 'ArrowRight' && i < cells.length - 1) cells[i + 1].focus();
+    });
+    cell.addEventListener('paste', function (e) {
+        e.preventDefault();
+        var digits = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6);
+        for (var j = 0; j < digits.length && i + j < cells.length; j++) cells[i + j].value = digits[j];
+        sync();
+        cells[Math.min(i + digits.length, cells.length - 1)].focus();
+    });
+});
+cells[0].focus();
+
+document.getElementById('verifyCodeForm').addEventListener('submit', function (e) {
+    sync();
+    if (hidden.value.length !== 6) {
+        e.preventDefault();
+        showNotificationModal('error', 'Incomplete code', 'Enter all six digits before verifying.');
+    }
+});
+
+/* ---- resend ---------------------------------------------------------- */
+document.getElementById('resendBtn').addEventListener('click', function () {
+    var btn = this;
+    BG.setButtonLoading(btn, true);
+
+    var body = new URLSearchParams({ email: {{ email | tojson }} });
+    fetch('/resend-reset-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data.success) {
+            timeLeft = 15 * 60;
+            timerEl.classList.remove('alert-danger');
+            timerEl.classList.add('alert-warning');
+            if (!timerId) timerId = setInterval(tick, 1000);
+            showNotificationModal('success', 'Code sent', data.message);
+        } else {
+            showNotificationModal('error', 'Could not resend', data.error || 'Please try again.');
         }
-        
-        const countdownInterval = setInterval(updateCountdown, 1000);
-        updateCountdown();
-        
-        // Code input formatting
-        document.getElementById('reset_code').addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-            if (value.length > 6) value = value.slice(0, 6);
-            e.target.value = value;
-        });
-        
-        // Auto-focus code input
-        document.getElementById('reset_code').focus();
-        
-        // Resend code functionality
-        document.getElementById('resendBtn').addEventListener('click', function() {
-            const btn = this;
-            const originalText = btn.innerHTML;
-            
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Sending...';
-            btn.disabled = true;
-            
-            fetch('/resend-reset-code', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'email={{ email }}'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reset timer
-                    timeLeft = 15 * 60;
-                    document.getElementById('timer').style.background = 'rgba(255, 193, 7, 0.1)';
-                    document.getElementById('timer').style.borderColor = 'rgba(255, 193, 7, 0.3)';
-                    
-                    // Show success message
-                    const alert = document.createElement('div');
-                    alert.className = 'alert alert-success alert-dismissible fade show';
-                    alert.innerHTML = `
-                        <i data-feather="check-circle" class="me-2"></i>
-                        ${data.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    `;
-                    document.querySelector('.auth-card').insertBefore(alert, document.querySelector('.email-info'));
-                    feather.replace();
-                } else {
-                    alert('Failed to resend code: ' + data.error);
-                }
-            })
-            .catch(error => {
-                alert('Network error. Please try again.');
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
-        });
-        
-        {% elif code_verified %}
-        // Password strength meter
-        function checkPasswordStrength(password) {
-            let strength = 0;
-            const checks = [
-                /.{8,}/, // At least 8 characters
-                /[a-z]/, // Lowercase
-                /[A-Z]/, // Uppercase
-                /[0-9]/, // Number
-                /[^A-Za-z0-9]/ // Special character
-            ];
-            
-            checks.forEach(check => {
-                if (check.test(password)) strength++;
-            });
-            
-            return strength;
-        }
-        
-        function updatePasswordStrength() {
-            const password = document.getElementById('new_password').value;
-            const strengthBar = document.getElementById('passwordStrength');
-            const strength = checkPasswordStrength(password);
-            
-            const colors = ['', '#dc3545', '#fd7e14', '#ffc107', '#28a745', '#198754'];
-            const widths = [0, 20, 40, 60, 80, 100];
-            
-            strengthBar.style.width = widths[strength] + '%';
-            strengthBar.style.backgroundColor = colors[strength];
-        }
-        
-        function checkPasswordMatch() {
-            const password = document.getElementById('new_password').value;
-            const confirm = document.getElementById('confirm_password').value;
-            const matchDiv = document.getElementById('passwordMatch');
-            
-            if (confirm && password !== confirm) {
-                matchDiv.innerHTML = '<span class="text-danger">Passwords do not match</span>';
-                return false;
-            } else if (confirm && password === confirm) {
-                matchDiv.innerHTML = '<span class="text-success">Passwords match</span>';
-                return true;
-            } else {
-                matchDiv.innerHTML = '';
-                return false;
-            }
-        }
-        
-        document.getElementById('new_password').addEventListener('input', function() {
-            updatePasswordStrength();
-            checkPasswordMatch();
-        });
-        
-        document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
-        
-        // Auto-focus new password input
-        document.getElementById('new_password').focus();
-        {% endif %}
-    </script>
-</body>
-</html>
+    })
+    .catch(function () {
+        showNotificationModal('error', 'Network error', 'Please try again.');
+    })
+    .finally(function () { BG.setButtonLoading(btn, false); });
+});
+
+{% elif code_verified %}
+/* ---- strength + match ------------------------------------------------ */
+var pw = document.getElementById('new_password');
+var cf = document.getElementById('confirm_password');
+var bar = document.querySelector('#strengthMeter > span');
+var matchEl = document.getElementById('passwordMatch');
+
+function strength(v) {
+    return [/.{8,}/, /[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/]
+        .filter(function (re) { return re.test(v); }).length;
+}
+
+function paintStrength() {
+    var s = strength(pw.value);
+    var widths = [0, 20, 40, 60, 80, 100];
+    var colors = ['', '#C0392B', '#D97706', '#A9660B', '#00A331', '#01D43F'];
+    bar.style.width = widths[s] + '%';
+    bar.style.background = colors[s] || '';
+}
+
+function paintMatch() {
+    if (!cf.value) { matchEl.textContent = ''; matchEl.className = 'hint'; return; }
+    var ok = pw.value === cf.value;
+    matchEl.textContent = ok ? 'Passwords match' : 'Passwords do not match';
+    matchEl.className = 'hint ' + (ok ? 'hint-ok' : 'hint-err');
+}
+
+pw.addEventListener('input', function () { paintStrength(); paintMatch(); });
+cf.addEventListener('input', paintMatch);
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "landing_base.html" %}
+{% block title %}How it works · BetGlobal{% endblock %}
+
+{% block content %}
+<div class="pad-lg wrap-md">
+    <h1 class="title-xl">How a bet runs, start to finish</h1>
+    <p class="lede-sm" style="margin:12px 0 0;max-width:600px">
+        Every bet on BetGlobal follows the same five stages. Nothing is priced by us
+        and nothing is settled by us unless you disagree.
+    </p>
+
+    <div style="margin-top:40px;display:flex;flex-direction:column">
+        {% set stages = [
+            {'num': 'Stage 01', 'icon': 'edit-3', 'tone': 'green', 'title': 'You write the bet',
+             'body': 'A title, a description of exactly what settles it, your stake, and the odds you want. Pick a category and, if it matters, an expiry date.',
+             'note': 'Minimum stake $0.01 · odds from 0.1:1'},
+            {'num': 'Stage 02', 'icon': 'list', 'tone': 'green', 'title': 'It goes on the board',
+             'body': 'Your stake is held from your balance and the bet becomes visible to everyone. Anyone except you can take the other side at the odds you set.',
+             'note': 'Public and verifiable from the moment it posts'},
+            {'num': 'Stage 03', 'icon': 'lock', 'tone': 'neutral', 'title': 'Both stakes lock',
+             'body': 'When someone accepts, their stake is held too. Neither side can withdraw the money while the bet is live.',
+             'note': 'Taker stake = your stake × the odds'},
+            {'num': 'Stage 04', 'icon': 'check-circle', 'tone': 'neutral', 'title': 'The creator calls it',
+             'body': 'After the event, the creator declares whether they won or lost. The taker then confirms or disputes that call.',
+             'note': 'Expired bets that nobody took are refunded in full'},
+            {'num': 'Stage 05', 'icon': 'shield', 'tone': 'amber', 'title': 'Agreement, or review',
+             'body': "If both agree, the whole pot moves to the winner immediately. If not, the taker opens a dispute with a written reason and evidence, and an administrator decides against the bet's stated terms.",
+             'note': 'Evidence up to 16 MB · admin decision is final'}
+        ] %}
+
+        {% for s in stages %}
+        <div style="display:grid;grid-template-columns:80px minmax(0,1fr);gap:24px;padding:24px 0;border-top:1px solid var(--line)">
+            <div>
+                <span class="tile tile-lg {% if s.tone == 'green' %}tile-green{% endif %}"
+                      {% if s.tone == 'amber' %}style="background:var(--amber-bg);color:var(--amber)"{% endif %}>
+                    <i data-feather="{{ s.icon }}" style="width:19px;height:19px"></i>
+                </span>
+                <div class="mono" style="font-size:11px;color:var(--muted-3);margin-top:10px">{{ s.num }}</div>
+            </div>
+            <div>
+                <h2 class="title-xs">{{ s.title }}</h2>
+                <p class="body" style="margin:8px 0 0;max-width:620px">{{ s.body }}</p>
+                <div class="mono" style="font-size:13px;color:var(--muted-2);margin-top:8px">{{ s.note }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:28px;display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+        <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('fees') }}">What it costs</a>
+    </div>
+</div>
+{% endblock %}

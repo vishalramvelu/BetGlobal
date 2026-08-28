@@ -1,199 +1,126 @@
-<!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}BetGlobal - Global Betting Platform{% endblock %}</title>
-    
-    <!-- Bootstrap CSS with dark theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <!-- Custom CSS - Load after Bootstrap to ensure proper override -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='landing.css') }}">
-    
-    <!-- Dark theme override -->
-    <style>
-        html[data-bs-theme="dark"] {
-            color-scheme: dark;
-        }
-        body {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
-            color: #fff !important;
-        }
-        .navbar-dark {
-            background-color: rgba(0, 0, 0, 0.95) !important;
-        }
-        .card {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            border: 1px solid rgba(255, 255, 255, 0.125) !important;
-        }
-    </style>
-</head>
-<body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark landing-navbar">
-        <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">
-                <div class="brand-icon">
-                    <i data-feather="trending-up"></i>
+{# Member shell — sidebar + topbar for signed-in users. #}
+{% extends "_layout.html" %}
+
+{% set nav_active = nav_active | default(request.endpoint) %}
+
+{% block body %}
+<div class="shell">
+    <div class="scrim" aria-hidden="true"></div>
+
+    <aside class="sidebar">
+        <a class="brand" href="{{ url_for('index') }}">
+            <img class="brand-mark" style="height:26px" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+            <img class="brand-wordmark" style="height:15px" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+        </a>
+
+        <div class="sb-user">
+            <div class="avatar">{{ current_user.username[:2] | upper if current_user.is_authenticated else '··' }}</div>
+            <div style="line-height:1.25;min-width:0">
+                <div class="sb-user-name">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</div>
+                <div class="sb-user-role">
+                    {% if current_user.is_authenticated and current_user.created_at %}
+                        Member since {{ current_user.created_at.strftime('%b %Y') }}
+                    {% else %}
+                        Signed out
+                    {% endif %}
                 </div>
-                <span class="brand-text">BetGlobal</span>
+            </div>
+            <a class="sb-logout" href="{{ url_for('security.logout') }}" title="Log out" aria-label="Log out">
+                <i data-feather="log-out" style="width:15px;height:15px"></i>
             </a>
-            
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                            <i data-feather="list" class="me-1"></i>
-                            All Bets
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-                            <i data-feather="pie-chart" class="me-1"></i>
-                            Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link nav-link-clean {% if request.endpoint == 'create_bet_page' %}active{% endif %}" href="{{ url_for('create_bet_page') }}">
-                            <i data-feather="plus-circle" class="me-1"></i>
-                            Create Bet
-                        </a>
-                    </li>
-                </ul>
-                
-                <!-- Right Side Menu -->
-                <div class="navbar-nav align-items-center">
-                    <!-- Wallet Button -->
-                    <div class="nav-item me-3">
-                        <a class="btn btn-gradient-nav" href="{{ url_for('wallet') }}">
-                            <i data-feather="credit-card" class="me-1"></i>
-                            Wallet
-                        </a>
-                    </div>
-                    
-                    <!-- User Menu -->
-                    <div class="nav-item dropdown">
-                        <a class="nav-link nav-link-clean dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i data-feather="user" class="me-1"></i>
-                            {{ current_user.username if current_user.is_authenticated else 'User' }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">
-                                <i data-feather="pie-chart" class="me-2"></i>Dashboard
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('wallet') }}">
-                                <i data-feather="credit-card" class="me-2"></i>Wallet
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('contact') }}">
-                                <i data-feather="mail" class="me-2"></i>Contact Us
-                            </a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('terms') }}">
-                                <i data-feather="file-text" class="me-2"></i>Terms of Service
-                            </a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('security.logout') }}">
-                                <i data-feather="log-out" class="me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </div>
-                </div>
+        </div>
+
+        {% if current_user.is_authenticated %}
+        <div class="sb-balance">
+            <div class="eyebrow-sm">Available</div>
+            <div class="amt">${{ '%.2f' | format(current_user.balance or 0) }}</div>
+            <div class="sub">
+                {% if locked_amount is defined and locked_amount %}
+                    ${{ '%.2f' | format(locked_amount) }} locked in bets
+                {% else %}
+                    Free to wager or withdraw
+                {% endif %}
+            </div>
+            <div class="acts">
+                <a class="btn-ink" href="{{ url_for('wallet') }}" style="text-decoration:none">Deposit</a>
+                <a class="btn-ghost" href="{{ url_for('wallet') }}" style="text-decoration:none;border:1px solid var(--line)">Withdraw</a>
             </div>
         </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="container mt-3">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            </div>
         {% endif %}
-    {% endwith %}
 
-    <!-- Main Content -->
-    <main class="{% block main_class %}container my-4{% endblock %}">
-        {% block content %}
-        <div class="text-center py-5">
-            <h1>Welcome to BetGlobal</h1>
-            <p class="lead">Your global betting platform</p>
-        </div>
-        {% endblock %}
-    </main>
+        <nav class="sb-nav" aria-label="Sections">
+            <div class="sb-heading">Betting</div>
+            <a class="sb-link {% if nav_active == 'index' %}is-active{% endif %}" href="{{ url_for('index') }}">
+                <i data-feather="list"></i>All Bets
+                {% if open_bet_count is defined %}<span class="sb-count">{{ open_bet_count }}</span>{% endif %}
+            </a>
+            <a class="sb-link {% if nav_active == 'create_bet_page' %}is-active{% endif %}" href="{{ url_for('create_bet_page') }}">
+                <i data-feather="plus-circle"></i>Create Bet
+            </a>
+            <a class="sb-link {% if nav_active == 'dashboard' %}is-active{% endif %}" href="{{ url_for('dashboard') }}">
+                <i data-feather="pie-chart"></i>My Dashboard
+                {% if action_count is defined and action_count %}<span class="sb-count">{{ action_count }}</span>{% endif %}
+            </a>
+            <a class="sb-link {% if nav_active == 'wallet' %}is-active{% endif %}" href="{{ url_for('wallet') }}">
+                <i data-feather="credit-card"></i>Wallet
+            </a>
 
-    <!-- Footer -->
-    <footer class="landing-footer">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="footer-brand">
-                        <div class="footer-logo">
-                            <div class="brand-icon">
-                                <i data-feather="trending-up"></i>
-                            </div>
-                            <span class="brand-text">BetGlobal</span>
+            <div class="sb-heading">Help &amp; legal</div>
+            <a class="sb-link {% if nav_active == 'contact' %}is-active{% endif %}" href="{{ url_for('contact') }}">
+                <i data-feather="mail"></i>Contact support
+            </a>
+            <a class="sb-link {% if nav_active == 'terms' %}is-active{% endif %}" href="{{ url_for('terms') }}">
+                <i data-feather="file-text"></i>Terms of Service
+            </a>
+            <a class="sb-link {% if nav_active == 'privacy' %}is-active{% endif %}" href="{{ url_for('privacy') }}">
+                <i data-feather="lock"></i>Privacy Policy
+            </a>
+        </nav>
+    </aside>
+
+    <main style="min-width:0;position:relative">
+        <div class="topbar">
+            <button type="button" class="menu-toggle" data-sidebar-toggle aria-label="Open menu">
+                <i data-feather="menu" style="width:16px;height:16px"></i>
+            </button>
+            <h1>{% block page_title %}BetGlobal{% endblock %}</h1>
+            {% block page_subtitle %}{% endblock %}
+
+            <div class="topbar-actions">
+                {% block topbar_extra %}{% endblock %}
+                <a class="btn-topbar" href="{{ url_for('create_bet_page') }}">
+                    <i data-feather="plus" style="width:14px;height:14px"></i>Create bet
+                </a>
+                <div class="topbar-sep"></div>
+
+                <div class="usermenu">
+                    <button type="button" class="usermenu-trigger" data-usermenu-toggle
+                            aria-expanded="false" aria-controls="userMenuPanel">
+                        <span class="avatar">{{ current_user.username[:2] | upper if current_user.is_authenticated else '··' }}</span>
+                        <span>{{ current_user.username if current_user.is_authenticated else 'Account' }}</span>
+                        <i data-feather="chevron-down" style="width:14px;height:14px;color:var(--muted-2)"></i>
+                    </button>
+                    <div class="usermenu-panel" id="userMenuPanel">
+                        <div class="usermenu-id">
+                            <div class="n">{{ current_user.username if current_user.is_authenticated else 'Account' }}</div>
+                            <div class="e">{{ current_user.email if current_user.is_authenticated else '' }}</div>
                         </div>
-                        <p class="footer-description">
-                            The world's most exciting peer-to-peer betting platform. 
-                            No house, no middleman, just pure betting.
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-section">
-                        <h6 class="footer-title">Support</h6>
-                        <ul class="footer-links">
-                            <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-section">
-                        <h6 class="footer-title">Legal</h6>
-                        <ul class="footer-links">
-                            <li><a href="{{ url_for('terms') }}">Terms of Service</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <p class="footer-copyright">
-                            &copy; 2025 BetGlobal. All rights reserved.
-                        </p>
+                        <hr>
+                        <a href="{{ url_for('dashboard') }}"><i data-feather="pie-chart"></i>My Dashboard</a>
+                        <a href="{{ url_for('wallet') }}"><i data-feather="credit-card"></i>Wallet</a>
+                        <a href="{{ url_for('contact') }}"><i data-feather="mail"></i>Contact support</a>
+                        <a href="{{ url_for('terms') }}"><i data-feather="file-text"></i>Terms of Service</a>
+                        <a href="{{ url_for('privacy') }}"><i data-feather="lock"></i>Privacy Policy</a>
+                        <hr>
+                        <a class="danger" href="{{ url_for('security.logout') }}"><i data-feather="log-out"></i>Log out</a>
                     </div>
                 </div>
             </div>
         </div>
-    </footer>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Initialize Feather Icons -->
-    <script>
-        feather.replace();
-    </script>
-    
-    
-    {% block scripts %}{% endblock %}
-</body>
-</html>
+        {% include "_flash.html" %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}
