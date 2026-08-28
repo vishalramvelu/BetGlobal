@@ -181,8 +181,8 @@ class Bet(db.Model):
     
     @validates('odds')
     def validate_odds(self, key, odds):
-        if odds is None or odds <= 1:
-            raise ValueError("Odds must be greater than 1.0")
+        if odds is None or odds <= 0:
+            raise ValueError("Odds must be greater than 0.0")
         if odds > 100:  # Reasonable max odds
             raise ValueError("Odds cannot exceed 100.0")
         return odds
@@ -197,8 +197,8 @@ class Bet(db.Model):
     
     @validates('description')
     def validate_description(self, key, description):
-        if not description or len(description.strip()) < 10:
-            raise ValueError("Bet description must be at least 10 characters")
+        if not description or len(description.strip()) < 5:
+            raise ValueError("Bet description must be at least 5 characters")
         if len(description) > 1000:
             raise ValueError("Bet description cannot exceed 1000 characters")
         return description.strip()
@@ -280,6 +280,32 @@ def accept_bet(bet_id, acceptor_id):
         import logging
         logging.error(f"Failed to send bet taken notification: {str(e)}")
     
+    return True
+
+def cancel_bet(bet_id, creator_id):
+    """Cancel an open bet and refund amount to creator"""
+    bet = Bet.query.get(bet_id)
+    if not bet or bet.status != 'open' or bet.creator_id != creator_id:
+        return False
+    
+    # Change status to cancelled
+    bet.status = 'cancelled'
+    
+    # Refund amount to creator
+    creator = User.query.get(creator_id)
+    if creator:
+        creator.balance = (creator.balance or 0) + bet.amount
+    
+    # Record refund transaction
+    create_transaction(
+        user_id=creator_id,
+        transaction_type='bet_refund',
+        amount=bet.amount,
+        description=f'Cancelled bet: {bet.title}',
+        bet_id=bet.id
+    )
+    
+    db.session.commit()
     return True
 
 def get_user_bets(user_id):

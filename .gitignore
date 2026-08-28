@@ -7,3 +7,8 @@
 # Development files
 .env.development
 instance/bets_dev.db
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

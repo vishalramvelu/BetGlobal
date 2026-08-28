@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from werkzeug.utils import secure_filename
 
 # Load environment variables from .env file
-load_dotenv()
+#load_dotenv()
 
 from flask_cors import CORS
 from flask_mail import Mail
@@ -20,8 +20,17 @@ from datetime import timedelta
 from database import db
 import stripe
 
+#production level
+ENV = os.environ.get("FLASK_ENV", "development").lower()  # or use a custom var, e.g. ENVIRONMENT
+IS_PROD = ENV == "production"
+
+
 # Set up logging configuration
-log_level = logging.INFO if os.environ.get('FLASK_ENV') == 'production' else logging.DEBUG
+if IS_PROD:
+    log_level = logging.INFO
+else:
+    log_level = logging.DEBUG
+
 logging.basicConfig(
     level=log_level,
     format='%(asctime)s %(levelname)s %(name)s: %(message)s'
@@ -29,8 +38,10 @@ logging.basicConfig(
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ['SESSION_SECRET']
-app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+app.secret_key = os.getenv("SESSION_SECRET", "dev-secret-key-change-in-production")
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for = 1, x_proto=1, x_host=1) #changing this to accomdate deployment
+
+
 
 # File upload configuration
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'dispute_evidence')
@@ -57,7 +68,7 @@ def validate_uploaded_file(file):
     file_size = file.tell()
     file.seek(0)  # Reset to beginning
     
-    if file_size > MAX_FILE_SIZE:
+    if file_size > MAX_FILE_SIZE: 
         return False, f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB."
     
     if file_size == 0:
@@ -74,7 +85,11 @@ def validate_uploaded_file(file):
     return True, "File is valid"
 
 # Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
+#app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
+
+    
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///bets.db")
+    
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
@@ -89,15 +104,11 @@ app.config['SECURITY_PASSWORD_SALT'] = os.environ['SECURITY_PASSWORD_SALT']
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha256'
 
 # Email confirmation - disable for development, enable for production
-if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SECURITY_CONFIRMABLE'] = True
-    app.config['SECURITY_SEND_REGISTER_EMAIL'] = True
-    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'security.login'
-else:
-    # Development mode - auto-confirm users, no email needed
-    app.config['SECURITY_CONFIRMABLE'] = False
-    app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
-    app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'index'
+
+# Development mode - auto-confirm users, no email needed
+app.config['SECURITY_CONFIRMABLE'] = False
+app.config['SECURITY_SEND_REGISTER_EMAIL'] = False
+app.config['SECURITY_POST_REGISTER_REDIRECT_ENDPOINT'] = 'index'
 
 app.config['SECURITY_REGISTERABLE'] = True
 app.config['SECURITY_RECOVERABLE'] = True
@@ -108,27 +119,23 @@ app.config['SECURITY_EMAIL_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'nor
 app.config['SECURITY_POST_LOGIN_REDIRECT_ENDPOINT'] = 'index'
 
 # Secure session configuration
-if os.environ.get('FLASK_ENV') == 'production':
-    app.config['SESSION_COOKIE_SECURE'] = True  # HTTPS only
+if IS_PROD:
+    app.config['SESSION_COOKIE_SECURE'] = True #make only https
 else:
     app.config['SESSION_COOKIE_SECURE'] = False  # Allow HTTP in development
+
+if IS_PROD:
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
+
 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JS access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # Mail configuration - Development mode
-if os.environ.get('FLASK_ENV') == 'production':
-    # Production email settings
-    app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
-    app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-    app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-else:
     # Development mode - suppress actual email sending, log to console
-    app.config['TESTING'] = True
-    app.config['MAIL_SUPPRESS_SEND'] = True
+app.config['TESTING'] = True
+app.config['MAIL_SUPPRESS_SEND'] = True
     
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@playstakes.com')
 
@@ -158,9 +165,11 @@ csp = {
     'img-src': "'self' data: *.stripe.com"
 }
 
-if os.environ.get('FLASK_ENV') == 'production':
-    Talisman(app, 
-        force_https=True,
+
+if IS_PROD:
+    Talisman(
+        app,
+        force_https=False,
         strict_transport_security=True,
         content_security_policy=csp
     )
@@ -189,7 +198,7 @@ def datetime_filter(date_string, format_string='%Y-%m-%d %H:%M'):
         return date_string  # Return original if parsing fails
 
 # Import models after app creation to avoid circular imports
-from models import Bet, User, Role, DisputeEvidence, create_bet, accept_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount, save_dispute_evidence, get_dispute_evidence, generate_reset_code, set_user_reset_code, verify_user_reset_code, clear_reset_code, get_user_by_email
+from models import Bet, User, Role, DisputeEvidence, create_bet, accept_bet, cancel_bet, get_bet_by_id, get_user_by_id, get_user_bets, check_and_expire_bets, is_bet_expired, Transaction, create_transaction, creator_decide_bet, taker_respond_to_decision, admin_resolve_dispute, get_disputed_bets, get_taker_amount, save_dispute_evidence, get_dispute_evidence, generate_reset_code, set_user_reset_code, verify_user_reset_code, clear_reset_code, get_user_by_email
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta, timezone
 from flask_mail import Message
@@ -805,8 +814,21 @@ def success():
 
     try:
         # Retrieve the Checkout Session from Stripe 
-        stripe_session = stripe.checkout.Session.retrieve(session_id)
-        amount_paid = stripe_session.amount_total / 100.0  # in dollars
+        stripe_session = stripe.checkout.Session.retrieve(session_id, expand=["payment_intent.charges.data.balance_transaction"]) #get actual fees amount
+
+        charge = stripe_session.payment_intent.charges.data[0]
+        bt     = charge.balance_transaction  # now already expanded object
+
+        # amounts are in cents
+        gross_cents = bt.gross      # e.g. 2000
+        fee_cents   = bt.fee        # e.g.   88
+        net_cents   = bt.net        # e.g. 1912
+
+        gross_amt = gross_cents / 100.0
+        fee_amt   = fee_cents   / 100.0
+        net_amt   = net_cents   / 100.0
+
+        amount_paid = net_amt  # in dollars
 
         # credit the user's wallet in database
         user = current_user
@@ -818,7 +840,7 @@ def success():
                 user_id=user.id,
                 transaction_type='deposit',
                 amount=amount_paid,
-                description=f'Stripe deposit: ${amount_paid:.2f}'
+                description=f'Stripe deposit (net of fees): ${amount_paid:.2f}'
             )
             
             db.session.commit()
@@ -868,8 +890,8 @@ def create_connected_account():
     # 2) Create an Account Link so they can finish connecting (KYC + bank)
     account_link = stripe.AccountLink.create(
         account=account.id,
-        refresh_url=url_for("wallet", _external=True),
-        return_url=url_for("wallet", _external=True),
+        refresh_url=url_for("wallet", _external=True, _scheme = "https"),
+        return_url=url_for("wallet", _external=True, _scheme = "https"),
         type="account_onboarding",
     )
 
@@ -950,6 +972,25 @@ def create_bet_page():
     """Create bet page"""
     return render_template('create_bet.html')
 
+
+def validate_bet_input(title, description):
+    """
+    Validate title and description lengths.
+    Returns an error message string if invalid, or None if valid.
+    """
+    # Normalize inputs
+    title_str = title.strip() if isinstance(title, str) else ''
+    if len(title_str) < 5:
+        return "Bet title must be at least 5 characters"
+    
+    description_str = description.strip() if isinstance(description, str) else ''
+    if len(description_str) < 5:
+        return "Bet description must be at least 5 characters"
+    
+    # Passed checks
+    return None
+
+
 @app.route('/api/create-bet', methods=['POST'])
 @login_required
 @limiter.limit("5 per minute")
@@ -967,6 +1008,11 @@ def api_create_bet():
         for field in required_fields:
             if not data.get(field):
                 return jsonify({'success': False, 'error': f'{field} is required'}), 400
+            
+        error = validate_bet_input(data.get('title', ''), data.get('description', ''))
+        if error:
+            # For JSON/AJAX:
+            return jsonify({'success': False, 'error': error}), 400
         
         # Validate numeric fields
         try:
@@ -974,6 +1020,8 @@ def api_create_bet():
             odds = float(data['odds'])
             if amount <= 0 or odds <= 0:
                 return jsonify({'success': False, 'error': 'Amount and odds must be positive numbers'}), 400
+            if amount > 10000:
+                return jsonify({'success': False, 'error':'Amount must be below 10000'}), 400
         except ValueError:
             return jsonify({'success': False, 'error': 'Invalid amount or odds format'}), 400
         
@@ -1133,6 +1181,46 @@ def api_creator_decide():
     except Exception as e:
         logging.error(f"Error in creator decision: {str(e)}")
         return jsonify({'success': False, 'error': 'Failed to submit decision'}), 500
+
+@app.route('/api/cancel-bet', methods=['POST'])
+@login_required
+def api_cancel_bet():
+    """API endpoint for bet creator to cancel their open bet"""
+    try:
+        # Handle both JSON and form data
+        if request.content_type and 'application/json' in request.content_type:
+            data = request.get_json()
+        else:
+            data = request.form.to_dict()
+        
+        bet_id = data.get('bet_id')
+        
+        if not bet_id:
+            return jsonify({'success': False, 'error': 'Bet ID is required'}), 400
+        
+        from flask_security import current_user
+        user_id = current_user.id
+        bet = get_bet_by_id(bet_id)
+        
+        if not bet:
+            return jsonify({'success': False, 'error': 'Bet not found'}), 404
+        
+        if bet.creator_id != user_id:
+            return jsonify({'success': False, 'error': 'Only the bet creator can cancel their bet'}), 403
+        
+        if bet.status != 'open':
+            return jsonify({'success': False, 'error': 'Only open bets can be cancelled'}), 400
+        
+        success = cancel_bet(bet_id, user_id)
+        
+        if success:
+            return jsonify({'success': True, 'message': 'Bet cancelled successfully. Your money has been refunded.'})
+        else:
+            return jsonify({'success': False, 'error': 'Failed to cancel bet'}), 500
+            
+    except Exception as e:
+        logging.error(f"Error cancelling bet: {str(e)}")
+        return jsonify({'success': False, 'error': 'Failed to cancel bet'}), 500
 
 @app.route('/api/taker-respond', methods=['POST'])
 @login_required
