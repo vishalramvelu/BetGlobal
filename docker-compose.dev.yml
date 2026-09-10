@@ -1,0 +1,30 @@
+# Local development database for Play Stakes / BetGlobal.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#   docker compose -f docker-compose.dev.yml down        # stop, keep data
+#   docker compose -f docker-compose.dev.yml down -v     # stop, wipe data
+#
+# Host port 5433 is used instead of 5432 so this does not collide with a
+# Postgres already running on the machine (local install or another project).
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: betglobal-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: betglobal
+      POSTGRES_PASSWORD: betglobal_dev
+      POSTGRES_DB: betglobal_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - betglobal_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U betglobal -d betglobal_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  betglobal_pgdata:

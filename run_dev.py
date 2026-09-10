@@ -5,6 +5,27 @@ import os
 import sys
 from dotenv import load_dotenv
 
+# Windows consoles default to cp1252, which cannot encode the emoji below.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
+def postgres_is_reachable(db_url, timeout=1.5):
+    """Open a TCP socket to the Postgres host/port in DATABASE_URL."""
+    import socket
+    from urllib.parse import urlparse
+
+    parsed = urlparse(db_url)
+    host = parsed.hostname or 'localhost'
+    port = parsed.port or 5432
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
 def run_development():
     print("🚀 Starting Play Stakes Development Server...")
     print("=" * 50)
@@ -25,10 +46,17 @@ def run_development():
     
     # Check database
     db_url = os.getenv('DATABASE_URL', '')
-    if 'sqlite' in db_url:
+    if 'postgres' in db_url:
+        print(f"✅ Using development database: {db_url}")
+        if not postgres_is_reachable(db_url):
+            print("❌ Cannot reach the development Postgres server.")
+            print("📝 Start it with: docker compose -f docker-compose.dev.yml up -d")
+            return
+        print("✅ Postgres is reachable")
+    elif 'sqlite' in db_url:
         print(f"✅ Using development database: {db_url}")
     else:
-        print(f"⚠️  Warning: Not using SQLite database: {db_url}")
+        print(f"⚠️  Warning: Unrecognised DATABASE_URL: {db_url}")
     
     # Import and initialize the app
     try:
@@ -79,7 +107,7 @@ def run_development():
         # Run the development server
         app.run(
             host='127.0.0.1',
-            port=5001,
+            port=5000,
             debug=True,
             use_reloader=True,
             use_debugger=True
