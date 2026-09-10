@@ -6,6 +6,8 @@
 #
 # Host port 5433 is used instead of 5432 so this does not collide with a
 # Postgres already running on the machine (local install or another project).
+# The mapping is bound to 127.0.0.1 so this dev database - which uses a weak,
+# committed password - is reachable only from this machine, never from the LAN.
 
 services:
   postgres:
@@ -17,7 +19,7 @@ services:
       POSTGRES_PASSWORD: betglobal_dev
       POSTGRES_DB: betglobal_dev
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - betglobal_pgdata:/var/lib/postgresql/data
     healthcheck:
