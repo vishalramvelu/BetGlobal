@@ -1,0 +1,18 @@
+[Unit]
+Description=Back up the BetGlobal SQLite database and uploads
+After=betglobal.service
+
+[Service]
+Type=oneshot
+User=betglobal
+Group=betglobal
+EnvironmentFile=/etc/betglobal/betglobal.env
+ExecStart=/opt/betglobal/current/deploy/scripts/backup_sqlite.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/betglobal

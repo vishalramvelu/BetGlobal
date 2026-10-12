@@ -1,7 +1,9 @@
 import os
 import logging
+from pathlib import Path
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, send_from_directory
+from flask import Flask, abort, render_template, request, jsonify, session, redirect, url_for, flash, send_from_directory
+from sqlalchemy import text
 from werkzeug.utils import secure_filename
 
 # Load environment variables from .env file
@@ -38,17 +40,28 @@ logging.basicConfig(
 
 # Create the app
 app = Flask(__name__)
+if IS_PROD and not os.getenv("SESSION_SECRET"):
+    raise RuntimeError("SESSION_SECRET is required in production")
 app.secret_key = os.getenv("SESSION_SECRET", "dev-secret-key-change-in-production")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for = 1, x_proto=1, x_host=1) #changing this to accomdate deployment
 
 
 
-# File upload configuration
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads', 'dispute_evidence')
+# Persistent data must live outside release checkouts in production. The local
+# default remains inside instance/ so development setup is self-contained.
+APP_ROOT = Path(__file__).resolve().parent
+configured_data_dir = os.environ.get('BETGLOBAL_DATA_DIR')
+DATA_DIR = Path(configured_data_dir or APP_ROOT / 'instance').resolve()
+UPLOAD_FOLDER = Path(os.environ.get(
+    'BETGLOBAL_UPLOAD_DIR',
+    DATA_DIR / 'uploads' / 'dispute_evidence'
+    if configured_data_dir
+    else APP_ROOT / 'uploads' / 'dispute_evidence'
+)).resolve()
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'txt', 'doc', 'docx'}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB max file size
 
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = str(UPLOAD_FOLDER)
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
 def allowed_file(filename):
@@ -88,7 +101,12 @@ def validate_uploaded_file(file):
 #app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bets.db")
 
     
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///bets.db")
+default_database_url = (
+    f"sqlite:///{DATA_DIR / 'betglobal.sqlite3'}"
+    if configured_data_dir
+    else "sqlite:///bets.db"
+)
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", default_database_url)
     
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -132,12 +150,27 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JS access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
-# Mail configuration - Development mode
-    # Development mode - suppress actual email sending, log to console
-app.config['TESTING'] = True
-app.config['MAIL_SUPPRESS_SEND'] = True
+# Mail configuration
+app.config['TESTING'] = os.environ.get('TESTING', 'false').lower() == 'true'
+app.config['MAIL_SUPPRESS_SEND'] = os.environ.get(
+    'MAIL_SUPPRESS_SEND',
+    'true'
+).lower() == 'true'
     
 app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@playstakes.com')
+app.config['RATELIMIT_STORAGE_URI'] = os.environ.get('RATELIMIT_STORAGE_URI', 'memory://')
+
+
+@app.before_request
+def migration_read_only_mode():
+    """Freeze writes briefly while the final cutover copy is taken."""
+    if (
+        os.environ.get('MIGRATION_READ_ONLY', 'false').lower() == 'true'
+        and request.method not in {'GET', 'HEAD', 'OPTIONS'}
+    ):
+        return jsonify({
+            'error': 'BetGlobal is temporarily read-only for scheduled maintenance.'
+        }), 503, {'Retry-After': '300'}
 
 # Initialize the app with the extension
 db.init_app(app)
@@ -487,6 +520,17 @@ def root():
     if check_authenticated():
         return redirect(url_for('index'))
     return redirect(url_for('landing'))
+
+
+@app.route('/healthz')
+def healthz():
+    """Minimal deployment health check with database reachability."""
+    try:
+        db.session.execute(text('SELECT 1'))
+        return jsonify({'status': 'ok'}), 200
+    except Exception:
+        logging.exception('Health check failed')
+        return jsonify({'status': 'unhealthy'}), 503
 
 @app.route('/bets')
 @login_required
@@ -1607,6 +1651,8 @@ def admin_statistics():
 @app.route('/set-user/<int:user_id>')
 def set_user(user_id):
     """Helper route to switch between users for testing"""
+    if IS_PROD:
+        abort(404)
     user = get_user_by_id(user_id)
     if user:
         session['user_id'] = user_id
@@ -1659,12 +1705,11 @@ def ratelimit_handler(_error):
     flash('Too many requests. Please try again later.', 'error')
     return redirect(request.referrer or url_for('index')), 429
 
-# Initialize database and sample data
+# Initialize the schema. Demo data is opt-in and never runs in production.
 with app.app_context():
     db.create_all()
-    
-    # Initialize with some sample users for demonstration
-    try:
+
+    if not IS_PROD and os.environ.get('SEED_DEMO_DATA', 'false').lower() == 'true':
         existing_users = User.query.count()
         if existing_users == 0:
             # Create users using Flask-Security-Too's user_datastore
@@ -1688,19 +1733,8 @@ with app.app_context():
             
             db.session.commit()
             logging.info("Sample users created with default password: password123")
-        else:
-            # Add fs_uniquifier to existing users if they don't have it
-            users_without_uniquifier = User.query.filter_by(fs_uniquifier=None).all()
-            for user in users_without_uniquifier:
-                import uuid
-                user.fs_uniquifier = str(uuid.uuid4())
-            if users_without_uniquifier:
-                db.session.commit()
-                logging.info(f"Added fs_uniquifier to {len(users_without_uniquifier)} existing users")
-    except Exception as e:
-        logging.error(f"Error initializing users: {e}")
-        db.session.rollback()
 
 # Initialize notification scheduler
 from scheduler import init_scheduler
-init_scheduler(app)
+if os.environ.get('ENABLE_SCHEDULER', 'true').lower() == 'true':
+    init_scheduler(app)

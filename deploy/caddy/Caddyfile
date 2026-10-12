@@ -1,0 +1,13 @@
+{$BETGLOBAL_HOST} {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8000 {
+        header_up X-Forwarded-Host {$BETGLOBAL_PUBLIC_HOST}
+    }
+
+    header {
+        -Server
+        X-BetGlobal-Origin lightsail
+        X-Content-Type-Options nosniff
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+}
