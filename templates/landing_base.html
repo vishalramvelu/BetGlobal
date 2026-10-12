@@ -5,8 +5,10 @@
 <header class="site-header">
     <div class="site-header-inner">
         <a class="brand" href="{{ url_for('landing') }}">
-            <img class="brand-mark" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-            <img class="brand-wordmark" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+            <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+            <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
         </a>
 
         {% set public_nav = [
@@ -62,8 +64,10 @@
     <div class="footer-cols">
         <div>
             <div class="brand brand-sm">
-                <img class="brand-mark" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-                <img class="brand-wordmark" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+                <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+                <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+                <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+                <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
             </div>
             <p class="footer-blurb">
                 Peer-to-peer betting with no house and no platform fee.

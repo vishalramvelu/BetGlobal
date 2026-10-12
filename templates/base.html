@@ -9,8 +9,10 @@
 
     <aside class="sidebar" aria-label="Sidebar">
         <a class="brand brand-sm" href="{{ url_for('index') }}">
-            <img class="brand-mark" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-            <img class="brand-wordmark" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+            <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+            <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
         </a>
 
         {% if current_user.is_authenticated %}

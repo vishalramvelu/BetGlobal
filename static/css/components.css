@@ -510,7 +510,7 @@ input::placeholder, textarea::placeholder { color: var(--faint); opacity: 1; }
 .meter-lg > span { height: 8px; }
 .meter-red > span, .meter-neg > span { background: var(--neg); }
 .meter-warn > span { background: var(--warn); }
-.meter-navy > span { background: var(--navy); }
+.meter-navy > span { background: var(--info); }
 .meter-info > span { background: var(--info); }
 
 /* empty state */
@@ -618,6 +618,15 @@ body.modal-open { overflow: hidden; }
 /* numbered feature list */
 .numbered { counter-reset: n; }
 .numbered > li { counter-increment: n; list-style: none; }
+
+/* light / dark asset swap (logo wordmarks) */
+.only-dark { display: none !important; }
+:root[data-theme="dark"] .only-light { display: none !important; }
+:root[data-theme="dark"] .only-dark { display: block !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .only-light { display: none !important; }
+  :root:not([data-theme="light"]) .only-dark { display: block !important; }
+}
 
 /* theme toggle (sun/moon swap) */
 .theme-toggle .i-sun { display: none; }

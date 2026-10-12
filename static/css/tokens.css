@@ -177,3 +177,11 @@
   --dots: radial-gradient(var(--line-strong) 1px, transparent 1px);
   --glow: radial-gradient(60% 50% at 50% 0%, rgba(27,228,87,.14), transparent 70%);
 }
+
+/* On dark surfaces the navy button inverts to a light "ink" button. */
+:root[data-theme="dark"] .btn-ink { background: var(--ink); border-color: var(--ink); color: #0B0F17; }
+:root[data-theme="dark"] .btn-ink:hover { background: #fff; border-color: #fff; color: #0B0F17; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-ink { background: var(--ink); border-color: var(--ink); color: #0B0F17; }
+  :root:not([data-theme="light"]) .btn-ink:hover { background: #fff; border-color: #fff; color: #0B0F17; }
+}
