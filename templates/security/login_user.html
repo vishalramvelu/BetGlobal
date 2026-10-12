@@ -5,8 +5,9 @@
 <div class="split">
     <div class="split-main">
         <div class="split-form">
-            <h1 class="title-md">Sign in</h1>
-            <p style="font-size:14.5px;color:var(--muted);margin:7px 0 26px">Welcome back.</p>
+            <span class="tile tile-lg tile-accent"><i data-feather="log-in"></i></span>
+            <h1 class="title-md mt-16">Welcome back</h1>
+            <p class="body-sm mt-6" style="margin-bottom:28px">Sign in to your BetGlobal account.</p>
 
             <form action="{{ url_for_security('login') }}" method="post">
                 {{ login_user_form.hidden_tag() }}
@@ -23,7 +24,7 @@
                 <div class="field">
                     <div class="label-row">
                         <label class="label" for="{{ login_user_form.password.id }}">Password</label>
-                        <a class="spacer" style="font-size:12px;font-weight:500" href="{{ url_for('forgot_password') }}">Forgot password?</a>
+                        <a class="link spacer meta" href="{{ url_for('forgot_password') }}">Forgot password?</a>
                     </div>
                     {{ login_user_form.password(class="input" + (" is-invalid" if login_user_form.password.errors else ""),
                                                 placeholder="Enter your password", autocomplete="current-password") }}
@@ -42,40 +43,43 @@
                 </div>
                 {% endif %}
 
-                <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
-                    <i data-feather="log-in" style="width:16px;height:16px"></i>Sign in
+                <button type="submit" class="btn btn-primary btn-block mt-20">
+                    Sign in<i data-feather="arrow-right"></i>
                 </button>
 
-                <p style="font-size:13px;color:var(--muted);margin:12px 0 0">
-                    No account yet? <a href="{{ url_for_security('register') }}" style="font-weight:500">Create one</a>
+                <p class="body-sm mt-16">
+                    No account yet? <a class="link" href="{{ url_for_security('register') }}">Create one</a>
                 </p>
             </form>
         </div>
     </div>
 
     <aside class="split-aside">
-        <div style="max-width:400px;width:100%">
-            <div class="mono" style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2)">
-                Why peer-to-peer
-            </div>
-            <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+        <div>
+            <div class="eyebrow">Why peer-to-peer</div>
+            <h2 class="title-lg mt-10">Every bet is between two people. Nobody else takes a cut.</h2>
+
+            <div class="aside-list">
                 {% for item in [
                     ('Zero platform fee', 'The whole pot goes to the winner.'),
                     ('You set the odds', 'No book pricing a line against you.'),
                     ('Evidence-backed settlement', 'Disputes go to human review.'),
                     ('Stripe in and out', 'Card deposits, bank payouts in 1–2 days.')
                 ] %}
-                <div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:12px">
-                    <div style="min-width:0;flex:1">
-                        <div style="font-size:13px;font-weight:600">{{ item[0] }}</div>
-                        <div style="font-size:11.5px;color:var(--muted-2);margin-top:2px">{{ item[1] }}</div>
+                <div class="aside-item">
+                    <span class="dot"><i data-feather="check"></i></span>
+                    <div>
+                        <div class="t">{{ item[0] }}</div>
+                        <div class="d">{{ item[1] }}</div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
-            <p style="font-size:13.5px;line-height:1.55;color:var(--muted);margin:20px 0 0">
-                Every bet is public and verifiable. Both sides confirm the result before money moves.
-            </p>
+
+            <div class="aside-quote">
+                “Every bet is public and verifiable. Both sides confirm the result before money moves.”
+                <div class="who">— How settlement works on BetGlobal</div>
+            </div>
         </div>
     </aside>
 </div>

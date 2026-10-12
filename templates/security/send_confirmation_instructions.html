@@ -4,14 +4,15 @@
 {% block title %}Resend confirmation · BetGlobal{% endblock %}
 
 {% block auth_content %}
-    <h1 class="title-sm">Resend confirmation</h1>
-    <p style="font-size:13.5px;color:var(--muted);margin:6px 0 20px;line-height:1.5">
+    <span class="tile tile-lg tile-accent"><i data-feather="mail"></i></span>
+    <h1 class="title-sm mt-16">Resend confirmation</h1>
+    <p class="body-sm mt-6" style="margin-bottom:20px">
         We'll send the confirmation link to the email on your account again.
     </p>
 
     <form action="{{ url_for_security('send_confirmation') }}" method="post">
         {{ send_confirmation_form.hidden_tag() }}
         {{ render_field_with_errors(send_confirmation_form.email, class="input", placeholder="you@example.com") }}
-        {{ render_field(send_confirmation_form.submit, class="btn btn-primary btn-block", style="margin-top:16px") }}
+        {{ render_field(send_confirmation_form.submit, class="btn btn-primary btn-block mt-16") }}
     </form>
 {% endblock %}

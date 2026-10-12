@@ -1,5 +1,10 @@
 {# Single document shell. Every page inherits its <head> from here — public,
-   member and admin shells all extend this file. #}
+   member and admin shells all extend this file.
+
+   Design system (v3 "Ledger"): static/css/tokens.css (custom properties,
+   light + dark), static/css/components.css (buttons, inputs, cards, badges,
+   KPI tiles, tables, notices, modals), static/css/layout.css (shells, auth,
+   landing, bet cards, responsive). Behaviour: static/betglobal.js. #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,16 +12,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}BetGlobal{% endblock %}</title>
     <meta name="description" content="{% block description %}Peer-to-peer betting with no house and no platform fee. Anyone can create a bet, anyone can take it.{% endblock %}">
-    <meta name="theme-color" content="#011E3F">
+    <meta name="theme-color" content="#F6F6F3" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0B0F17" media="(prefers-color-scheme: dark)">
 
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo-mark.png') }}">
+
+    {# Apply a remembered theme before first paint so there is no flash. #}
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('bg-theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='betglobal.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body>
