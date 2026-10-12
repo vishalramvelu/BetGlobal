@@ -5,9 +5,9 @@
 
 {% block content %}
 {% if error %}
-<div class="pad">
+<div class="pad" style="padding-bottom:0">
     <div class="alert alert-danger alert-permanent">
-        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <i data-feather="alert-circle"></i>
         <span>{{ error }}</span>
     </div>
 </div>
@@ -16,25 +16,25 @@
 {% set total_volume = category_stats | sum(attribute=2) if category_stats else 0 %}
 {% set max_volume = (category_stats | map(attribute=2) | max) if category_stats else 0 %}
 
-<div class="kpi-strip g4">
-    <div class="kpi">
-        <div class="kpi-label">Total volume</div>
+<div class="kpi-grid g4">
+    <div class="kpi is-navy">
+        <div class="kpi-label"><i data-feather="bar-chart-2"></i>Total volume</div>
         <div class="kpi-value">${{ '{:,.0f}'.format(total_volume or 0) }}</div>
         <div class="kpi-note">Creator stakes, all categories</div>
     </div>
     <div class="kpi">
-        <div class="kpi-label">Avg bet size</div>
+        <div class="kpi-label"><i data-feather="divide"></i>Avg bet size</div>
         <div class="kpi-value">${{ '%.2f' | format((total_volume / total_bets) if total_bets else 0) }}</div>
         <div class="kpi-note">Across {{ total_bets }} bets</div>
     </div>
-    <div class="kpi">
-        <div class="kpi-label">Dispute rate</div>
-        {% set rate = (disputed_bets / total_bets * 100) if total_bets else 0 %}
-        <div class="kpi-value {% if rate > 5 %}is-amber{% endif %}">{{ '%.1f' | format(rate) }}%</div>
+    {% set rate = (disputed_bets / total_bets * 100) if total_bets else 0 %}
+    <div class="kpi {% if rate > 5 %}is-warn{% endif %}">
+        <div class="kpi-label"><i data-feather="alert-triangle"></i>Dispute rate</div>
+        <div class="kpi-value {% if rate > 5 %}is-warn{% endif %}">{{ '%.1f' | format(rate) }}%</div>
         <div class="kpi-note">{{ disputed_bets }} disputed</div>
     </div>
-    <div class="kpi">
-        <div class="kpi-label">Funded users</div>
+    <div class="kpi is-accent">
+        <div class="kpi-label"><i data-feather="users"></i>Funded users</div>
         <div class="kpi-value">{{ users_with_balance }}</div>
         <div class="kpi-note">
             {{ '%.0f' | format((users_with_balance / total_users * 100) if total_users else 0) }}% of {{ total_users }} registered
@@ -42,21 +42,24 @@
     </div>
 </div>
 
-<div class="pad grid gap-16" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
+<div class="pad two-col" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">
 
     <!-- volume by category -->
     <div class="card" style="height:max-content">
-        <header class="card-head" style="padding:12px 16px"><h2>Volume by category</h2></header>
-        <div style="padding:16px">
+        <header class="card-head">
+            <span class="tile tile-accent"><i data-feather="pie-chart"></i></span>
+            <h2>Volume by category</h2>
+        </header>
+        <div class="card-body">
             {% for row in category_stats %}
                 {% set name = row[0] %}
                 {% set count = row[1] %}
                 {% set volume = row[2] or 0 %}
-                <div style="margin-bottom:14px">
-                    <div style="display:flex;align-items:baseline;gap:8px;font-size:13px">
-                        <span style="font-weight:500">{{ name }}</span>
-                        <span class="mono" style="font-size:11.5px;color:var(--muted-2)">{{ count }} bet{{ 's' if count != 1 }}</span>
-                        <span class="mono spacer" style="font-weight:500">${{ '{:,.2f}'.format(volume) }}</span>
+                <div class="mb-16">
+                    <div class="row-base ui">
+                        <span class="fw-500">{{ name }}</span>
+                        <span class="mono meta">{{ count }} bet{{ 's' if count != 1 }}</span>
+                        <span class="mono spacer fw-500">${{ '{:,.2f}'.format(volume) }}</span>
                     </div>
                     <div class="meter">
                         <span style="width:{{ '%.1f' | format((volume / max_volume * 100) if max_volume else 0) }}%"></span>
@@ -68,25 +71,28 @@
         </div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="col gap-16">
 
         <!-- status mix -->
         <div class="card">
-            <header class="card-head" style="padding:12px 16px"><h2>Bet status mix</h2></header>
-            <div style="padding:16px;display:flex;flex-direction:column;gap:11px">
+            <header class="card-head">
+                <span class="tile"><i data-feather="sliders"></i></span>
+                <h2>Bet status mix</h2>
+            </header>
+            <div class="card-body col gap-10">
                 {% set mix = [
                     ('Open', open_bets, 'var(--green)'),
-                    ('Accepted', accepted_bets, '#7FE3A2'),
-                    ('Awaiting', awaiting_resolution_bets, '#CFEFDA'),
-                    ('Completed', completed_bets, 'var(--green-pale)'),
-                    ('Disputed', disputed_bets, 'var(--amber)'),
-                    ('Cancelled', cancelled_bets, 'var(--line)')
+                    ('Accepted', accepted_bets, 'var(--info)'),
+                    ('Awaiting', awaiting_resolution_bets, 'var(--warn)'),
+                    ('Completed', completed_bets, 'var(--navy)'),
+                    ('Disputed', disputed_bets, 'var(--neg)'),
+                    ('Cancelled', cancelled_bets, 'var(--line-strong)')
                 ] %}
                 {% for label, count, colour in mix %}
-                <div style="display:flex;align-items:center;gap:10px;font-size:13px">
+                <div class="row gap-10 ui">
                     <span class="swatch" style="background:{{ colour }}"></span>{{ label }}
-                    <span class="mono spacer" style="font-weight:500">{{ count }}</span>
-                    <span class="mono" style="font-size:11.5px;color:var(--muted-2);width:48px;text-align:right">
+                    <span class="mono spacer fw-500">{{ count }}</span>
+                    <span class="mono meta right" style="width:48px">
                         {{ '%.1f' | format((count / total_bets * 100) if total_bets else 0) }}%
                     </span>
                 </div>
@@ -96,12 +102,16 @@
 
         <!-- top by profit -->
         <div class="card">
-            <header class="card-head" style="padding:12px 16px"><h2>Top winners</h2></header>
+            <header class="card-head">
+                <span class="tile tile-accent"><i data-feather="award"></i></span>
+                <h2>Top winners</h2>
+            </header>
             {% for u in top_users_by_profit %}
-            <div class="card-row" style="align-items:center;padding:11px 16px">
-                <span class="mono" style="font-size:11px;color:var(--muted-3);width:16px;flex-shrink:0">{{ loop.index }}</span>
-                <span style="font-size:13px;font-weight:500">{{ u.username }}</span>
-                <span class="mono spacer" style="font-size:13px;font-weight:500;color:{{ 'var(--green-text)' if (u.total_profit or 0) >= 0 else 'var(--red)' }}">
+            <div class="card-row is-center" style="padding:11px 16px">
+                <span class="mono meta" style="width:16px;flex-shrink:0">{{ loop.index }}</span>
+                <span class="avatar avatar-sm">{{ u.username[:2] }}</span>
+                <span class="ui fw-500">{{ u.username }}</span>
+                <span class="mono spacer ui fw-500 {{ 'text-pos' if (u.total_profit or 0) >= 0 else 'text-neg' }}">
                     {% if (u.total_profit or 0) >= 0 %}+{% endif %}${{ '%.2f' | format(u.total_profit or 0) }}
                 </span>
             </div>
@@ -112,12 +122,16 @@
 
         <!-- top by balance -->
         <div class="card">
-            <header class="card-head" style="padding:12px 16px"><h2>Largest balances</h2></header>
+            <header class="card-head">
+                <span class="tile"><i data-feather="credit-card"></i></span>
+                <h2>Largest balances</h2>
+            </header>
             {% for u in top_users_by_balance %}
-            <div class="card-row" style="align-items:center;padding:11px 16px">
-                <span class="mono" style="font-size:11px;color:var(--muted-3);width:16px;flex-shrink:0">{{ loop.index }}</span>
-                <span style="font-size:13px;font-weight:500">{{ u.username }}</span>
-                <span class="mono spacer" style="font-size:13px;font-weight:500">${{ '%.2f' | format(u.balance or 0) }}</span>
+            <div class="card-row is-center" style="padding:11px 16px">
+                <span class="mono meta" style="width:16px;flex-shrink:0">{{ loop.index }}</span>
+                <span class="avatar avatar-sm">{{ u.username[:2] }}</span>
+                <span class="ui fw-500">{{ u.username }}</span>
+                <span class="mono spacer ui fw-500">${{ '%.2f' | format(u.balance or 0) }}</span>
             </div>
             {% else %}
             <div class="empty"><p>No funded accounts.</p></div>
@@ -127,48 +141,46 @@
 </div>
 
 <!-- recent activity -->
-<div class="pad" style="padding-top:0">
-    <div class="grid g2 gap-16">
-        <div class="card">
-            <header class="card-head" style="padding:12px 16px">
-                <h2>Recent bets</h2>
-                <span class="mono" style="font-size:11px;color:var(--muted-2)">last {{ recent_bets | length }}</span>
-            </header>
-            {% for bet in recent_bets %}
-            <div class="card-row" style="align-items:center">
-                <div style="min-width:0;flex:1">
-                    <div class="clip" style="font-size:13px;font-weight:500">{{ bet.title }}</div>
-                    <div class="mono" style="font-size:11.5px;color:var(--muted-2);margin-top:2px">
-                        ${{ '%.2f' | format(bet.amount) }} · {{ bet.odds }}:1 · {{ bet.category }}
-                    </div>
+<div class="pad two-col-even" style="padding-top:0">
+    <div class="card">
+        <header class="card-head">
+            <span class="tile"><i data-feather="clock"></i></span>
+            <h2>Recent bets</h2>
+            <span class="count">last {{ recent_bets | length }}</span>
+        </header>
+        {% for bet in recent_bets %}
+        <div class="card-row is-center">
+            <div class="mw-0 grow">
+                <div class="clip ui fw-500">{{ bet.title }}</div>
+                <div class="mono meta mt-2">
+                    ${{ '%.2f' | format(bet.amount) }} · {{ bet.odds }}:1 · {{ bet.category }}
                 </div>
-                <span class="badge badge-{{ bet.status }}" style="flex-shrink:0">{{ bet.status.replace('_', ' ') }}</span>
             </div>
-            {% else %}
-            <div class="empty"><p>Nothing yet.</p></div>
-            {% endfor %}
+            <span class="badge badge-{{ bet.status }} shrink-0">{{ bet.status.replace('_', ' ') }}</span>
         </div>
+        {% else %}
+        <div class="empty"><p>Nothing yet.</p></div>
+        {% endfor %}
+    </div>
 
-        <div class="card">
-            <header class="card-head" style="padding:12px 16px">
-                <h2>Recent sign-ups</h2>
-                <span class="mono" style="font-size:11px;color:var(--muted-2)">last {{ recent_users | length }}</span>
-            </header>
-            {% for u in recent_users %}
-            <div class="card-row" style="align-items:center">
-                <span class="avatar">{{ u.username[:2] | upper }}</span>
-                <div style="min-width:0;flex:1">
-                    <div style="font-size:13px;font-weight:500">{{ u.username }}</div>
-                    <div class="clip" style="font-size:11.5px;color:var(--muted-2)">{{ u.email }}</div>
-                </div>
-                <span class="mono" style="font-size:11px;color:var(--muted-3);flex-shrink:0">
-                    {{ u.created_at | strftime('%b %d') }}
-                </span>
+    <div class="card">
+        <header class="card-head">
+            <span class="tile"><i data-feather="user-plus"></i></span>
+            <h2>Recent sign-ups</h2>
+            <span class="count">last {{ recent_users | length }}</span>
+        </header>
+        {% for u in recent_users %}
+        <div class="card-row is-center">
+            <span class="avatar">{{ u.username[:2] }}</span>
+            <div class="mw-0 grow">
+                <div class="ui fw-500">{{ u.username }}</div>
+                <div class="clip meta">{{ u.email }}</div>
             </div>
-            {% else %}
-            <div class="empty"><p>No users yet.</p></div>
-            {% endfor %}
+            <span class="mono meta shrink-0">{{ u.created_at | strftime('%b %d') }}</span>
         </div>
+        {% else %}
+        <div class="empty"><p>No users yet.</p></div>
+        {% endfor %}
     </div>
 </div>
 {% endblock %}

@@ -5,82 +5,84 @@
 
 {% block content %}
 {% if error %}
-<div class="pad">
+<div class="pad" style="padding-bottom:0">
     <div class="alert alert-danger alert-permanent">
-        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <i data-feather="alert-circle"></i>
         <span>{{ error }}</span>
     </div>
 </div>
 {% endif %}
 
-<div class="pad" style="display:flex;flex-direction:column;gap:20px">
+<div class="pad col gap-20">
 
     <!-- users -->
     {% set user_cols = '44px minmax(0,1fr) minmax(0,1.4fr) 104px 104px 96px' %}
     <div class="card">
-        <header class="card-head" style="padding:11px 16px;flex-wrap:wrap">
+        <header class="card-head wrap-items">
+            <span class="tile"><i data-feather="users"></i></span>
             <h2 class="mono">users</h2>
-            <span class="mono" style="font-size:11px;color:var(--muted-2)">{{ users | length }} row{{ 's' if users | length != 1 }}</span>
+            <span class="count">{{ users | length }} row{{ 's' if users | length != 1 }}</span>
         </header>
 
         <div class="dtable">
             <div class="dtable-head mono" style="grid-template-columns:{{ user_cols }}">
                 <span>id</span><span>username</span><span>email</span>
-                <span style="text-align:right">balance</span>
-                <span style="text-align:right">profit</span>
-                <span style="text-align:right">created</span>
+                <span class="right">balance</span>
+                <span class="right">profit</span>
+                <span class="right">created</span>
             </div>
 
             {% for u in users %}
-            <div class="dtable-row" style="grid-template-columns:{{ user_cols }};font-size:12.5px">
-                <span class="mono" style="color:var(--muted-3)">{{ u.id }}</span>
-                <span class="clip" style="font-weight:500">{{ u.username }}</span>
-                <span class="clip" style="color:var(--muted)">{{ u.email }}</span>
+            <div class="dtable-row" style="grid-template-columns:{{ user_cols }}">
+                <span class="mono text-faint">{{ u.id }}</span>
+                <span class="clip fw-500">{{ u.username }}</span>
+                <span class="clip text-muted">{{ u.email }}</span>
                 <span class="num">${{ '%.2f' | format(u.balance or 0) }}</span>
-                <span class="num" style="color:{{ 'var(--green-text)' if (u.total_profit or 0) >= 0 else 'var(--red)' }}">
+                <span class="num {{ 'text-pos' if (u.total_profit or 0) >= 0 else 'text-neg' }}">
                     {% if (u.total_profit or 0) >= 0 %}+{% endif %}${{ '%.2f' | format(u.total_profit or 0) }}
                 </span>
-                <span class="num" style="color:var(--muted-2);font-size:11.5px;font-weight:400">
+                <span class="num meta" style="font-weight:400">
                     {{ u.created_at | strftime('%Y-%m-%d') }}
                 </span>
             </div>
             {% else %}
-            <div class="empty" style="padding:32px 16px"><p>No users.</p></div>
+            <div class="empty"><p>No users.</p></div>
             {% endfor %}
         </div>
     </div>
 
     <!-- bets -->
     {# last column is wide enough for the longest status, "awaiting resolution" #}
-    {% set bet_cols = '52px minmax(0,1.8fr) minmax(0,0.9fr) minmax(0,0.9fr) 96px 56px 148px' %}
+    {% set bet_cols = '52px minmax(0,1.8fr) minmax(0,0.9fr) minmax(0,0.9fr) 96px 56px 160px' %}
     <div class="card">
-        <header class="card-head" style="padding:11px 16px;flex-wrap:wrap">
+        <header class="card-head wrap-items">
+            <span class="tile"><i data-feather="layers"></i></span>
             <h2 class="mono">bets</h2>
-            <span class="mono" style="font-size:11px;color:var(--muted-2)">{{ bets | length }} row{{ 's' if bets | length != 1 }}</span>
+            <span class="count">{{ bets | length }} row{{ 's' if bets | length != 1 }}</span>
         </header>
 
         <div class="dtable">
             <div class="dtable-head mono" style="grid-template-columns:{{ bet_cols }};gap:8px">
                 <span>id</span><span>title</span><span>creator</span><span>acceptor</span>
-                <span style="text-align:right">amount</span>
-                <span style="text-align:right">odds</span>
-                <span style="text-align:right">status</span>
+                <span class="right">amount</span>
+                <span class="right">odds</span>
+                <span class="right">status</span>
             </div>
 
             {% for b in bets %}
-            <div class="dtable-row" style="grid-template-columns:{{ bet_cols }};gap:8px;font-size:12.5px">
-                <span class="mono" style="color:var(--muted-3)">{{ b.id }}</span>
-                <span class="clip" style="font-weight:500" title="{{ b.title }}">{{ b.title }}</span>
-                <span class="clip" style="color:var(--muted)">{{ b.creator_id }}</span>
-                <span class="clip" style="color:var(--muted)">{{ b.acceptor_id if b.acceptor_id else '—' }}</span>
+            <div class="dtable-row" style="grid-template-columns:{{ bet_cols }};gap:8px">
+                <span class="mono text-faint">{{ b.id }}</span>
+                <span class="clip fw-500" title="{{ b.title }}">{{ b.title }}</span>
+                <span class="clip text-muted">{{ b.creator_id }}</span>
+                <span class="clip text-muted">{{ b.acceptor_id if b.acceptor_id else '—' }}</span>
                 <span class="num">${{ '%.2f' | format(b.amount) }}</span>
                 <span class="num">{{ b.odds }}</span>
-                <span style="text-align:right">
-                    <span class="badge badge-{{ b.status }}" style="font-size:10px;padding:2px 6px">{{ b.status.replace('_', ' ') }}</span>
+                <span class="right">
+                    <span class="badge badge-sm badge-{{ b.status }}">{{ b.status.replace('_', ' ') }}</span>
                 </span>
             </div>
             {% else %}
-            <div class="empty" style="padding:32px 16px"><p>No bets.</p></div>
+            <div class="empty"><p>No bets.</p></div>
             {% endfor %}
         </div>
     </div>

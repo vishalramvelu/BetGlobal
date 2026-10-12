@@ -20,18 +20,19 @@
 {% set me = current_user.id if current_user.is_authenticated else None %}
 
 <div class="filterbar">
-    {% set base_args = {'search': current_search or None, 'category': current_category or None} %}
-    <a class="chip {% if not current_status %}is-active{% endif %}"
-       href="{{ url_for('index', search=current_search or None, category=current_category or None, status='') }}">All</a>
-    {% for st in ['open', 'accepted', 'completed', 'expired'] %}
-        <a class="chip {% if current_status == st %}is-active{% endif %}"
-           href="{{ url_for('index', search=current_search or None, category=current_category or None, status=st) }}">
-            {{ st | capitalize }}
-        </a>
-    {% endfor %}
+    <div class="segmented" role="tablist" aria-label="Status">
+        <a class="{% if not current_status %}is-active{% endif %}"
+           href="{{ url_for('index', search=current_search or None, category=current_category or None, status='') }}">All</a>
+        {% for st in ['open', 'accepted', 'completed', 'expired'] %}
+            <a class="{% if current_status == st %}is-active{% endif %}"
+               href="{{ url_for('index', search=current_search or None, category=current_category or None, status=st) }}">
+                {{ st | capitalize }}
+            </a>
+        {% endfor %}
+    </div>
 
     {% if categories %}
-        <span style="width:1px;height:20px;background:var(--line);margin:0 4px"></span>
+        <span class="vsep"></span>
         <a class="chip chip-sm {% if not current_category %}is-active{% endif %}"
            href="{{ url_for('index', search=current_search or None, status=current_status or None) }}">All categories</a>
         {% for cat in categories %}
@@ -41,8 +42,8 @@
     {% endif %}
 
     {% if current_search or current_category or current_status %}
-        <a class="chip chip-sm spacer" href="{{ url_for('index') }}">
-            <i data-feather="x" style="width:12px;height:12px"></i>Clear filters
+        <a class="btn btn-quiet btn-sm spacer" href="{{ url_for('index') }}">
+            <i data-feather="x"></i>Clear filters
         </a>
     {% endif %}
 </div>
@@ -50,26 +51,26 @@
 <div class="pad">
     {% if error %}
         <div class="alert alert-danger alert-permanent">
-            <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+            <i data-feather="alert-circle"></i>
             <span>{{ error }}</span>
         </div>
 
     {% elif not bets %}
-        <div class="card empty" style="padding:56px 24px">
-            <span class="tile tile-lg" style="margin:0 auto"><i data-feather="inbox" style="width:19px;height:19px"></i></span>
-            <h2 class="title-sm" style="margin-top:14px">No bets found</h2>
-            <p style="margin-top:6px">
+        <div class="empty empty-dashed" style="padding:64px 24px">
+            <span class="tile tile-xl"><i data-feather="inbox"></i></span>
+            <h2 class="title-sm">No bets found</h2>
+            <p>
                 {% if current_search or current_category or current_status %}
                     Nothing matches those filters.
                 {% else %}
                     The board is empty. Be the first to post one.
                 {% endif %}
             </p>
-            <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+            <div class="actions">
                 {% if current_search or current_category or current_status %}
-                    <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">View all bets</a>
+                    <a class="btn btn-secondary btn-sm" href="{{ url_for('index') }}">View all bets</a>
                 {% endif %}
-                <a class="btn btn-primary btn-sm" href="{{ url_for('create_bet_page') }}">Create a bet</a>
+                <a class="btn btn-primary btn-sm" href="{{ url_for('create_bet_page') }}"><i data-feather="plus"></i>Create a bet</a>
             </div>
         </div>
 
@@ -79,11 +80,11 @@
                 {% set mine = (bet.creator_id == me) %}
                 {% set taker_stake = bet.amount * bet.odds %}
                 {% set pot = bet.amount + taker_stake %}
-                <div class="bet-card" data-bet-id="{{ bet.id }}" role="button" tabindex="0">
-                    <div class="row-flex">
+                <div class="bet-card rise-in" style="--i:{{ loop.index0 }}" data-bet-id="{{ bet.id }}" role="button" tabindex="0">
+                    <div class="row">
                         <span class="bet-cat">{{ bet.category }}</span>
-                        <span class="spacer status-dot {% if bet.status == 'accepted' %}is-amber{% elif bet.status not in ('open',) %}is-grey{% endif %}">
-                            {{ bet.status.replace('_', ' ') | title }}
+                        <span class="spacer status-dot {% if bet.status == 'accepted' %}is-info{% elif bet.status in ('awaiting_resolution', 'disputed') %}is-warn{% elif bet.status != 'open' %}is-grey{% else %}is-live{% endif %}">
+                            {{ bet.status.replace('_', ' ') }}
                         </span>
                     </div>
 
@@ -108,9 +109,10 @@
                     </div>
 
                     <div class="bet-meta">
-                        <i data-feather="user"></i>{{ users.get(bet.creator_id, {}).get('username', 'Unknown') }}
+                        <span class="avatar avatar-sm">{{ users.get(bet.creator_id, {}).get('username', '??')[:2] }}</span>
+                        {{ users.get(bet.creator_id, {}).get('username', 'Unknown') }}
                         {% if bet.expire_time %}
-                            <span class="spacer" style="display:inline-flex;align-items:center;gap:4px">
+                            <span class="spacer row gap-4">
                                 <i data-feather="clock"></i>{{ bet.expire_time | strftime('%b %d') }}
                             </span>
                         {% endif %}
@@ -144,16 +146,16 @@
 <div class="modal-backdrop" id="betDetailsModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal modal-lg">
         <div class="modal-head">
-            <span class="mono eyebrow-sm" id="bdMeta"></span>
+            <span class="mono eyebrow" id="bdMeta"></span>
             <span class="status-dot" id="bdStatus"></span>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close">
+            <button type="button" class="icon-btn modal-close" data-modal-close aria-label="Close">
                 <i data-feather="x"></i>
             </button>
         </div>
 
         <div class="modal-body">
             <h2 class="title-sm" id="bdTitle"></h2>
-            <p class="body-sm" style="margin:8px 0 0" id="bdDescription"></p>
+            <p class="body-sm mt-8" id="bdDescription"></p>
         </div>
 
         <div class="figure-strip">
@@ -163,42 +165,42 @@
             <div><div class="lbl">Odds</div><div class="val" id="bdOdds"></div></div>
         </div>
 
-        <div class="modal-body grid g2" style="gap:20px">
+        <div class="modal-body grid g2 gap-20">
             <div>
-                <div class="eyebrow" style="margin-bottom:10px">Participants</div>
-                <div style="display:flex;flex-direction:column;gap:10px">
-                    <div class="row-flex" style="gap:10px">
-                        <span class="avatar" id="bdCreatorInitials"></span>
+                <div class="eyebrow mb-12">Participants</div>
+                <div class="col gap-12">
+                    <div class="row gap-10">
+                        <span class="avatar avatar-accent" id="bdCreatorInitials"></span>
                         <div>
-                            <div style="font-size:13.5px;font-weight:500" id="bdCreator"></div>
-                            <div style="font-size:11.5px;color:var(--muted-2)" id="bdCreatorRole"></div>
+                            <div class="ui fw-500" id="bdCreator"></div>
+                            <div class="meta" id="bdCreatorRole"></div>
                         </div>
                     </div>
-                    <div class="row-flex" style="gap:10px">
+                    <div class="row gap-10">
                         <span class="avatar avatar-dashed" id="bdTakerInitials">
-                            <i data-feather="user-plus" style="width:12px;height:12px"></i>
+                            <i data-feather="user-plus"></i>
                         </span>
                         <div>
-                            <div style="font-size:13.5px;font-weight:500" id="bdTaker"></div>
-                            <div style="font-size:11.5px;color:var(--muted-2)" id="bdTakerRole"></div>
+                            <div class="ui fw-500" id="bdTaker"></div>
+                            <div class="meta" id="bdTakerRole"></div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div>
-                <div class="eyebrow" style="margin-bottom:10px">Timeline</div>
-                <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
-                    <div style="display:flex;gap:10px">
-                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">Created</span>
+                <div class="eyebrow mb-12">Timeline</div>
+                <div class="col gap-10 ui">
+                    <div class="row-start gap-10">
+                        <span class="mono meta" style="width:88px;flex-shrink:0">Created</span>
                         <span id="bdCreated"></span>
                     </div>
-                    <div style="display:flex;gap:10px">
-                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">Expires</span>
+                    <div class="row-start gap-10">
+                        <span class="mono meta" style="width:88px;flex-shrink:0">Expires</span>
                         <span id="bdExpires"></span>
                     </div>
-                    <div style="display:flex;gap:10px">
-                        <span class="mono" style="color:var(--muted-2);width:88px;flex-shrink:0;font-size:11.5px">After</span>
+                    <div class="row-start gap-10">
+                        <span class="mono meta" style="width:88px;flex-shrink:0">After</span>
                         <span class="text-muted">Both sides confirm the result</span>
                     </div>
                 </div>
@@ -206,9 +208,9 @@
         </div>
 
         <div class="modal-foot">
-            <span style="font-size:12.5px;color:var(--muted)" id="bdHold"></span>
-            <div class="spacer" style="display:flex;gap:8px">
-                <button type="button" class="btn btn-ghost btn-sm" data-modal-close>Close</button>
+            <span class="meta" id="bdHold"></span>
+            <div class="spacer row gap-8">
+                <button type="button" class="btn btn-secondary btn-sm" data-modal-close>Close</button>
                 <button type="button" class="btn btn-primary btn-sm" id="bdAccept" hidden></button>
             </div>
         </div>
@@ -252,7 +254,7 @@
         showConfirmationModal(
             'Accept this bet?',
             '"' + title + '" — ' + money(stake) + ' will be held from your balance until the bet settles.',
-            'check-circle', '#00A331',
+            'check-circle', 'var(--pos)',
             function () {
                 var body = new FormData();
                 body.append('bet_id', parseInt(betId, 10));
@@ -294,7 +296,7 @@
         set('bdMeta', bet.category + ' · Bet #' + bet.id);
         set('bdStatus', bet.status.replace(/_/g, ' '));
         document.getElementById('bdStatus').className =
-            'status-dot' + (bet.status === 'open' ? '' : (bet.status === 'accepted' ? ' is-amber' : ' is-grey'));
+            'status-dot' + (bet.status === 'open' ? ' is-live' : (bet.status === 'accepted' ? ' is-info' : ' is-grey'));
 
         /* user-authored text — assign as text, never as markup */
         set('bdTitle', bet.title);
@@ -322,8 +324,6 @@
             takerEl.replaceChildren();
             var icon = document.createElement('i');
             icon.setAttribute('data-feather', 'user-plus');
-            icon.style.width = '12px';
-            icon.style.height = '12px';
             takerEl.appendChild(icon);
             set('bdTaker', 'Open for anyone');
             set('bdTakerRole', 'Taker stakes ' + money(takerStake));

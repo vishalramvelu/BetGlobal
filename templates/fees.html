@@ -1,10 +1,12 @@
-{% extends "landing_base.html" %}
+{% extends "base.html" if current_user.is_authenticated else "landing_base.html" %}
 {% block title %}What it costs · BetGlobal{% endblock %}
+{% block page_title %}Fees{% endblock %}
 
 {% block content %}
 <div class="pad-lg wrap-md">
-    <h1 class="title-xl">What it costs</h1>
-    <p class="lede-sm" style="margin:12px 0 0;max-width:600px">
+    <div class="eyebrow eyebrow-accent">Pricing</div>
+    <h1 class="title-xl mt-10">What it costs</h1>
+    <p class="lede-sm mt-12" style="max-width:600px">
         One number to remember: zero. We make nothing on your bets. Card and bank rails
         are the only place money leaves the system, and that is Stripe's fee, not ours.
     </p>
@@ -18,39 +20,46 @@
         {'action': 'Bank withdrawal',   'fee': 'Stripe rate', 'green': false, 'note': 'Requires a connected bank account'}
     ] %}
 
-    <div class="card dtable" style="margin-top:36px">
-        <div class="dtable-head" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);gap:12px;padding:11px 18px">
-            <span>Action</span><span style="text-align:right">Our fee</span><span>Notes</span>
+    <div class="card dtable mt-32">
+        <div class="dtable-head" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);position:static">
+            <span>Action</span><span class="right">Our fee</span><span>Notes</span>
         </div>
         {% for f in fee_rows %}
-        <div class="dtable-row" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);gap:12px;padding:14px 18px;font-size:14px">
-            <span style="font-weight:500">{{ f.action }}</span>
-            <span class="mono" style="text-align:right;font-weight:500;{% if f.green %}color:var(--green-text){% endif %}">{{ f.fee }}</span>
-            <span style="font-size:13px;color:var(--muted)">{{ f.note }}</span>
+        <div class="dtable-row" style="grid-template-columns:minmax(0,1.6fr) 130px minmax(0,1.4fr);padding:14px 16px;font-size:14px">
+            <span class="fw-500">{{ f.action }}</span>
+            <span class="num {% if f.green %}text-pos{% endif %}">{{ f.fee }}</span>
+            <span class="body-sm">{{ f.note }}</span>
         </div>
         {% endfor %}
     </div>
 
-    <div class="card card-pad" style="margin-top:24px;padding:20px;max-width:620px">
-        <div class="eyebrow">Worked example</div>
-        <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:10px 0 14px">
-            You post a bet staking $500 at 1.8:1. Someone takes it for $900. The pot is $1,400.
-        </p>
-        <div style="display:flex;flex-direction:column;gap:9px;font-size:14px">
-            <div style="display:flex">
-                <span class="text-muted">Winner receives</span>
-                <span class="mono spacer" style="font-weight:500">$1,400.00</span>
+    <div class="grid g2 gap-16 mt-24">
+        <div class="card card-pad">
+            <div class="eyebrow">Worked example</div>
+            <p class="body mt-10 mb-12">
+                You post a bet staking $500 at 1.8:1. Someone takes it for $900. The pot is $1,400.
+            </p>
+            <div class="col gap-10">
+                <div class="calc-row"><span class="text-muted">Winner receives</span><span class="v">$1,400.00</span></div>
+                <div class="calc-row"><span class="text-muted">BetGlobal keeps</span><span class="v text-pos">$0.00</span></div>
             </div>
-            <div style="display:flex">
-                <span class="text-muted">BetGlobal keeps</span>
-                <span class="mono spacer text-green" style="font-weight:500">$0.00</span>
-            </div>
+        </div>
+        <div class="card-navy card-pad">
+            <div class="eyebrow">Cut of every $100 wagered</div>
+            <div class="row-base mt-20"><span class="ui">Traditional sportsbook</span><span class="mono spacer fw-500">$5 – $15</span></div>
+            <div class="meter meter-lg meter-neg" style="background:rgba(255,255,255,.12);box-shadow:none"><span style="width:64%"></span></div>
+            <div class="row-base mt-16"><span class="ui">BetGlobal</span><span class="mono spacer fw-500" style="color:#6BF29A">$0</span></div>
+            <div class="meter meter-lg" style="background:rgba(255,255,255,.12);box-shadow:none"><span style="width:2%"></span></div>
         </div>
     </div>
 
-    <div style="margin-top:32px;display:flex;gap:9px;flex-wrap:wrap">
-        <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
-        <a class="btn btn-ghost btn-sm" href="{{ url_for('how_it_works') }}">How a bet runs</a>
+    <div class="cta-group mt-32">
+        {% if current_user.is_authenticated %}
+            <a class="btn btn-primary" href="{{ url_for('create_bet_page') }}"><i data-feather="plus"></i>Create a bet</a>
+        {% else %}
+            <a class="btn btn-primary" href="{{ url_for('security.register') }}">Create free account</a>
+        {% endif %}
+        <a class="btn btn-secondary" href="{{ url_for('how_it_works') }}">How a bet runs</a>
     </div>
 </div>
 {% endblock %}

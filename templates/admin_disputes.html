@@ -5,9 +5,9 @@
 
 {% block content %}
 {% if error %}
-<div class="pad">
+<div class="pad" style="padding-bottom:0">
     <div class="alert alert-danger alert-permanent">
-        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <i data-feather="alert-circle"></i>
         <span>{{ error }}</span>
     </div>
 </div>
@@ -15,28 +15,25 @@
 
 {% if not disputed_bets %}
     <div class="pad">
-        <div class="card empty" style="padding:56px 24px">
-            <span class="tile tile-lg tile-green" style="margin:0 auto">
-                <i data-feather="check-circle" style="width:19px;height:19px"></i>
-            </span>
-            <h2 class="title-sm" style="margin-top:14px">No open disputes</h2>
-            <p style="margin-top:6px">Every bet has settled by agreement. Nothing needs a decision.</p>
+        <div class="empty empty-dashed" style="padding:64px 24px">
+            <span class="tile tile-xl tile-accent"><i data-feather="check-circle"></i></span>
+            <h2 class="title-sm">No open disputes</h2>
+            <p>Every bet has settled by agreement. Nothing needs a decision.</p>
         </div>
     </div>
 {% else %}
 
-<div class="grid" style="grid-template-columns:300px minmax(0,1fr);min-height:calc(100vh - var(--topbar-h))">
+<div class="split-pane">
 
     <!-- queue -->
-    <div style="border-right:1px solid var(--line)">
+    <div class="queue">
+        <div class="eyebrow" style="padding:14px 16px 6px">Queue</div>
         {% for bet in disputed_bets %}
             {% set pot = bet.amount + (bet.amount * bet.odds) %}
             <a class="queue-item {% if loop.first %}is-active{% endif %}" href="#dispute-{{ bet.id }}">
-                <div class="row-flex">
-                    <span class="mono" style="font-size:11px;color:var(--muted-2)">#{{ bet.id }}</span>
-                    <span class="mono spacer" style="font-size:11px;color:var(--amber)">
-                        ${{ '{:,.0f}'.format(pot) }}
-                    </span>
+                <div class="row">
+                    <span class="mono meta">#{{ bet.id }}</span>
+                    <span class="mono spacer meta text-warn fw-600">${{ '{:,.0f}'.format(pot) }}</span>
                 </div>
                 <div class="t">{{ bet.title }}</div>
                 <div class="m">
@@ -48,26 +45,26 @@
     </div>
 
     <!-- detail -->
-    <div style="padding:24px;display:flex;flex-direction:column;gap:32px">
+    <div class="pad col gap-32">
         {% for bet in disputed_bets %}
             {% set taker_stake = bet.amount * bet.odds %}
             {% set pot = bet.amount + taker_stake %}
             {% set creator = users.get(bet.creator_id, {}) %}
             {% set acceptor = users.get(bet.acceptor_id, {}) %}
 
-            <section id="dispute-{{ bet.id }}" style="scroll-margin-top:calc(var(--topbar-h) + 16px)">
-                <div class="row-flex" style="flex-wrap:wrap;min-width:0">
-                    <span class="mono" style="font-size:11px;color:var(--muted-2)">Bet #{{ bet.id }}</span>
+            <section id="dispute-{{ bet.id }}" class="card" style="scroll-margin-top:calc(var(--topbar-h) + 16px)">
+                <div class="card-head wrap-items">
+                    <span class="mono meta">Bet #{{ bet.id }}</span>
                     <span class="badge badge-disputed">Disputed</span>
-                    <span class="mono spacer" style="font-size:11px;color:var(--muted-2)">
-                        created {{ bet.created_at | strftime('%b %d, %Y') }}
-                    </span>
+                    <span class="mono spacer meta">created {{ bet.created_at | strftime('%b %d, %Y') }}</span>
                 </div>
 
-                <h2 class="title-sm" style="margin:12px 0 0">{{ bet.title }}</h2>
-                <p class="body-sm" style="margin:7px 0 0;max-width:640px">{{ bet.description }}</p>
+                <div class="card-body" style="padding:20px 16px 0">
+                    <h2 class="title-sm">{{ bet.title }}</h2>
+                    <p class="body-sm mt-6" style="max-width:640px">{{ bet.description }}</p>
+                </div>
 
-                <div class="figure-strip" style="margin-top:18px;border-radius:var(--r);border:1px solid var(--line)">
+                <div class="figure-strip is-rounded" style="margin:18px 16px 0">
                     <div><div class="lbl">Creator staked</div><div class="val">${{ '%.2f' | format(bet.amount) }}</div></div>
                     <div><div class="lbl">Taker staked</div><div class="val">${{ '%.2f' | format(taker_stake) }}</div></div>
                     <div><div class="lbl">Total pot</div><div class="val is-green">${{ '%.2f' | format(pot) }}</div></div>
@@ -75,92 +72,85 @@
                 </div>
 
                 <!-- both sides -->
-                <div class="grid g2 gap-16" style="margin-top:24px">
-                    <div class="card card-pad" style="padding:16px">
-                        <div class="row-flex" style="gap:9px">
-                            <span class="avatar" style="width:24px;height:24px">
-                                {{ creator.get('username', '??')[:2] | upper }}
-                            </span>
-                            <div style="font-size:13px;font-weight:600">{{ creator.get('username', 'Unknown') }}</div>
-                            <span class="spacer" style="font-size:11px;color:var(--muted-2)">Creator</span>
+                <div class="two-col-even" style="padding:16px">
+                    <div class="card card-flat card-tint card-pad" style="padding:16px">
+                        <div class="row gap-10">
+                            <span class="avatar avatar-accent">{{ creator.get('username', '??')[:2] }}</span>
+                            <div class="ui fw-600">{{ creator.get('username', 'Unknown') }}</div>
+                            <span class="badge badge-plain spacer">Creator</span>
                         </div>
-                        <div class="eyebrow" style="margin-top:14px">Claim</div>
-                        <div style="font-size:13.5px;font-weight:600;margin-top:4px">
+                        <div class="eyebrow mt-16">Claim</div>
+                        <div class="ui fw-600 mt-4">
                             {{ 'Creator wins' if bet.creator_decision == 'creator_wins' else 'Taker wins' }}
                         </div>
-                        <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:8px 0 0">
-                            Declared the result after the event closed.
-                        </p>
+                        <p class="body-sm mt-8">Declared the result after the event closed.</p>
                     </div>
 
-                    <div class="card card-pad" style="padding:16px">
-                        <div class="row-flex" style="gap:9px">
-                            <span class="avatar" style="width:24px;height:24px">
-                                {{ acceptor.get('username', '??')[:2] | upper }}
-                            </span>
-                            <div style="font-size:13px;font-weight:600">{{ acceptor.get('username', 'Unknown') }}</div>
-                            <span class="spacer" style="font-size:11px;color:var(--muted-2)">Taker</span>
+                    <div class="card card-flat card-tint card-pad" style="padding:16px">
+                        <div class="row gap-10">
+                            <span class="avatar">{{ acceptor.get('username', '??')[:2] }}</span>
+                            <div class="ui fw-600">{{ acceptor.get('username', 'Unknown') }}</div>
+                            <span class="badge badge-plain spacer">Taker</span>
                         </div>
-                        <div class="eyebrow" style="margin-top:14px">Dispute reason</div>
-                        <p style="font-size:13px;line-height:1.55;color:var(--ink-2);margin:8px 0 0">
-                            {{ bet.dispute_reason or 'No reason recorded.' }}
-                        </p>
+                        <div class="eyebrow mt-16">Dispute reason</div>
+                        <p class="body mt-8" style="font-size:13px">{{ bet.dispute_reason or 'No reason recorded.' }}</p>
                     </div>
                 </div>
 
                 <!-- evidence -->
                 {% set items = bet_evidence.get(bet.id, []) if bet_evidence else [] %}
-                <div class="card" style="margin-top:16px">
-                    <header class="card-head" style="padding:11px 14px">
-                        <h3>Evidence</h3>
-                        <span class="mono" style="font-size:11px;color:var(--muted-2)">
-                            {{ items | length }} item{{ 's' if items | length != 1 }} · max 16 MB each
-                        </span>
-                    </header>
+                <div style="padding:0 16px">
+                    <div class="card card-flat">
+                        <header class="card-head">
+                            <span class="tile"><i data-feather="paperclip"></i></span>
+                            <h3>Evidence</h3>
+                            <span class="count">{{ items | length }} item{{ 's' if items | length != 1 }}</span>
+                            <span class="meta spacer">max 16 MB each</span>
+                        </header>
 
-                    {% for ev in items %}
-                        <div class="card-row" style="align-items:center;padding:12px 14px">
-                            <span class="tile" style="width:30px;height:30px;border-radius:6px">
-                                <i data-feather="{{ 'file-text' if ev.evidence_type == 'text' else 'image' }}"
-                                   style="width:15px;height:15px"></i>
-                            </span>
+                        {% for ev in items %}
+                            <div class="card-row is-center">
+                                <span class="tile {% if ev.evidence_type == 'text' %}tile-info{% endif %}">
+                                    <i data-feather="{{ 'file-text' if ev.evidence_type == 'text' else 'image' }}"></i>
+                                </span>
 
-                            <div style="min-width:0;flex:1">
-                                {% if ev.evidence_type == 'text' %}
-                                    <div style="font-size:13px;font-weight:500">Written statement</div>
-                                    <p style="font-size:12.5px;color:var(--ink-2);margin:4px 0 0;line-height:1.5">{{ ev.text_content }}</p>
-                                {% else %}
-                                    <div class="clip" style="font-size:13px;font-weight:500">{{ ev.file_name }}</div>
-                                {% endif %}
-                                <div style="font-size:11.5px;color:var(--muted-2);margin-top:2px">
-                                    Uploaded by {{ users.get(ev.user_id, {}).get('username', 'unknown') }}
-                                    · {{ ev.uploaded_at | strftime('%b %d, %Y %H:%M') }}
+                                <div class="mw-0 grow">
+                                    {% if ev.evidence_type == 'text' %}
+                                        <div class="ui fw-500">Written statement</div>
+                                        <p class="body-sm mt-4" style="color:var(--ink-2)">{{ ev.text_content }}</p>
+                                    {% else %}
+                                        <div class="clip ui fw-500">{{ ev.file_name }}</div>
+                                    {% endif %}
+                                    <div class="meta mt-2">
+                                        Uploaded by {{ users.get(ev.user_id, {}).get('username', 'unknown') }}
+                                        · {{ ev.uploaded_at | strftime('%b %d, %Y %H:%M') }}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {% if ev.evidence_type != 'text' and ev.file_path %}
-                                {% set ext = (ev.file_name or '').lower().split('.')[-1] %}
-                                {% set href = url_for('uploaded_file', filename=ev.file_path) %}
-                                {% if ext in ('png', 'jpg', 'jpeg', 'gif') %}
-                                    <button type="button" class="btn btn-ghost btn-xs" style="flex-shrink:0"
-                                            data-image-src="{{ href }}" data-image-name="{{ ev.file_name }}">View</button>
-                                {% else %}
-                                    <a class="btn btn-ghost btn-xs" style="flex-shrink:0" href="{{ href }}" target="_blank" rel="noopener">Open</a>
+                                {% if ev.evidence_type != 'text' and ev.file_path %}
+                                    {% set ext = (ev.file_name or '').lower().split('.')[-1] %}
+                                    {% set href = url_for('uploaded_file', filename=ev.file_path) %}
+                                    {% if ext in ('png', 'jpg', 'jpeg', 'gif') %}
+                                        <button type="button" class="btn btn-secondary btn-xs shrink-0"
+                                                data-image-src="{{ href }}" data-image-name="{{ ev.file_name }}">View</button>
+                                    {% else %}
+                                        <a class="btn btn-secondary btn-xs shrink-0" href="{{ href }}" target="_blank" rel="noopener">Open</a>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
-                        </div>
-                    {% else %}
-                        <div class="empty" style="padding:24px 14px"><p>Neither side attached evidence.</p></div>
-                    {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="empty" style="padding:24px 14px"><p>Neither side attached evidence.</p></div>
+                        {% endfor %}
+                    </div>
                 </div>
 
                 <!-- resolution -->
-                <div class="card card-pad" style="margin-top:16px;padding:16px">
-                    <h3 style="font-size:12.5px;font-weight:600;margin:0">Admin resolution</h3>
-                    <p style="font-size:12.5px;color:var(--muted);margin:5px 0 14px">
-                        Payout is final and both users are emailed the outcome.
-                    </p>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <div class="card-foot" style="margin-top:16px">
+                    <div class="mw-0">
+                        <div class="ui fw-600">Admin resolution</div>
+                        <div class="meta">Payout is final and both users are emailed the outcome.</div>
+                    </div>
+                    <div class="spacer row wrap-items gap-8">
                         <button type="button" class="btn btn-primary btn-sm"
                                 onclick="resolveDispute({{ bet.id }}, 'creator_wins')">
                             Award {{ creator.get('username', 'creator') }} · ${{ '{:,.2f}'.format(pot) }}
@@ -169,7 +159,7 @@
                                 onclick="resolveDispute({{ bet.id }}, 'acceptor_wins')">
                             Award {{ acceptor.get('username', 'taker') }} · ${{ '{:,.2f}'.format(pot) }}
                         </button>
-                        <button type="button" class="btn btn-ghost btn-sm"
+                        <button type="button" class="btn btn-secondary btn-sm"
                                 onclick="resolveDispute({{ bet.id }}, 'void')">Void &amp; refund both</button>
                     </div>
                 </div>
@@ -193,7 +183,7 @@ function resolveDispute(betId, decision) {
         'Resolve dispute #' + betId,
         'You are about to ' + label + '. The payout is final and both users are notified.',
         decision === 'void' ? 'rotate-ccw' : 'check-circle',
-        decision === 'void' ? '#A9660B' : '#00A331',
+        decision === 'void' ? 'var(--warn)' : 'var(--pos)',
         function () {
             var body = new FormData();
             body.append('bet_id', betId);

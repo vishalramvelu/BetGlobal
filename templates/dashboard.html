@@ -15,31 +15,31 @@
 {% if error %}
 <div class="pad">
     <div class="alert alert-danger alert-permanent">
-        <i data-feather="alert-circle" style="width:15px;height:15px;flex-shrink:0"></i>
+        <i data-feather="alert-circle"></i>
         <span>{{ error }}</span>
     </div>
 </div>
 {% else %}
 
-<div class="kpi-strip g4">
-    <div class="kpi">
-        <div class="kpi-label">Total bets</div>
+<div class="kpi-grid g4">
+    <div class="kpi is-navy">
+        <div class="kpi-label"><i data-feather="layers"></i>Total bets</div>
         <div class="kpi-value">{{ total_bets }}</div>
         <div class="kpi-note">{{ created_bets | length }} created · {{ accepted_bets | length }} taken</div>
     </div>
-    <div class="kpi">
-        <div class="kpi-label">Active bets</div>
+    <div class="kpi is-accent">
+        <div class="kpi-label"><i data-feather="activity"></i>Active bets</div>
         <div class="kpi-value">{{ active_bets }}</div>
         <div class="kpi-note">Still in play</div>
     </div>
     <div class="kpi">
-        <div class="kpi-label">Completed</div>
+        <div class="kpi-label"><i data-feather="check-circle"></i>Completed</div>
         <div class="kpi-value">{{ completed_bets }}</div>
         <div class="kpi-note">Settled and paid</div>
     </div>
-    <div class="kpi">
-        <div class="kpi-label">Total profit</div>
-        <div class="kpi-value {% if profit > 0 %}is-green{% endif %}">
+    <div class="kpi {% if profit > 0 %}is-accent{% endif %}">
+        <div class="kpi-label"><i data-feather="trending-up"></i>Total profit</div>
+        <div class="kpi-value {% if profit > 0 %}is-pos{% elif profit < 0 %}is-neg{% endif %}">
             {% if profit > 0 %}+{% endif %}${{ '%.2f' | format(profit) }}
         </div>
         <div class="kpi-note">Balance ${{ '%.2f' | format((user.balance if user else 0) or 0) }}</div>
@@ -51,17 +51,18 @@
     <!-- ---------------------------------------------------- created ---- -->
     <section class="card" style="height:max-content">
         <header class="card-head">
+            <span class="tile tile-accent"><i data-feather="edit-3"></i></span>
             <h2>My created bets</h2>
-            <span class="mono" style="font-size:11px;color:var(--muted-2)">{{ created_bets | length }}</span>
+            <span class="count">{{ created_bets | length }}</span>
             <a class="btn-link spacer" href="{{ url_for('index') }}">View all</a>
         </header>
 
         {% for bet in created_bets %}
             {% set taker_stake = bet.amount * bet.odds %}
             <div class="card-row">
-                <div style="min-width:0;flex:1">
-                    <div style="font-size:13.5px;font-weight:600;letter-spacing:-.01em">{{ bet.title }}</div>
-                    <div class="mono" style="display:flex;gap:10px;margin-top:5px;font-size:11.5px;color:var(--muted-2);flex-wrap:wrap">
+                <div class="mw-0 grow">
+                    <div class="ui fw-600" style="letter-spacing:-.01em">{{ bet.title }}</div>
+                    <div class="mono meta row wrap-items gap-10 mt-4">
                         <span>${{ '%.2f' | format(bet.amount) }}</span>
                         <span>{{ bet.odds }}:1</span>
                         <span>{{ bet.category }}</span>
@@ -69,56 +70,61 @@
                     </div>
                 </div>
 
-                <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
+                <div class="col gap-6 shrink-0" style="align-items:flex-end">
                     <span class="badge badge-{{ bet.status }}">{{ bet.status.replace('_', ' ') }}</span>
 
                     {% if bet.status == 'open' %}
-                        <button type="button" class="btn btn-ghost btn-xs" onclick="cancelBet({{ bet.id }})">Cancel bet</button>
+                        <button type="button" class="btn btn-secondary btn-xs" onclick="cancelBet({{ bet.id }})">Cancel bet</button>
                     {% elif bet.status == 'accepted' %}
-                        <div style="display:flex;gap:5px">
+                        <div class="row gap-6">
                             <button type="button" class="btn btn-primary btn-xs"
                                     onclick="resolveCreatorBet({{ bet.id }}, 'creator_wins')">I won</button>
-                            <button type="button" class="btn btn-ghost btn-xs"
+                            <button type="button" class="btn btn-secondary btn-xs"
                                     onclick="resolveCreatorBet({{ bet.id }}, 'acceptor_wins')">I lost</button>
                         </div>
                     {% elif bet.status == 'awaiting_resolution' %}
-                        <span style="font-size:11px;color:var(--muted-2)">Waiting on the taker</span>
+                        <span class="meta">Waiting on the taker</span>
                     {% elif bet.status == 'disputed' %}
-                        <span style="font-size:11px;color:var(--amber)">Under admin review</span>
+                        <span class="meta text-warn">Under admin review</span>
                     {% endif %}
                 </div>
             </div>
         {% else %}
-            <div class="empty" style="padding:32px 14px">
-                <p>You haven't created a bet yet.</p>
-                <a class="btn btn-primary btn-sm" style="margin-top:10px" href="{{ url_for('create_bet_page') }}">Create your first bet</a>
+            <div class="empty" style="padding:40px 16px">
+                <span class="tile tile-lg"><i data-feather="edit-3"></i></span>
+                <h3>No bets created yet</h3>
+                <p>Write a claim, set the stake and odds, and it goes straight on the board.</p>
+                <div class="actions">
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('create_bet_page') }}"><i data-feather="plus"></i>Create your first bet</a>
+                </div>
             </div>
         {% endfor %}
     </section>
 
     <!-- ----------------------------------------- action + accepted ---- -->
-    <section style="display:flex;flex-direction:column;gap:16px">
+    <section class="col gap-16">
 
         {% for bet in needs_action %}
-        <div class="card card-amber">
+        <div class="card card-warn">
             <header class="card-head">
+                <span class="tile tile-warn"><i data-feather="bell"></i></span>
                 <h2>Needs your response</h2>
-                <span style="width:7px;height:7px;border-radius:50%;background:var(--amber)"></span>
+                <span class="status-dot is-warn spacer">Action</span>
             </header>
-            <div style="padding:14px">
-                <div style="font-size:13.5px;font-weight:600">{{ bet.title }}</div>
-                <div style="font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45">
+            <div class="card-body">
+                <div class="ui fw-600">{{ bet.title }}</div>
+                <div class="body-sm mt-4">
                     {% if bet.creator_decision == 'creator_wins' %}
                         The creator claims they won. Confirm the result or dispute it with evidence.
                     {% else %}
                         The creator says you won. Confirm to collect the pot, or dispute it.
                     {% endif %}
                 </div>
-                <div style="display:flex;gap:6px;margin-top:12px;align-items:center;flex-wrap:wrap">
-                    <button type="button" class="btn btn-primary btn-xs" style="padding:8px 12px;font-size:12.5px"
-                            onclick="respondToDecision({{ bet.id }}, 'accepted')">Confirm result</button>
-                    <button type="button" class="btn btn-ghost btn-xs" style="padding:8px 12px;font-size:12.5px"
-                            onclick="showDisputeModal({{ bet.id }})">Dispute</button>
+                <div class="row wrap-items gap-8 mt-14">
+                    <button type="button" class="btn btn-primary btn-sm"
+                            onclick="respondToDecision({{ bet.id }}, 'accepted')"><i data-feather="check"></i>Confirm result</button>
+                    <button type="button" class="btn btn-secondary btn-sm"
+                            onclick="showDisputeModal({{ bet.id }})"><i data-feather="flag"></i>Dispute</button>
                 </div>
             </div>
         </div>
@@ -126,25 +132,30 @@
 
         <div class="card">
             <header class="card-head">
+                <span class="tile tile-info"><i data-feather="users"></i></span>
                 <h2>My accepted bets</h2>
-                <span class="mono" style="font-size:11px;color:var(--muted-2)">{{ accepted_bets | length }}</span>
+                <span class="count">{{ accepted_bets | length }}</span>
             </header>
 
             {% for bet in accepted_bets %}
-            <div class="card-row" style="align-items:center">
-                <div style="min-width:0;flex:1">
-                    <div style="font-size:13.5px;font-weight:600">{{ bet.title }}</div>
-                    <div class="mono" style="display:flex;gap:10px;margin-top:5px;font-size:11.5px;color:var(--muted-2)">
+            <div class="card-row is-center">
+                <div class="mw-0 grow">
+                    <div class="ui fw-600">{{ bet.title }}</div>
+                    <div class="mono meta row gap-10 mt-4">
                         <span>${{ '%.2f' | format(bet.amount * bet.odds) }}</span>
                         <span>{{ bet.odds }}:1</span>
                     </div>
                 </div>
-                <span class="badge badge-{{ bet.status }}" style="flex-shrink:0">{{ bet.status.replace('_', ' ') }}</span>
+                <span class="badge badge-{{ bet.status }} shrink-0">{{ bet.status.replace('_', ' ') }}</span>
             </div>
             {% else %}
-            <div class="empty" style="padding:32px 14px">
-                <p>Nothing in play.</p>
-                <a class="btn btn-ghost btn-sm" style="margin-top:10px" href="{{ url_for('index') }}">Browse open bets</a>
+            <div class="empty" style="padding:40px 16px">
+                <span class="tile tile-lg"><i data-feather="inbox"></i></span>
+                <h3>Nothing in play</h3>
+                <p>Take the other side of an open bet and it shows up here.</p>
+                <div class="actions">
+                    <a class="btn btn-secondary btn-sm" href="{{ url_for('index') }}">Browse open bets</a>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -156,13 +167,13 @@
 <div class="modal-backdrop" id="disputeModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal modal-lg">
         <div class="modal-head">
-            <span class="tile" style="background:#FDF3F2;color:var(--red)"><i data-feather="flag"></i></span>
+            <span class="tile tile-neg"><i data-feather="flag"></i></span>
             <h2>Dispute the decision</h2>
-            <button type="button" class="modal-close" data-modal-close aria-label="Close"><i data-feather="x"></i></button>
+            <button type="button" class="icon-btn modal-close" data-modal-close aria-label="Close"><i data-feather="x"></i></button>
         </div>
 
         <div class="modal-body">
-            <p class="body-sm" style="margin:0 0 16px">
+            <p class="body-sm mb-16">
                 Explain why you disagree with the creator's call and attach anything that supports it.
                 An administrator reads this against the bet's stated terms.
             </p>
@@ -184,32 +195,31 @@
                 <div class="field">
                     <label class="label" for="evidenceFile">Upload evidence file</label>
                     <input class="input" type="file" id="evidenceFile" name="evidence_file"
-                           accept=".png,.jpg,.jpeg,.gif,.pdf,.txt,.doc,.docx"
-                           style="height:auto;padding:9px 12px">
+                           accept=".png,.jpg,.jpeg,.gif,.pdf,.txt,.doc,.docx">
                     <div class="hint">Optional. PNG, JPG, PDF, DOC or TXT — max 16 MB.</div>
                 </div>
 
-                <div class="card" id="filePreview" hidden style="padding:12px 14px;display:flex;align-items:center;gap:11px">
-                    <span class="tile"><i data-feather="paperclip" style="width:15px;height:15px"></i></span>
-                    <div style="min-width:0;flex:1">
-                        <div class="clip" style="font-size:13px;font-weight:500" id="fileName"></div>
-                        <div style="font-size:11.5px;color:var(--muted-2)" id="fileSize"></div>
+                <div class="card card-flat mt-12" id="filePreview" hidden style="padding:12px 14px;display:flex;align-items:center;gap:11px">
+                    <span class="tile"><i data-feather="paperclip"></i></span>
+                    <div class="mw-0 grow">
+                        <div class="clip ui fw-500" id="fileName"></div>
+                        <div class="meta" id="fileSize"></div>
                     </div>
-                    <button type="button" class="btn btn-ghost btn-xs" onclick="clearFileSelection()">Remove</button>
+                    <button type="button" class="btn btn-secondary btn-xs" onclick="clearFileSelection()">Remove</button>
                 </div>
             </form>
 
-            <div class="alert alert-info" style="margin-top:16px">
-                <i data-feather="shield" style="width:15px;height:15px;flex-shrink:0"></i>
-                <span>An admin reviews this dispute and any evidence. Bet <span class="mono" style="font-weight:600" id="disputeBetId"></span>.</span>
+            <div class="alert alert-info alert-permanent mt-16">
+                <i data-feather="shield"></i>
+                <span>An admin reviews this dispute and any evidence. Bet <span class="mono fw-600" id="disputeBetId"></span>.</span>
             </div>
         </div>
 
         <div class="modal-foot">
             <div class="spacer"></div>
-            <button type="button" class="btn btn-ghost btn-sm" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-modal-close>Cancel</button>
             <button type="button" class="btn btn-danger btn-sm" id="submitDispute">
-                <i data-feather="send" style="width:14px;height:14px"></i>Submit dispute
+                <i data-feather="send"></i>Submit dispute
             </button>
         </div>
     </div>
@@ -253,7 +263,7 @@ function resolveCreatorBet(betId, decision) {
             ? 'The taker will be asked to confirm. If they dispute it, an admin reviews the evidence.'
             : 'The pot moves to the taker once they confirm. This cannot be undone.',
         won ? 'check-circle' : 'x-circle',
-        won ? '#00A331' : '#A9660B',
+        won ? 'var(--pos)' : 'var(--warn)',
         function () {
             postForm('/api/creator-decide', { bet_id: betId, decision: decision }, function (data) {
                 showNotificationModal('success', 'Decision recorded', data.message || 'The taker has been notified.');
@@ -268,7 +278,7 @@ function cancelBet(betId) {
     showConfirmationModal(
         'Cancel this bet',
         'The bet comes off the board and your stake is refunded in full.',
-        'x-circle', '#C0392B',
+        'x-circle', 'var(--neg)',
         function () {
             postForm('/api/cancel-bet', { bet_id: betId }, function (data) {
                 showNotificationModal('success', 'Bet cancelled', data.message || 'Your stake has been refunded.');
@@ -284,7 +294,7 @@ function respondToDecision(betId, response) {
         showConfirmationModal(
             'Confirm the result',
             "You agree with the creator's call. The pot moves immediately and this is final.",
-            'check-circle', '#00A331',
+            'check-circle', 'var(--pos)',
             function () { submitTakerResponse(betId, 'accepted'); }
         );
         return;
