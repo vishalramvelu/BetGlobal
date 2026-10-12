@@ -112,7 +112,7 @@
     i.setAttribute('data-feather', safe);
     tileEl.replaceChildren(i);
     tileEl.style.color = color || '';
-    tileEl.style.background = color ? 'color-mix(in srgb, ' + color + ' 12%, #fff)' : '';
+    tileEl.style.background = color ? 'color-mix(in srgb, ' + color + ' 14%, var(--surface))' : '';
   }
 
   /* Signatures kept identical to the previous Bootstrap-backed helpers so
@@ -137,10 +137,10 @@
   function showNotificationModal(type, title, message) {
     ensureSharedModals();
     var map = {
-      success: ['check-circle', '#00A331'],
-      error:   ['alert-circle', '#C0392B'],
-      warning: ['alert-triangle', '#A9660B'],
-      info:    ['info', '#334E68']
+      success: ['check-circle', 'var(--pos)'],
+      error:   ['alert-circle', 'var(--neg)'],
+      warning: ['alert-triangle', 'var(--warn)'],
+      info:    ['info', 'var(--info)']
     };
     var pair = map[type] || map.info;
     document.getElementById('bgNotifyTitle').textContent = title || '';
@@ -209,6 +209,34 @@
       return;
     }
 
+    /* light / dark theme (persisted; _layout.html applies it before paint) */
+    var themeBtn = e.target.closest('[data-theme-toggle]');
+    if (themeBtn) {
+      e.preventDefault();
+      var root = document.documentElement;
+      var current = root.getAttribute('data-theme');
+      if (!current) {
+        current = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      var next = current === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('bg-theme', next); } catch (err) {}
+      return;
+    }
+
+    /* public header: mobile nav drawer */
+    var navBtn = e.target.closest('[data-mobile-nav-toggle]');
+    if (navBtn) {
+      e.preventDefault();
+      var drawer = document.getElementById(navBtn.getAttribute('aria-controls') || 'mobileNav');
+      if (drawer) {
+        var open = drawer.classList.toggle('is-open');
+        navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        icons();
+      }
+      return;
+    }
+
     /* toggle the mobile sidebar */
     var burger = e.target.closest('[data-sidebar-toggle]');
     if (burger) {
@@ -254,10 +282,12 @@
     if (!button) return;
     if (isLoading) {
       button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
       button.dataset.originalHtml = button.innerHTML;
       button.textContent = 'Working…';
     } else {
       button.disabled = false;
+      button.removeAttribute('aria-busy');
       if (button.dataset.originalHtml) button.innerHTML = button.dataset.originalHtml;
       icons();
     }
@@ -272,14 +302,40 @@
     ensureSharedModals();
     icons();
 
-    /* auto-dismiss transient flash messages */
-    document.querySelectorAll('.alert:not(.alert-permanent)').forEach(function (alert) {
+    /* auto-dismiss transient flash toasts (hover pauses nothing; 6 s) */
+    document.querySelectorAll('.flash-stack .alert:not(.alert-permanent)').forEach(function (alert, i) {
       setTimeout(function () {
-        alert.style.transition = 'opacity .3s';
-        alert.style.opacity = '0';
-        setTimeout(function () { alert.remove(); }, 300);
-      }, 6000);
+        alert.classList.add('is-leaving');
+        setTimeout(function () { alert.remove(); }, 260);
+      }, 6000 + i * 400);
     });
+
+    /* toast helper for page scripts: BG.toast(message, type) */
+    BG.toast = function (message, type) {
+      var stack = document.querySelector('.flash-stack');
+      if (!stack) {
+        stack = document.createElement('div');
+        stack.className = 'flash-stack';
+        stack.setAttribute('role', 'status');
+        stack.setAttribute('aria-live', 'polite');
+        document.body.appendChild(stack);
+      }
+      var tone = { error: 'danger', danger: 'danger', success: 'success', warning: 'warning' }[type] || 'info';
+      var iconName = { danger: 'alert-circle', success: 'check-circle', warning: 'alert-triangle', info: 'info' }[tone];
+      var el = document.createElement('div');
+      el.className = 'alert alert-' + tone;
+      el.setAttribute('role', 'alert');
+      var ic = document.createElement('i'); ic.setAttribute('data-feather', iconName);
+      var txt = document.createElement('span'); txt.textContent = message || '';
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'alert-close';
+      x.setAttribute('data-dismiss-alert', ''); x.setAttribute('aria-label', 'Dismiss');
+      var xi = document.createElement('i'); xi.setAttribute('data-feather', 'x'); x.appendChild(xi);
+      el.appendChild(ic); el.appendChild(txt); el.appendChild(x);
+      stack.appendChild(el);
+      icons();
+      setTimeout(function () { el.classList.add('is-leaving'); setTimeout(function () { el.remove(); }, 260); }, 6000);
+      return el;
+    };
 
     /* two-decimal normalisation on currency inputs */
     document.querySelectorAll('input[data-currency]').forEach(function (input) {
@@ -330,6 +386,6 @@
   window.BettingPlatform = {
     formatCurrency: formatCurrency,
     setButtonLoading: setButtonLoading,
-    showToast: function (message, type) { showNotificationModal(type || 'info', '', message); }
+    showToast: function (message, type) { BG.toast(message, type || 'info'); }
   };
 })();

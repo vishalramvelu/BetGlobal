@@ -2,11 +2,12 @@
 {% block title %}Create account · BetGlobal{% endblock %}
 
 {% block content %}
-<div class="split" style="min-height:760px">
+<div class="split">
     <div class="split-main">
         <div class="split-form">
-            <h1 class="title-md">Create account</h1>
-            <p style="font-size:14.5px;color:var(--muted);margin:7px 0 26px">Join the future of betting in just minutes.</p>
+            <span class="tile tile-lg tile-accent"><i data-feather="user-plus"></i></span>
+            <h1 class="title-md mt-16">Create your account</h1>
+            <p class="body-sm mt-6" style="margin-bottom:28px">Free to join. Deposit only when you are ready to bet.</p>
 
             <form action="{{ url_for_security('register') }}" method="post">
                 {{ register_user_form.hidden_tag() }}
@@ -20,82 +21,76 @@
                             <div class="hint hint-err">{{ error }}</div>
                         {% endfor %}
                     {% else %}
-                        <div class="hint">3–20 characters, letters and numbers only</div>
+                        <div class="hint">3–20 characters, letters and numbers only. Shown publicly on your bets.</div>
                     {% endif %}
                 </div>
 
                 <div class="field">
                     <label class="label" for="{{ register_user_form.email.id }}">Email address</label>
                     {{ register_user_form.email(class="input" + (" is-invalid" if register_user_form.email.errors else ""),
-                                                placeholder="Enter your email", autocomplete="email") }}
+                                                placeholder="you@example.com", autocomplete="email") }}
                     {% for error in register_user_form.email.errors %}
                         <div class="hint hint-err">{{ error }}</div>
                     {% endfor %}
                 </div>
 
-                <div class="field">
-                    <label class="label" for="{{ register_user_form.password.id }}">Password</label>
-                    {{ register_user_form.password(class="input" + (" is-invalid" if register_user_form.password.errors else ""),
-                                                   placeholder="Create a password", autocomplete="new-password") }}
-                    {% if register_user_form.password.errors %}
-                        {% for error in register_user_form.password.errors %}
+                <div class="grid g2 gap-12" style="margin-top:16px">
+                    <div class="field">
+                        <label class="label" for="{{ register_user_form.password.id }}">Password</label>
+                        {{ register_user_form.password(class="input" + (" is-invalid" if register_user_form.password.errors else ""),
+                                                       placeholder="Create a password", autocomplete="new-password") }}
+                        {% if register_user_form.password.errors %}
+                            {% for error in register_user_form.password.errors %}
+                                <div class="hint hint-err">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="hint">Minimum 6 characters</div>
+                        {% endif %}
+                    </div>
+                    <div class="field" style="margin-top:0">
+                        <label class="label" for="{{ register_user_form.password_confirm.id }}">Confirm</label>
+                        {{ register_user_form.password_confirm(class="input" + (" is-invalid" if register_user_form.password_confirm.errors else ""),
+                                                               placeholder="Repeat it", autocomplete="new-password") }}
+                        {% for error in register_user_form.password_confirm.errors %}
                             <div class="hint hint-err">{{ error }}</div>
                         {% endfor %}
-                    {% else %}
-                        <div class="hint">Minimum 6 characters</div>
-                    {% endif %}
+                    </div>
                 </div>
 
-                <div class="field">
-                    <label class="label" for="{{ register_user_form.password_confirm.id }}">Confirm password</label>
-                    {{ register_user_form.password_confirm(class="input" + (" is-invalid" if register_user_form.password_confirm.errors else ""),
-                                                           placeholder="Confirm your password", autocomplete="new-password") }}
-                    {% for error in register_user_form.password_confirm.errors %}
-                        <div class="hint hint-err">{{ error }}</div>
-                    {% endfor %}
-                </div>
+                <p class="meta mt-16" style="line-height:1.5">
+                    By creating an account you agree to the
+                    <a class="link" href="{{ url_for('terms') }}">Terms of Service</a> and
+                    <a class="link" href="{{ url_for('privacy') }}">Privacy Policy</a>. 18+ only.
+                </p>
 
-                <div class="field">
-                    <span class="check-text" style="display:block">
-                        By creating an account you agree to the
-                        <a href="{{ url_for('terms') }}" style="font-weight:500">Terms of Service</a> and
-                        <a href="{{ url_for('privacy') }}" style="font-weight:500">Privacy Policy</a>.
-                    </span>
-                </div>
-
-                <button type="submit" class="btn btn-primary btn-block" style="margin-top:16px">
-                    <i data-feather="user-plus" style="width:16px;height:16px"></i>Create account
+                <button type="submit" class="btn btn-primary btn-block mt-20">
+                    Create account<i data-feather="arrow-right"></i>
                 </button>
 
-                <p style="font-size:13px;color:var(--muted);margin:12px 0 0">
-                    Already registered? <a href="{{ url_for_security('login') }}" style="font-weight:500">Sign in</a>
+                <p class="body-sm mt-16">
+                    Already registered? <a class="link" href="{{ url_for_security('login') }}">Sign in</a>
                 </p>
             </form>
         </div>
     </div>
 
     <aside class="split-aside">
-        <div style="max-width:400px">
-            <h2 style="font-size:26px;letter-spacing:-.03em;margin:0;text-wrap:balance">Start your betting journey</h2>
-            <p style="font-size:14.5px;line-height:1.6;color:var(--muted);margin:10px 0 0">
-                Join users who are already winning with peer-to-peer betting.
-                No house edge, just pure competition.
-            </p>
+        <div>
+            <div class="eyebrow">Start your betting journey</div>
+            <h2 class="title-lg mt-10">No house edge. Just you, another member, and the terms you both agreed.</h2>
 
-            <div style="margin-top:26px;display:flex;flex-direction:column;gap:18px">
+            <div class="aside-list">
                 {% for perk in [
                     ('Post any bet you can define', 'Sports, markets, weather, or a promise about yourself.'),
                     ('Keep the whole pot', 'Zero platform fee on every bet, win or lose.'),
                     ('Evidence-backed settlement', 'Disputes go to human review with files attached.'),
                     ('Stripe in and out', 'Card deposits, bank payouts in 1–2 days.')
                 ] %}
-                <div style="display:flex;gap:12px;align-items:flex-start">
-                    <span style="width:24px;height:24px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <i data-feather="check" style="width:13px;height:13px;color:var(--ink)"></i>
-                    </span>
+                <div class="aside-item">
+                    <span class="dot"><i data-feather="check"></i></span>
                     <div>
-                        <div style="font-size:14px;font-weight:600">{{ perk[0] }}</div>
-                        <div style="font-size:13px;color:var(--muted);line-height:1.5;margin-top:2px">{{ perk[1] }}</div>
+                        <div class="t">{{ perk[0] }}</div>
+                        <div class="d">{{ perk[1] }}</div>
                     </div>
                 </div>
                 {% endfor %}

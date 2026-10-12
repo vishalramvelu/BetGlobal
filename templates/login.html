@@ -6,17 +6,16 @@
 
 {% block content %}
 <div class="centered-page">
-    <div class="centered-card" style="text-align:center">
-        <div class="card card-pad" style="padding:28px">
-            <h1 class="title-sm">Sign in</h1>
-            <p style="font-size:13.5px;color:var(--muted);margin:8px 0 20px;line-height:1.5">
-                Sign-in has moved. Continue on the current page.
-            </p>
+    <div class="centered-card">
+        <div class="card card-pad center" style="padding:32px 28px">
+            <span class="tile tile-lg tile-accent mx-auto"><i data-feather="log-in"></i></span>
+            <h1 class="title-sm mt-16">Sign in</h1>
+            <p class="body-sm mt-8" style="margin-bottom:20px">Sign-in has moved. Continue on the current page.</p>
             <a class="btn btn-primary btn-block" href="{{ url_for('security.login') }}">
-                <i data-feather="log-in" style="width:16px;height:16px"></i>Go to sign in
+                Go to sign in<i data-feather="arrow-right"></i>
             </a>
-            <p style="font-size:13px;color:var(--muted);margin:14px 0 0">
-                No account yet? <a href="{{ url_for('security.register') }}" style="font-weight:500">Create one</a>
+            <p class="body-sm mt-14">
+                No account yet? <a class="link" href="{{ url_for('security.register') }}">Create one</a>
             </p>
         </div>
     </div>

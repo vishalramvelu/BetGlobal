@@ -2,7 +2,14 @@
 """Development environment setup script"""
 
 import os
+import sys
 from dotenv import load_dotenv
+
+# Windows consoles default to cp1252, which cannot encode the emoji below.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 from werkzeug.security import generate_password_hash
 
 def setup_development():
@@ -30,8 +37,8 @@ def setup_development():
 FLASK_ENV=development
 FLASK_DEBUG=True
 
-# Local Database (SQLite for easy development)
-DATABASE_URL=sqlite:///{os.getcwd()}/instance/bets_dev.db
+# Local Database (Postgres in Docker - see docker-compose.dev.yml)
+DATABASE_URL=postgresql+psycopg2://betglobal:betglobal_dev@localhost:5433/betglobal_dev
 
 # Security (DEV ONLY - NOT FOR PRODUCTION)
 SESSION_SECRET=dev-session-secret-key-not-for-production-use-only
@@ -79,12 +86,13 @@ instance/bets_dev.db
     
     print("\n🎉 Development environment ready!")
     print("\nNext steps:")
-    print("1. Update Stripe test keys in .env.development")
-    print("2. Run: python3 run_dev.py")
-    print(f"3. Admin panel: http://localhost:5000/admin/login (password: {dev_password})")
-    print("4. Main app: http://localhost:5000")
+    print("1. Start the database: docker compose -f docker-compose.dev.yml up -d")
+    print("2. Update Stripe test keys in .env.development")
+    print("3. Run: python3 run_dev.py")
+    print(f"4. Admin panel: http://localhost:5000/admin/login (password: {dev_password})")
+    print("5. Main app: http://localhost:5000")
     print("\n💡 Development Tips:")
-    print("- Database: SQLite (instance/bets_dev.db)")
+    print("- Database: Postgres in Docker (docker compose -f docker-compose.dev.yml up -d)")
     print("- Sample users: testuser1/testuser2 (password: password123)")
     print("- Emails: Suppressed (check console for codes)")
     print("- Debug mode: Enabled (auto-restart on file changes)")

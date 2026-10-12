@@ -6,28 +6,26 @@
 {% block body %}
 <div class="staff-page">
     <div class="staff-card">
-        <div class="brand" style="justify-content:center;margin-bottom:24px">
+        <div class="brand" style="justify-content:center;margin-bottom:28px">
             <img src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="" style="height:30px;width:auto">
             <img src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal" style="height:17px;width:auto">
+            <span class="staff-tag">Staff</span>
         </div>
 
-        <div class="card" style="padding:28px;border:0">
-            <div style="text-align:center">
-                <span class="tile tile-lg" style="margin:0 auto;background:var(--surface-5)">
-                    <i data-feather="shield" style="width:20px;height:20px;color:var(--ink)"></i>
-                </span>
-                <h1 style="font-size:20px;letter-spacing:-.025em;margin:16px 0 0">Admin login</h1>
-                <p style="font-size:13px;color:var(--muted);margin:6px 0 0">Enter admin password to continue</p>
+        <div class="card" style="padding:28px;border:0;box-shadow:var(--sh-modal)">
+            <div class="center">
+                <span class="tile tile-lg tile-navy mx-auto"><i data-feather="shield"></i></span>
+                <h1 class="title-sm mt-16">Staff sign-in</h1>
+                <p class="body-sm mt-6">Enter the admin password to continue</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div style="margin-top:18px">
+                    <div class="mt-20">
                         {% for category, message in messages %}
                             {% set tone = 'danger' if category in ('error', 'danger') else category %}
-                            <div class="alert alert-{{ tone }}">
-                                <i data-feather="{{ 'alert-circle' if tone == 'danger' else 'info' }}"
-                                   style="width:15px;height:15px;flex-shrink:0"></i>
+                            <div class="alert alert-{{ tone }} alert-permanent">
+                                <i data-feather="{{ 'alert-circle' if tone == 'danger' else 'info' }}"></i>
                                 <span>{{ message }}</span>
                             </div>
                         {% endfor %}
@@ -35,18 +33,18 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" style="margin-top:22px">
+            <form method="POST" class="mt-24">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <label class="label" for="password">Admin password</label>
                 <div class="input-affix">
-                    <i data-feather="lock" style="width:15px;height:15px;color:var(--muted-2);flex-shrink:0"></i>
+                    <i data-feather="lock" class="i-15"></i>
                     <input type="password" id="password" name="password" required autofocus
-                           autocomplete="current-password" style="letter-spacing:.2em">
+                           autocomplete="current-password" placeholder="••••••••••••">
                 </div>
 
-                <button type="submit" class="btn btn-ink btn-block" style="margin-top:16px">
-                    <i data-feather="log-in" style="width:16px;height:16px"></i>Access admin panel
+                <button type="submit" class="btn btn-ink btn-block mt-16">
+                    <i data-feather="log-in"></i>Access admin panel
                 </button>
 
                 <div class="note">
@@ -57,7 +55,7 @@
         </div>
 
         <div class="staff-back">
-            <a href="{{ url_for('landing') }}" style="color:inherit">← Back to site</a>
+            <a href="{{ url_for('landing') }}">← Back to site</a>
         </div>
     </div>
 </div>

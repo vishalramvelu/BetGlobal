@@ -3,27 +3,55 @@
 
 {% block body %}
 <header class="site-header">
-    <a class="brand" href="{{ url_for('landing') }}">
-        <img class="brand-mark" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-        <img class="brand-wordmark" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
-    </a>
+    <div class="site-header-inner">
+        <a class="brand" href="{{ url_for('landing') }}">
+            <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+            <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+            <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
+        </a>
 
-    <nav class="site-nav" aria-label="Main">
-        <a href="{{ url_for('index') }}"       class="{% if request.endpoint == 'index' %}is-active{% endif %}">Live Bets</a>
-        <a href="{{ url_for('how_it_works') }}" class="{% if request.endpoint == 'how_it_works' %}is-active{% endif %}">How it works</a>
-        <a href="{{ url_for('fees') }}"        class="{% if request.endpoint == 'fees' %}is-active{% endif %}">Fees</a>
-        <a href="{{ url_for('contact') }}"     class="{% if request.endpoint == 'contact' %}is-active{% endif %}">Contact</a>
-    </nav>
+        {% set public_nav = [
+            ('index', 'Live Bets'),
+            ('how_it_works', 'How it works'),
+            ('fees', 'Fees'),
+            ('contact', 'Contact')
+        ] %}
+        <nav class="site-nav" aria-label="Main">
+            {% for endpoint, label in public_nav %}
+            <a href="{{ url_for(endpoint) }}" class="nav-link {% if request.endpoint == endpoint %}is-active{% endif %}"
+               {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>{{ label }}</a>
+            {% endfor %}
+        </nav>
 
-    <div class="header-actions">
-        {% if current_user.is_authenticated %}
-            <a class="btn btn-quiet" href="{{ url_for('dashboard') }}">Dashboard</a>
-            <a class="btn btn-primary btn-sm" href="{{ url_for('index') }}">Open the board</a>
-        {% else %}
-            <a class="btn btn-quiet" href="{{ url_for('security.login') }}">Sign in</a>
-            <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
-        {% endif %}
+        <div class="header-actions">
+            <button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">
+                <i data-feather="moon" class="i-moon"></i><i data-feather="sun" class="i-sun"></i>
+            </button>
+            {% if current_user.is_authenticated %}
+                <a class="btn btn-quiet btn-sm" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="btn btn-primary btn-sm" href="{{ url_for('index') }}">Open the board</a>
+            {% else %}
+                <a class="btn btn-quiet btn-sm" href="{{ url_for('security.login') }}">Sign in</a>
+                <a class="btn btn-primary btn-sm" href="{{ url_for('security.register') }}">Create free account</a>
+            {% endif %}
+            <button type="button" class="btn btn-secondary btn-icon btn-sm menu-toggle" data-mobile-nav-toggle
+                    aria-expanded="false" aria-controls="mobileNav" aria-label="Menu">
+                <i data-feather="menu"></i>
+            </button>
+        </div>
     </div>
+
+    <nav class="mobile-nav" id="mobileNav" aria-label="Main (mobile)">
+        {% for endpoint, label in public_nav %}
+        <a href="{{ url_for(endpoint) }}" class="{% if request.endpoint == endpoint %}is-active{% endif %}">
+            {{ label }}<i data-feather="chevron-right" class="i-14 text-faint"></i>
+        </a>
+        {% endfor %}
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('security.login') }}">Sign in<i data-feather="log-in" class="i-14 text-faint"></i></a>
+        {% endif %}
+    </nav>
 </header>
 
 {% include "_flash.html" %}
@@ -35,14 +63,19 @@
 <footer class="site-footer">
     <div class="footer-cols">
         <div>
-            <div class="brand">
-                <img class="brand-mark" style="height:26px" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-                <img class="brand-wordmark" style="height:15px" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <div class="brand brand-sm">
+                <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+                <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+                <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+                <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
             </div>
             <p class="footer-blurb">
                 Peer-to-peer betting with no house and no platform fee.
                 Anyone can create a bet, anyone can take it.
             </p>
+            <div class="row mt-16 gap-6">
+                <span class="status-dot is-live">All systems normal</span>
+            </div>
         </div>
 
         <div>

@@ -5,32 +5,40 @@
 {% block page_subtitle %}<span class="sub">Draft · not published</span>{% endblock %}
 
 {% block content %}
-<div class="grid" style="grid-template-columns:minmax(0,1fr) 360px;min-height:calc(100vh - var(--topbar-h))">
+<div class="editor-layout">
 
-    <form id="createBetForm" style="padding:24px;display:flex;flex-direction:column;gap:22px;max-width:640px">
+    <form id="createBetForm" class="editor-main">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <div>
-            <div class="eyebrow" style="margin-bottom:14px">The claim</div>
-            <label class="label" for="title">Bet title <span class="req">*</span></label>
-            <input type="text" class="input" id="title" name="title" required maxlength="200"
-                   placeholder="Bitcoin closes above $120k this year" autofocus>
-            <div class="hint" data-hint-for="title">One sentence, stated so it can only be true or false.</div>
-        </div>
+        <section class="form-section">
+            <div class="row gap-10">
+                <span class="step is-current">1</span>
+                <div class="eyebrow">The claim</div>
+            </div>
+            <div class="field">
+                <label class="label" for="title">Bet title <span class="req">*</span></label>
+                <input type="text" class="input input-lg" id="title" name="title" required maxlength="200"
+                       placeholder="Bitcoin closes above $120k this year" autofocus>
+                <div class="hint" data-hint-for="title">One sentence, stated so it can only be true or false.</div>
+            </div>
 
-        <div>
-            <label class="label" for="description">Description <span class="req">*</span></label>
-            <textarea class="textarea" id="description" name="description" rows="3" required data-auto-resize
-                      placeholder="Settled on the Dec 31 daily close on Coinbase. Wick highs don't count."></textarea>
-            <div class="hint" data-hint-for="description">Be specific about the conditions and how the bet will be resolved.</div>
-        </div>
+            <div class="field">
+                <label class="label" for="description">Description <span class="req">*</span></label>
+                <textarea class="textarea" id="description" name="description" rows="3" required data-auto-resize
+                          placeholder="Settled on the Dec 31 daily close on Coinbase. Wick highs don't count."></textarea>
+                <div class="hint" data-hint-for="description">Be specific about the conditions and how the bet will be resolved.</div>
+            </div>
+        </section>
 
         <hr class="rule">
 
-        <div>
-            <div class="eyebrow" style="margin-bottom:14px">Stake and odds</div>
+        <section class="form-section">
+            <div class="row gap-10">
+                <span class="step">2</span>
+                <div class="eyebrow">Stake and odds</div>
+            </div>
             <div class="grid g2 gap-16">
-                <div>
+                <div class="field">
                     <label class="label" for="amount">Bet amount <span class="req">*</span></label>
                     <div class="input-affix">
                         <span class="affix">$</span>
@@ -39,7 +47,7 @@
                     </div>
                     <div class="hint" data-hint-for="amount">Minimum $0.01</div>
                 </div>
-                <div>
+                <div class="field" style="margin-top:0">
                     <label class="label" for="odds">Odds (X:1) <span class="req">*</span></label>
                     <input type="number" class="input mono" id="odds" name="odds" required
                            min="0.1" step="0.1" placeholder="1.8">
@@ -47,46 +55,54 @@
                 </div>
             </div>
 
-            <div style="display:flex;gap:6px;margin-top:10px">
+            <div class="preset-row" style="margin-top:0">
                 {% for preset in ['1', '1.8', '2', '3'] %}
                 <button type="button" class="preset" data-preset-target="#odds" data-preset-value="{{ preset }}">{{ preset }}:1</button>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <div class="grid g2 gap-16">
-            <div>
-                <label class="label" for="category">Category <span class="req">*</span></label>
-                <select class="select" id="category" name="category" required>
-                    <option value="">Select a category</option>
-                    {% for cat in ['Sports', 'Politics', 'Entertainment', 'Technology', 'Finance', 'Weather', 'Other'] %}
-                        <option value="{{ cat }}">{{ cat }}</option>
-                    {% endfor %}
-                </select>
-                <div class="hint" data-hint-for="category">&nbsp;</div>
-            </div>
-            <div>
-                <label class="label" for="expire_time">Expiration date</label>
-                <input type="date" class="input" id="expire_time" name="expire_time">
-                <div class="hint">Optional. Expires at EST midnight.</div>
-            </div>
-        </div>
+        <hr class="rule">
 
-        <div style="display:flex;gap:9px;padding-top:4px">
-            <button type="submit" class="btn btn-primary" id="submitBtn" style="flex:1;height:42px;padding:0">
-                <i data-feather="check" style="width:16px;height:16px"></i>Create bet
+        <section class="form-section">
+            <div class="row gap-10">
+                <span class="step">3</span>
+                <div class="eyebrow">Category and timing</div>
+            </div>
+            <div class="grid g2 gap-16">
+                <div class="field">
+                    <label class="label" for="category">Category <span class="req">*</span></label>
+                    <select class="select" id="category" name="category" required>
+                        <option value="">Select a category</option>
+                        {% for cat in ['Sports', 'Politics', 'Entertainment', 'Technology', 'Finance', 'Weather', 'Other'] %}
+                            <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="hint" data-hint-for="category">&nbsp;</div>
+                </div>
+                <div class="field" style="margin-top:0">
+                    <label class="label" for="expire_time">Expiration date</label>
+                    <input type="date" class="input" id="expire_time" name="expire_time">
+                    <div class="hint">Optional. Expires at EST midnight.</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="row gap-10" style="padding-top:4px">
+            <button type="submit" class="btn btn-primary btn-lg grow" id="submitBtn">
+                <i data-feather="check"></i>Publish bet
             </button>
-            <a class="btn btn-ghost" href="{{ url_for('index') }}" style="width:120px;height:42px;padding:0">Cancel</a>
+            <a class="btn btn-secondary btn-lg" href="{{ url_for('index') }}" style="min-width:120px">Cancel</a>
         </div>
     </form>
 
-    <aside class="panel" style="padding:24px;display:flex;flex-direction:column;gap:18px">
+    <aside class="editor-aside">
         <div>
-            <div class="eyebrow" style="margin-bottom:10px">Live preview</div>
-            <div class="bet-card" style="cursor:default">
-                <div class="row-flex">
+            <div class="eyebrow mb-12">Live preview</div>
+            <div class="bet-card is-static">
+                <div class="row">
                     <span class="bet-cat" id="pvCategory">Category</span>
-                    <span class="spacer status-dot">Open</span>
+                    <span class="spacer status-dot is-live">Open</span>
                 </div>
                 <div>
                     <div class="bet-title" id="pvTitle">Your bet title</div>
@@ -97,35 +113,39 @@
                     <div><div class="lbl">Total pot</div><div class="val is-green" id="pvPot">$0.00</div></div>
                     <div><div class="lbl">Odds</div><div class="val" id="pvOdds">—</div></div>
                 </div>
+                <div class="bet-meta">
+                    <span class="avatar avatar-sm avatar-accent">{{ current_user.username[:2] if current_user.is_authenticated else '··' }}</span>
+                    {{ current_user.username if current_user.is_authenticated else 'you' }}
+                </div>
             </div>
         </div>
 
-        <div class="card card-pad" style="padding:14px">
+        <div class="card card-pad" style="padding:16px">
             <div class="eyebrow">Payout calculator</div>
-            <div style="margin-top:12px;display:flex;flex-direction:column;gap:9px;font-size:13px">
-                <div style="display:flex"><span class="text-muted">You stake</span><span class="mono spacer" style="font-weight:500" id="calcStake">$0.00</span></div>
-                <div style="display:flex"><span class="text-muted">Taker must wager</span><span class="mono spacer" style="font-weight:500" id="calcTaker">$0.00</span></div>
-                <div style="display:flex"><span class="text-muted">Total pot</span><span class="mono spacer" style="font-weight:500" id="calcPot">$0.00</span></div>
-                <div style="display:flex"><span class="text-muted">Platform fee</span><span class="mono spacer text-green" style="font-weight:500">$0.00</span></div>
-                <hr class="rule">
-                <div style="display:flex"><span style="font-weight:500">If you win</span><span class="mono spacer text-green" style="font-weight:500" id="calcWin">+$0.00</span></div>
-                <div style="display:flex"><span style="font-weight:500">If you lose</span><span class="mono spacer text-red" style="font-weight:500" id="calcLose">−$0.00</span></div>
+            <div class="col gap-10 mt-12">
+                <div class="calc-row"><span class="text-muted">You stake</span><span class="v" id="calcStake">$0.00</span></div>
+                <div class="calc-row"><span class="text-muted">Taker must wager</span><span class="v" id="calcTaker">$0.00</span></div>
+                <div class="calc-row"><span class="text-muted">Total pot</span><span class="v" id="calcPot">$0.00</span></div>
+                <div class="calc-row"><span class="text-muted">Platform fee</span><span class="v text-pos">$0.00</span></div>
+                <hr class="rule-faint">
+                <div class="calc-row is-total"><span>If you win</span><span class="v text-pos" id="calcWin">+$0.00</span></div>
+                <div class="calc-row is-total"><span>If you lose</span><span class="v text-neg" id="calcLose">−$0.00</span></div>
             </div>
         </div>
 
-        <div class="card card-pad" style="padding:14px">
+        <div class="card card-pad" style="padding:16px">
             <div class="eyebrow">Tips for great bets</div>
-            <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
-                    <i data-feather="check" style="width:13px;height:13px;color:var(--green-text);margin-top:2px;flex-shrink:0"></i>
+            <div class="col gap-10 mt-12">
+                <div class="row-start gap-8 body-sm" style="color:var(--ink-2)">
+                    <i data-feather="check" class="i-14 text-pos shrink-0" style="margin-top:3px"></i>
                     State the claim so it can only resolve true or false.
                 </div>
-                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
-                    <i data-feather="check" style="width:13px;height:13px;color:var(--green-text);margin-top:2px;flex-shrink:0"></i>
+                <div class="row-start gap-8 body-sm" style="color:var(--ink-2)">
+                    <i data-feather="check" class="i-14 text-pos shrink-0" style="margin-top:3px"></i>
                     Name the source that settles it — a dispute review reads this.
                 </div>
-                <div style="display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--ink-2);line-height:1.45">
-                    <i data-feather="alert-circle" style="width:13px;height:13px;color:var(--amber);margin-top:2px;flex-shrink:0"></i>
+                <div class="row-start gap-8 body-sm" style="color:var(--ink-2)">
+                    <i data-feather="alert-circle" class="i-14 text-warn shrink-0" style="margin-top:3px"></i>
                     <span id="tipHold">Your stake is held from your balance on publish.</span>
                 </div>
             </div>
@@ -184,6 +204,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function fieldError(name, message) {
         var field = document.getElementById(name);
         field.classList.add('is-invalid');
+        var affix = field.closest('.input-affix');
+        if (affix) affix.classList.add('is-invalid');
         var hint = document.querySelector('[data-hint-for="' + name + '"]');
         if (hint) {
             if (!hint.dataset.original) hint.dataset.original = hint.textContent;
@@ -226,7 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     showConfirmationModal(
                         'Bet created',
                         'Your bet is live on the board. Go to your dashboard, or post another?',
-                        'check-circle', '#00A331',
+                        'check-circle', 'var(--pos)',
                         function () { window.location.href = '{{ url_for("dashboard") }}'; }
                     );
                     document.getElementById('bgConfirmOk').textContent = 'Go to dashboard';

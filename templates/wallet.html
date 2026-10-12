@@ -10,100 +10,109 @@
 {% set balance = (user.balance if user else 0) or 0 %}
 {% set profit = (user.total_profit if user else 0) or 0 %}
 
-<div class="kpi-strip g3">
-    <div class="kpi">
-        <div class="kpi-label">Available</div>
+<div class="kpi-grid g3">
+    <div class="kpi is-accent">
+        <div class="kpi-label"><i data-feather="credit-card"></i>Available</div>
         <div class="kpi-value lg" id="current-balance">${{ '%.2f' | format(balance) }}</div>
         <div class="kpi-note">Free to wager or withdraw</div>
     </div>
     <div class="kpi">
-        <div class="kpi-label">Transactions</div>
+        <div class="kpi-label"><i data-feather="list"></i>Transactions</div>
         <div class="kpi-value lg">{{ transactions | length }}</div>
         <div class="kpi-note">
             {% if current_filter and current_filter != 'all' %}In the selected period{% else %}All time{% endif %}
         </div>
     </div>
-    <div class="kpi">
-        <div class="kpi-label">All-time profit</div>
-        <div class="kpi-value lg {% if profit > 0 %}is-green{% endif %}">
+    <div class="kpi {% if profit > 0 %}is-accent{% elif profit < 0 %}is-warn{% endif %}">
+        <div class="kpi-label"><i data-feather="trending-up"></i>All-time profit</div>
+        <div class="kpi-value lg {% if profit > 0 %}is-pos{% elif profit < 0 %}is-neg{% endif %}">
             {% if profit > 0 %}+{% endif %}${{ '%.2f' | format(profit) }}
         </div>
         <div class="kpi-note">Net across settled bets</div>
     </div>
 </div>
 
-<div class="pad grid g2 gap-16" style="padding-bottom:20px;border-bottom:1px solid var(--line)">
+<div class="pad grid g2 gap-16" style="padding-bottom:0">
 
     <!-- deposit -->
-    <div class="card card-pad">
-        <div class="row-flex" style="gap:9px">
-            <span class="tile tile-green"><i data-feather="arrow-down-left" style="width:15px;height:15px"></i></span>
-            <h2 style="font-size:14px;font-weight:600;margin:0">Deposit funds</h2>
-        </div>
+    <div class="card">
+        <header class="card-head">
+            <span class="tile tile-accent"><i data-feather="arrow-down-left"></i></span>
+            <h2>Deposit funds</h2>
+            <span class="badge badge-plain spacer">Card · Stripe</span>
+        </header>
 
-        <form action="{{ url_for('create_checkout_session') }}" method="POST" style="margin-top:16px">
+        <form action="{{ url_for('create_checkout_session') }}" method="POST" class="card-body" style="padding:20px">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <label class="label" for="stripeAmount">Amount (credit card)</label>
-            <div class="input-affix">
+            <label class="label" for="stripeAmount">Amount</label>
+            <div class="input-affix input-lg">
                 <span class="affix">$</span>
                 <input type="number" name="amount" id="stripeAmount" placeholder="0.00"
                        min="1" max="10000" step="0.01" required data-currency>
+                <span class="meta">USD</span>
             </div>
 
-            <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <div class="preset-row">
                 {% for preset in ['25', '100', '500', '1000'] %}
                 <button type="button" class="preset" data-preset-target="#stripeAmount" data-preset-value="{{ preset }}">${{ preset }}</button>
                 {% endfor %}
             </div>
 
-            <button type="submit" class="btn btn-primary btn-h40" style="width:100%;margin-top:14px">
-                <i data-feather="credit-card" style="width:15px;height:15px"></i>Pay with Stripe
+            <button type="submit" class="btn btn-primary btn-block mt-16">
+                <i data-feather="credit-card"></i>Pay with Stripe
             </button>
             <div class="hint" id="fee-note">Secure payment via Stripe · min $1.00, max $10,000.00</div>
         </form>
     </div>
 
     <!-- withdraw -->
-    <div class="card card-pad">
-        <div class="row-flex" style="gap:9px;flex-wrap:wrap">
-            <span class="tile"><i data-feather="arrow-up-right" style="width:15px;height:15px"></i></span>
-            <h2 style="font-size:14px;font-weight:600;margin:0">Withdraw funds</h2>
-            <span class="spacer" style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;
-                         color:{{ 'var(--green-text)' if can_withdraw else 'var(--muted-2)' }}">
-                <i data-feather="{{ 'check-circle' if can_withdraw else 'alert-circle' }}" style="width:13px;height:13px"></i>
+    <div class="card">
+        <header class="card-head">
+            <span class="tile"><i data-feather="arrow-up-right"></i></span>
+            <h2>Withdraw funds</h2>
+            <span class="spacer status-dot {% if can_withdraw %}is-live{% else %}is-grey{% endif %}">
                 {{ 'Bank connected' if can_withdraw else 'Bank not connected' }}
             </span>
-        </div>
+        </header>
 
         {% if can_withdraw %}
-            <form action="{{ url_for('create_payout') }}" method="POST" id="withdrawForm" style="margin-top:16px">
+            <form action="{{ url_for('create_payout') }}" method="POST" id="withdrawForm" class="card-body" style="padding:20px">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                 <label class="label" for="stripeWithdrawAmount">Amount (bank transfer)</label>
-                <div class="input-affix">
+                <div class="input-affix input-lg">
                     <span class="affix">$</span>
                     <input type="number" name="amount" id="stripeWithdrawAmount" placeholder="0.00"
                            min="0.01" max="{{ balance }}" step="0.01" required data-currency>
                     <button type="button" class="affix-action" id="withdrawMax">Max</button>
                 </div>
 
-                <button type="submit" class="btn btn-ghost btn-h40" style="width:100%;margin-top:14px">
-                    Withdraw to bank
+                <button type="submit" class="btn btn-ink btn-block mt-16">
+                    <i data-feather="arrow-up-right"></i>Withdraw to bank
                 </button>
                 <div class="hint">Available now: ${{ '%.2f' | format(balance) }} · arrives in 1–2 business days</div>
             </form>
         {% else %}
-            <p class="body-sm" style="margin:16px 0 0">
-                Connect a bank account through Stripe before you can withdraw. It takes a minute
-                and only has to be done once.
-            </p>
-            <form action="{{ url_for('create_connected_account') }}" method="POST" style="margin-top:14px">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-ink btn-h40" style="width:100%">
-                    <i data-feather="link" style="width:15px;height:15px"></i>Connect a bank account
-                </button>
-            </form>
+            <div class="card-body" style="padding:20px">
+                <div class="empty-dashed" style="padding:20px;text-align:left">
+                    <div class="row-start gap-12">
+                        <span class="tile tile-lg tile-info"><i data-feather="link"></i></span>
+                        <div>
+                            <div class="ui fw-600">Connect a bank account</div>
+                            <p class="body-sm mt-4">
+                                Payouts go through Stripe. Connecting takes a minute and only has to be done once.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <form action="{{ url_for('create_connected_account') }}" method="POST" class="mt-14">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ink btn-block">
+                        <i data-feather="link"></i>Connect a bank account
+                    </button>
+                </form>
+            </div>
         {% endif %}
     </div>
 </div>
@@ -111,43 +120,47 @@
 <!-- transactions -->
 <div class="pad">
     <div class="card">
-        <header class="card-head" style="padding:12px 16px;flex-wrap:wrap">
+        <header class="card-head wrap-items">
+            <span class="tile"><i data-feather="list"></i></span>
             <h2>Transaction history</h2>
-            <span class="mono" style="font-size:11px;color:var(--muted-2)">{{ transactions | length }}</span>
-            <div class="spacer" style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="count">{{ transactions | length }}</span>
+            <div class="segmented spacer">
                 {% for key, label in [('all', 'All time'), ('year', 'Year'), ('month', 'Month'), ('week', 'Week')] %}
-                    <a class="chip chip-sm {% if (current_filter or 'all') == key %}is-active{% endif %}"
+                    <a class="{% if (current_filter or 'all') == key %}is-active{% endif %}"
                        href="{{ url_for('wallet', period=key) }}">{{ label }}</a>
                 {% endfor %}
             </div>
         </header>
 
         {% if not transactions %}
-            <div class="empty" style="padding:44px 16px">
-                <span class="tile tile-lg" style="margin:0 auto"><i data-feather="inbox" style="width:19px;height:19px"></i></span>
-                <p style="margin-top:12px">No transactions in this period.</p>
+            <div class="empty" style="padding:48px 16px">
+                <span class="tile tile-lg"><i data-feather="inbox"></i></span>
+                <h3>No transactions in this period</h3>
+                <p>Deposits, stakes, payouts and refunds all land here.</p>
                 {% if current_filter and current_filter != 'all' %}
-                    <a class="btn btn-ghost btn-sm" style="margin-top:10px" href="{{ url_for('wallet') }}">View all transactions</a>
+                    <div class="actions">
+                        <a class="btn btn-secondary btn-sm" href="{{ url_for('wallet') }}">View all transactions</a>
+                    </div>
                 {% endif %}
             </div>
         {% else %}
-            {% set cols = '88px minmax(0,1fr) 132px 104px' %}
+            {% set cols = '88px minmax(0,1fr) 140px 112px' %}
             <div class="dtable">
-                <div class="dtable-head" style="grid-template-columns:{{ cols }}">
-                    <span>Date</span><span>Description</span><span>Type</span><span style="text-align:right">Amount</span>
+                <div class="dtable-head" style="grid-template-columns:{{ cols }};position:static">
+                    <span>Date</span><span>Description</span><span>Type</span><span class="right">Amount</span>
                 </div>
 
                 {% for t in transactions %}
                 <div class="dtable-row" style="grid-template-columns:{{ cols }}">
-                    <span class="mono" style="font-size:12px;color:var(--muted-2)">{{ t.created_at | strftime('%b %d') }}</span>
-                    <span class="clip" style="font-weight:500" title="{{ t.description }}">
+                    <span class="mono meta">{{ t.created_at | strftime('%b %d') }}</span>
+                    <span class="clip fw-500" title="{{ t.description }}">
                         {{ t.description }}
                         {% if t.bet_id and bets.get(t.bet_id) %}
-                            <span class="mono" style="color:var(--muted-2);font-size:11.5px"> · #{{ t.bet_id }}</span>
+                            <span class="mono meta"> · #{{ t.bet_id }}</span>
                         {% endif %}
                     </span>
-                    <span><span class="badge">{{ t.transaction_type.replace('_', ' ') }}</span></span>
-                    <span class="num {% if t.amount >= 0 %}text-green{% endif %}">
+                    <span><span class="badge badge-plain">{{ t.transaction_type.replace('_', ' ') }}</span></span>
+                    <span class="num {% if t.amount >= 0 %}text-pos{% endif %}">
                         {% if t.amount >= 0 %}+{% endif %}${{ '%.2f' | format(t.amount) }}
                     </span>
                 </div>

@@ -1,15 +1,16 @@
-{# Flash messages. Shared by all three shells. #}
+{# Flash messages. Shared by all three shells: rendered as a toast column
+   (bottom-right on desktop, top on phones) that betglobal.js auto-dismisses.
+   Set `flash_inline = true` before including to render them in the flow. #}
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-        <div class="flash-stack">
+        <div class="flash-stack {% if flash_inline %}flash-inline{% endif %}" role="status" aria-live="polite">
             {% for category, message in messages %}
                 {% set tone = 'danger' if category in ('error', 'danger') else ('success' if category == 'success' else ('warning' if category == 'warning' else 'info')) %}
-                <div class="alert alert-{{ tone }}" role="alert">
-                    <i data-feather="{{ 'alert-circle' if tone == 'danger' else ('check-circle' if tone == 'success' else 'info') }}"
-                       style="width:15px;height:15px;flex-shrink:0;margin-top:1px"></i>
+                <div class="alert alert-{{ tone }}" role="alert" style="--i:{{ loop.index0 }}">
+                    <i data-feather="{{ 'alert-circle' if tone == 'danger' else ('check-circle' if tone == 'success' else ('alert-triangle' if tone == 'warning' else 'info')) }}"></i>
                     <span>{{ message }}</span>
                     <button type="button" class="alert-close" data-dismiss-alert aria-label="Dismiss">
-                        <i data-feather="x" style="width:14px;height:14px"></i>
+                        <i data-feather="x"></i>
                     </button>
                 </div>
             {% endfor %}

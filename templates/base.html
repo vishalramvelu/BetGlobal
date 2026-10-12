@@ -1,4 +1,4 @@
-{# Member shell — sidebar + topbar for signed-in users. #}
+{# Member shell — sidebar rail + glass topbar for signed-in users. #}
 {% extends "_layout.html" %}
 
 {% set nav_active = nav_active | default(request.endpoint) %}
@@ -7,32 +7,17 @@
 <div class="shell">
     <div class="scrim" aria-hidden="true"></div>
 
-    <aside class="sidebar">
-        <a class="brand" href="{{ url_for('index') }}">
-            <img class="brand-mark" style="height:26px" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
-            <img class="brand-wordmark" style="height:15px" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+    <aside class="sidebar" aria-label="Sidebar">
+        <a class="brand brand-sm" href="{{ url_for('index') }}">
+            <img class="brand-mark only-light" src="{{ url_for('static', filename='img/logo-mark.png') }}" alt="">
+            <img class="brand-wordmark only-light" src="{{ url_for('static', filename='img/logo-wordmark.png') }}" alt="BetGlobal">
+            <img class="brand-mark only-dark" src="{{ url_for('static', filename='img/logo-mark-light.png') }}" alt="">
+            <img class="brand-wordmark only-dark" src="{{ url_for('static', filename='img/logo-wordmark-light.png') }}" alt="BetGlobal">
         </a>
 
-        <div class="sb-user">
-            <div class="avatar">{{ current_user.username[:2] | upper if current_user.is_authenticated else '··' }}</div>
-            <div style="line-height:1.25;min-width:0">
-                <div class="sb-user-name">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</div>
-                <div class="sb-user-role">
-                    {% if current_user.is_authenticated and current_user.created_at %}
-                        Member since {{ current_user.created_at.strftime('%b %Y') }}
-                    {% else %}
-                        Signed out
-                    {% endif %}
-                </div>
-            </div>
-            <a class="sb-logout" href="{{ url_for('security.logout') }}" title="Log out" aria-label="Log out">
-                <i data-feather="log-out" style="width:15px;height:15px"></i>
-            </a>
-        </div>
-
         {% if current_user.is_authenticated %}
-        <div class="sb-balance">
-            <div class="eyebrow-sm">Available</div>
+        <div class="card-navy sb-balance">
+            <div class="eyebrow">Available balance</div>
             <div class="amt">${{ '%.2f' | format(current_user.balance or 0) }}</div>
             <div class="sub">
                 {% if locked_amount is defined and locked_amount %}
@@ -42,8 +27,10 @@
                 {% endif %}
             </div>
             <div class="acts">
-                <a class="btn-ink" href="{{ url_for('wallet') }}" style="text-decoration:none">Deposit</a>
-                <a class="btn-ghost" href="{{ url_for('wallet') }}" style="text-decoration:none;border:1px solid var(--line)">Withdraw</a>
+                <a class="btn btn-primary" href="{{ url_for('wallet') }}">
+                    <i data-feather="arrow-down-left"></i>Deposit
+                </a>
+                <a class="btn btn-on-dark" href="{{ url_for('wallet') }}">Withdraw</a>
             </div>
         </div>
         {% endif %}
@@ -51,7 +38,7 @@
         <nav class="sb-nav" aria-label="Sections">
             <div class="sb-heading">Betting</div>
             <a class="sb-link {% if nav_active == 'index' %}is-active{% endif %}" href="{{ url_for('index') }}">
-                <i data-feather="list"></i>All Bets
+                <i data-feather="layers"></i>All Bets
                 {% if open_bet_count is defined %}<span class="sb-count">{{ open_bet_count }}</span>{% endif %}
             </a>
             <a class="sb-link {% if nav_active == 'create_bet_page' %}is-active{% endif %}" href="{{ url_for('create_bet_page') }}">
@@ -59,13 +46,16 @@
             </a>
             <a class="sb-link {% if nav_active == 'dashboard' %}is-active{% endif %}" href="{{ url_for('dashboard') }}">
                 <i data-feather="pie-chart"></i>My Dashboard
-                {% if action_count is defined and action_count %}<span class="sb-count">{{ action_count }}</span>{% endif %}
+                {% if action_count is defined and action_count %}<span class="sb-count is-warn">{{ action_count }}</span>{% endif %}
             </a>
             <a class="sb-link {% if nav_active == 'wallet' %}is-active{% endif %}" href="{{ url_for('wallet') }}">
                 <i data-feather="credit-card"></i>Wallet
             </a>
 
             <div class="sb-heading">Help &amp; legal</div>
+            <a class="sb-link {% if nav_active == 'how_it_works' %}is-active{% endif %}" href="{{ url_for('how_it_works') }}">
+                <i data-feather="book-open"></i>How it works
+            </a>
             <a class="sb-link {% if nav_active == 'contact' %}is-active{% endif %}" href="{{ url_for('contact') }}">
                 <i data-feather="mail"></i>Contact support
             </a>
@@ -76,43 +66,66 @@
                 <i data-feather="lock"></i>Privacy Policy
             </a>
         </nav>
+
+        <div class="sb-user">
+            <div class="avatar avatar-accent">{{ current_user.username[:2] if current_user.is_authenticated else '··' }}</div>
+            <div class="mw-0" style="line-height:1.25">
+                <div class="sb-user-name"><span class="clip">{{ current_user.username if current_user.is_authenticated else 'Guest' }}</span></div>
+                <div class="sb-user-role">
+                    {% if current_user.is_authenticated and current_user.created_at %}
+                        Member since {{ current_user.created_at.strftime('%b %Y') }}
+                    {% else %}
+                        Signed out
+                    {% endif %}
+                </div>
+            </div>
+            <a class="icon-btn sb-logout" href="{{ url_for('security.logout') }}" title="Log out" aria-label="Log out">
+                <i data-feather="log-out"></i>
+            </a>
+        </div>
     </aside>
 
-    <main style="min-width:0;position:relative">
+    <main>
         <div class="topbar">
-            <button type="button" class="menu-toggle" data-sidebar-toggle aria-label="Open menu">
-                <i data-feather="menu" style="width:16px;height:16px"></i>
+            <button type="button" class="btn btn-secondary btn-icon btn-sm menu-toggle" data-sidebar-toggle aria-label="Open menu">
+                <i data-feather="menu"></i>
             </button>
             <h1>{% block page_title %}BetGlobal{% endblock %}</h1>
             {% block page_subtitle %}{% endblock %}
 
             <div class="topbar-actions">
                 {% block topbar_extra %}{% endblock %}
-                <a class="btn-topbar" href="{{ url_for('create_bet_page') }}">
-                    <i data-feather="plus" style="width:14px;height:14px"></i>Create bet
+                <a class="btn btn-primary btn-topbar" href="{{ url_for('create_bet_page') }}">
+                    <i data-feather="plus"></i><span class="btn-text">Create bet</span>
                 </a>
+                <button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <i data-feather="moon" class="i-moon"></i><i data-feather="sun" class="i-sun"></i>
+                </button>
                 <div class="topbar-sep"></div>
 
                 <div class="usermenu">
                     <button type="button" class="usermenu-trigger" data-usermenu-toggle
                             aria-expanded="false" aria-controls="userMenuPanel">
-                        <span class="avatar">{{ current_user.username[:2] | upper if current_user.is_authenticated else '··' }}</span>
-                        <span>{{ current_user.username if current_user.is_authenticated else 'Account' }}</span>
-                        <i data-feather="chevron-down" style="width:14px;height:14px;color:var(--muted-2)"></i>
+                        <span class="avatar avatar-accent">{{ current_user.username[:2] if current_user.is_authenticated else '··' }}</span>
+                        <span class="name">{{ current_user.username if current_user.is_authenticated else 'Account' }}</span>
+                        <i data-feather="chevron-down"></i>
                     </button>
-                    <div class="usermenu-panel" id="userMenuPanel">
+                    <div class="usermenu-panel pop" id="userMenuPanel" role="menu">
                         <div class="usermenu-id">
-                            <div class="n">{{ current_user.username if current_user.is_authenticated else 'Account' }}</div>
-                            <div class="e">{{ current_user.email if current_user.is_authenticated else '' }}</div>
+                            <span class="avatar avatar-lg avatar-accent">{{ current_user.username[:2] if current_user.is_authenticated else '··' }}</span>
+                            <div class="mw-0">
+                                <div class="n clip">{{ current_user.username if current_user.is_authenticated else 'Account' }}</div>
+                                <div class="e clip">{{ current_user.email if current_user.is_authenticated else '' }}</div>
+                            </div>
                         </div>
-                        <hr>
-                        <a href="{{ url_for('dashboard') }}"><i data-feather="pie-chart"></i>My Dashboard</a>
-                        <a href="{{ url_for('wallet') }}"><i data-feather="credit-card"></i>Wallet</a>
-                        <a href="{{ url_for('contact') }}"><i data-feather="mail"></i>Contact support</a>
-                        <a href="{{ url_for('terms') }}"><i data-feather="file-text"></i>Terms of Service</a>
-                        <a href="{{ url_for('privacy') }}"><i data-feather="lock"></i>Privacy Policy</a>
-                        <hr>
-                        <a class="danger" href="{{ url_for('security.logout') }}"><i data-feather="log-out"></i>Log out</a>
+                        <div class="pop-sep"></div>
+                        <a class="pop-item" role="menuitem" href="{{ url_for('dashboard') }}"><i data-feather="pie-chart"></i>My Dashboard</a>
+                        <a class="pop-item" role="menuitem" href="{{ url_for('wallet') }}"><i data-feather="credit-card"></i>Wallet</a>
+                        <a class="pop-item" role="menuitem" href="{{ url_for('contact') }}"><i data-feather="mail"></i>Contact support</a>
+                        <a class="pop-item" role="menuitem" href="{{ url_for('terms') }}"><i data-feather="file-text"></i>Terms of Service</a>
+                        <a class="pop-item" role="menuitem" href="{{ url_for('privacy') }}"><i data-feather="lock"></i>Privacy Policy</a>
+                        <div class="pop-sep"></div>
+                        <a class="pop-item danger" role="menuitem" href="{{ url_for('security.logout') }}"><i data-feather="log-out"></i>Log out</a>
                     </div>
                 </div>
             </div>

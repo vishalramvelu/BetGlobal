@@ -1,0 +1,187 @@
+/* ==========================================================================
+   BetGlobal design tokens  (v3 "Ledger")
+   One place for every colour, radius, shadow, type size and motion curve.
+   Light is the default; dark follows the OS unless <html data-theme="light">
+   pins it, and <html data-theme="dark"> forces it. Components never use raw
+   hex values — they read these custom properties.
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* ---- surfaces (warm stone neutrals, after swejoblists) ---- */
+  --paper:        #F6F6F3;   /* page background */
+  --surface:      #FFFFFF;   /* cards, inputs, popovers */
+  --surface-2:    #FAFAF8;   /* card heads, table heads, quiet wells */
+  --hover-tint:   #F1F2EE;   /* hover rows, quiet buttons */
+  --well:         #ECEEE9;   /* recessed tracks, avatar backgrounds */
+
+  /* ---- ink ---- */
+  --ink:          #0E1726;   /* primary text (navy-leaning near-black) */
+  --ink-2:        #2E3A4D;   /* dense body text */
+  --muted:        #5B6472;   /* secondary text, AA on paper */
+  --faint:        #8B93A1;   /* meta text, icons, placeholders */
+  --ghost:        #B6BCC6;   /* disabled text, hairline icons */
+
+  /* ---- rules ---- */
+  --line-strong:  #D4D8DE;   /* control borders */
+  --line:         #E4E7EB;   /* card borders */
+  --line-faint:   #EEF0F2;   /* row dividers */
+
+  /* ---- brand ---- */
+  --navy:         #011E3F;   /* logo navy: admin rail, ink buttons, dark bands */
+  --navy-2:       #0A3160;
+  --green:        #01D43F;   /* logo green: primary buttons, live dots */
+  --green-hover:  #00BF39;
+  --accent:       #0D9A3A;   /* green that passes AA on white: links, text */
+  --accent-hover: #087A2D;
+  --accent-soft:  #E6F8EC;   /* green tint: active nav, selected chips */
+  --accent-line:  #B4E9C5;
+  --accent-ring:  rgba(1, 212, 63, .28);
+
+  /* ---- semantic ---- */
+  --pos:          #0D9A3A;  --pos-soft:  #E6F8EC;  --pos-line:  #B4E9C5;
+  --warn:         #935A0E;  --warn-soft: #FBF3E1;  --warn-line: #ECD29F;
+  --neg:          #B4382A;  --neg-soft:  #FBECEA;  --neg-line:  #EFC3BC;
+  --info:         #2F5BD8;  --info-soft: #ECF1FE;  --info-line: #C5D3F7;
+
+  /* ---- shape ---- */
+  --r-item: 7px;    /* menu rows, small buttons, badges that are not pills */
+  --r-ctl:  9px;    /* buttons, inputs, chips */
+  --r-pop:  12px;   /* popovers, modals, menus */
+  --r-card: 14px;   /* cards, KPI tiles */
+
+  /* ---- elevation ---- */
+  --sh-ctl:   inset 0 1.5px 0 rgba(255,255,255,.95), inset 0 -1px 0 rgba(14,23,38,.06), 0 1px 2px rgba(14,23,38,.08);
+  --sh-card:  0 1px 2px rgba(14,23,38,.04), 0 1px 1px rgba(14,23,38,.02);
+  --sh-pop:   0 1px 2px rgba(14,23,38,.06), 0 16px 36px -18px rgba(14,23,38,.45);
+  --sh-modal: 0 2px 4px rgba(14,23,38,.08), 0 32px 64px -24px rgba(14,23,38,.5);
+  --sh-focus: 0 0 0 3px var(--accent-ring);
+  --sh-primary: inset 0 1px 0 rgba(255,255,255,.35), 0 1px 2px rgba(14,23,38,.14);
+
+  /* ---- type ---- */
+  --ff-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ff-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-2xs:  11px;  --lh-2xs:  16px;   /* eyebrows, badges */
+  --fs-meta: 12px;  --lh-meta: 16px;   /* meta lines, table heads */
+  --fs-ui:   13px;  --lh-ui:   20px;   /* controls, rows, dense UI */
+  --fs-body: 14px;  --lh-body: 22px;   /* default body */
+  --fs-lead: 16px;  --lh-lead: 26px;   /* intros */
+  --fs-h3:   15px;  --lh-h3:   22px;
+  --fs-h2:   18px;  --lh-h2:   26px;
+  --fs-h1:   26px;  --lh-h1:   32px;
+  --fs-display: clamp(38px, 6vw, 64px);
+
+  /* ---- motion ---- */
+  --dur-fast: 150ms;  /* hovers, colour changes, presses */
+  --dur-base: 200ms;  /* popovers, menus, toasts in */
+  --dur-slow: 260ms;  /* indicator slides, row entrance */
+  --ease-out:    cubic-bezier(.22, 1, .36, 1);
+  --ease-spring: cubic-bezier(.34, 1.36, .64, 1);
+
+  /* ---- shell metrics ---- */
+  --sidebar-w: 256px;
+  --topbar-h:  56px;
+  --header-h:  60px;
+  --gutter:    24px;
+  --page-max:  1200px;
+
+  /* ---- decorative ---- */
+  --dots: radial-gradient(var(--line-strong) 1px, transparent 1px);
+  --glow: radial-gradient(60% 50% at 50% 0%, rgba(1,212,63,.16), transparent 70%);
+}
+
+/* ------------------------------------------------------------- dark ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper:       #0B0F17;
+    --surface:     #121826;
+    --surface-2:   #161D2C;
+    --hover-tint:  #1A2233;
+    --well:        #1E2737;
+
+    --ink:         #E9ECF1;
+    --ink-2:       #C9D0DB;
+    --muted:       #9AA3B2;
+    --faint:       #6E7889;
+    --ghost:       #4B5564;
+
+    --line-strong: #323C4F;
+    --line:        #242D3D;
+    --line-faint:  #1C2433;
+
+    --navy:        #061A36;
+    --navy-2:      #0C2A55;
+    --green:       #1BE457;
+    --green-hover: #3BEB6E;
+    --accent:      #4ADE80;
+    --accent-hover:#86EFAC;
+    --accent-soft: rgba(27,228,87,.12);
+    --accent-line: rgba(27,228,87,.32);
+    --accent-ring: rgba(27,228,87,.32);
+
+    --pos:  #4ADE80;  --pos-soft:  rgba(27,228,87,.12);  --pos-line:  rgba(27,228,87,.32);
+    --warn: #F0B35B;  --warn-soft: rgba(240,179,91,.12); --warn-line: rgba(240,179,91,.32);
+    --neg:  #F0776B;  --neg-soft:  rgba(240,119,107,.12);--neg-line:  rgba(240,119,107,.32);
+    --info: #86A6FF;  --info-soft: rgba(134,166,255,.12);--info-line: rgba(134,166,255,.32);
+
+    --sh-ctl:   inset 0 1px 0 rgba(255,255,255,.05), 0 1px 2px rgba(0,0,0,.4);
+    --sh-card:  0 1px 2px rgba(0,0,0,.3);
+    --sh-pop:   0 1px 2px rgba(0,0,0,.4), 0 16px 36px -14px rgba(0,0,0,.8);
+    --sh-modal: 0 2px 4px rgba(0,0,0,.5), 0 32px 64px -20px rgba(0,0,0,.9);
+    --sh-primary: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 2px rgba(0,0,0,.4);
+    --dots: radial-gradient(var(--line-strong) 1px, transparent 1px);
+    --glow: radial-gradient(60% 50% at 50% 0%, rgba(27,228,87,.14), transparent 70%);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper:       #0B0F17;
+  --surface:     #121826;
+  --surface-2:   #161D2C;
+  --hover-tint:  #1A2233;
+  --well:        #1E2737;
+
+  --ink:         #E9ECF1;
+  --ink-2:       #C9D0DB;
+  --muted:       #9AA3B2;
+  --faint:       #6E7889;
+  --ghost:       #4B5564;
+
+  --line-strong: #323C4F;
+  --line:        #242D3D;
+  --line-faint:  #1C2433;
+
+  --navy:        #061A36;
+  --navy-2:      #0C2A55;
+  --green:       #1BE457;
+  --green-hover: #3BEB6E;
+  --accent:      #4ADE80;
+  --accent-hover:#86EFAC;
+  --accent-soft: rgba(27,228,87,.12);
+  --accent-line: rgba(27,228,87,.32);
+  --accent-ring: rgba(27,228,87,.32);
+
+  --pos:  #4ADE80;  --pos-soft:  rgba(27,228,87,.12);  --pos-line:  rgba(27,228,87,.32);
+  --warn: #F0B35B;  --warn-soft: rgba(240,179,91,.12); --warn-line: rgba(240,179,91,.32);
+  --neg:  #F0776B;  --neg-soft:  rgba(240,119,107,.12);--neg-line:  rgba(240,119,107,.32);
+  --info: #86A6FF;  --info-soft: rgba(134,166,255,.12);--info-line: rgba(134,166,255,.32);
+
+  --sh-ctl:   inset 0 1px 0 rgba(255,255,255,.05), 0 1px 2px rgba(0,0,0,.4);
+  --sh-card:  0 1px 2px rgba(0,0,0,.3);
+  --sh-pop:   0 1px 2px rgba(0,0,0,.4), 0 16px 36px -14px rgba(0,0,0,.8);
+  --sh-modal: 0 2px 4px rgba(0,0,0,.5), 0 32px 64px -20px rgba(0,0,0,.9);
+  --sh-primary: inset 0 1px 0 rgba(255,255,255,.18), 0 1px 2px rgba(0,0,0,.4);
+  --dots: radial-gradient(var(--line-strong) 1px, transparent 1px);
+  --glow: radial-gradient(60% 50% at 50% 0%, rgba(27,228,87,.14), transparent 70%);
+}
+
+/* On dark surfaces the navy button inverts to a light "ink" button. */
+:root[data-theme="dark"] .btn-ink { background: var(--ink); border-color: var(--ink); color: #0B0F17; }
+:root[data-theme="dark"] .btn-ink:hover { background: #fff; border-color: #fff; color: #0B0F17; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-ink { background: var(--ink); border-color: var(--ink); color: #0B0F17; }
+  :root:not([data-theme="light"]) .btn-ink:hover { background: #fff; border-color: #fff; color: #0B0F17; }
+}
