@@ -1,0 +1,24 @@
+{# Error page. Uses the member shell when signed in, the public shell otherwise. #}
+{% extends "base.html" if current_user.is_authenticated else "landing_base.html" %}
+
+{% block title %}{{ title }} · BetGlobal{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="pad">
+    <div class="empty" style="padding:56px 16px;text-align:center">
+        <div class="mono" style="font-size:12px;color:var(--muted-2);letter-spacing:.08em">ERROR {{ status }}</div>
+        <h1 class="title-lg" style="margin:10px 0 6px">{{ title }}</h1>
+        <p style="color:var(--muted);max-width:420px;margin:0 auto;line-height:1.55">{{ message }}</p>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:18px;flex-wrap:wrap">
+            {% if current_user.is_authenticated %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+                <a class="btn btn-ghost btn-sm" href="{{ url_for('index') }}">Browse bets</a>
+            {% else %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('landing') }}">Home</a>
+                <a class="btn btn-ghost btn-sm" href="{{ url_for_security('login') }}">Sign in</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

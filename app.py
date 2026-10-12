@@ -13,7 +13,7 @@ from flask_cors import CORS
 from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_security import Security, SQLAlchemyUserDatastore, auth_required, hash_password
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_talisman import Talisman
@@ -148,6 +148,13 @@ if IS_PROD:
 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # No JS access
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
+# Flask-WTF's "SSL strict" mode rejects any HTTPS POST whose Referer host differs
+# from request.host. Behind CloudFront + Caddy, Caddy pins X-Forwarded-Host to the
+# apex domain, so visitors on www.betgloballive.com always failed that check and
+# every login/register POST became a 400. The CSRF token check still runs, and the
+# SameSite=Lax session cookie covers the cross-site case, so the Referer check is
+# safe to drop.
+app.config['WTF_CSRF_SSL_STRICT'] = False
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=24)
 
 # Mail configuration
@@ -1661,6 +1668,23 @@ def set_user(user_id):
         flash('User not found', 'error')
     return redirect(request.referrer or url_for('index'))
 
+def _render_error_page(status, title, message):
+    """Render a real error page instead of an empty shell.
+
+    The previous handlers returned a bare base.html, which looked like a broken
+    dashboard with a 'Guest' sidebar and no explanation.
+    """
+    return render_template('error.html', status=status, title=title, message=message), status
+
+@app.errorhandler(CSRFError)
+def csrf_error(error):
+    """CSRF failures: log the real reason, then send the user back to the form."""
+    logging.warning(f"CSRF failure on {request.method} {request.path}: {error.description}")
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Invalid or expired CSRF token'}), 400
+    flash('Your form session expired. Please try again.', 'error')
+    return redirect(request.referrer or request.path or url_for('index'))
+
 @app.errorhandler(404)
 def not_found_error(_error):
     """Handle 404 errors"""
@@ -1669,7 +1693,7 @@ def not_found_error(_error):
     # For admin routes, try to redirect to admin login
     if request.path.startswith('/admin'):
         return redirect(url_for('admin_login'))
-    return render_template('base.html'), 404
+    return _render_error_page(404, 'Page not found', "We couldn't find that page.")
 
 @app.errorhandler(500)
 def internal_error(_error):
@@ -1681,21 +1705,21 @@ def internal_error(_error):
     if request.path.startswith('/admin'):
         flash('Admin dashboard error. Please try again.', 'error')
         return redirect(url_for('admin_login'))
-    return render_template('base.html'), 500
+    return _render_error_page(500, 'Something went wrong', 'An unexpected error occurred. Please try again in a moment.')
 
 @app.errorhandler(400)
 def bad_request_error(_error):
     """Handle 400 errors"""
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Bad request'}), 400
-    return render_template('base.html'), 400
+    return _render_error_page(400, 'Bad request', "We couldn't process that request. Please go back and try again.")
 
 @app.errorhandler(403)
 def forbidden_error(_error):
     """Handle 403 errors"""
     if request.path.startswith('/api/'):
         return jsonify({'error': 'Forbidden'}), 403
-    return render_template('base.html'), 403
+    return _render_error_page(403, 'Access denied', "You don't have permission to view this page.")
 
 @app.errorhandler(429)
 def ratelimit_handler(_error):
